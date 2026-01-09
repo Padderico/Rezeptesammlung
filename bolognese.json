@@ -1,17 +1,8 @@
 {
-  "name": "Spaghetti Bolognese",
-  "ingredients": [
-    {
-      "text": "500 g Hackfleisch"
-    },
-    {
-      "text": "400 g Gehackte Tomaten"
-    },
-    {
-      "text": "250 g Spaghetti"
-    },
-    {
-      "text": "1 Zwiebel"
-    }
+  "name": "Bolognese",
+  "recipeIngredient": [
+    "500 g Hackfleisch",
+    "400 g Gehackte Tomaten",
+    "1 Zwiebel"
   ]
 }
