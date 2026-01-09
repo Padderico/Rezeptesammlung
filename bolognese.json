@@ -1,5 +1,8 @@
 {
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
   "name": "Bolognese",
+  "description": "Ein einfaches Bolognese‑Rezept",
   "recipeIngredient": [
     "500 g Hackfleisch",
     "400 g Gehackte Tomaten",
