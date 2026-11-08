@@ -68,6 +68,35 @@
   "extra": false
  },
  {
+  "slug": "gnocchi-hackfleisch-auflauf-mit-tomatensosse",
+  "first": "KW 46/2026",
+  "title": "Gnocchi-Hackfleisch-Auflauf mit Tomatensoße",
+  "tags": [
+   "Fleisch",
+   "Thermomix",
+   "Ofen",
+   "Eisen",
+   "Vorkochen"
+  ],
+  "total": 35,
+  "last": "KW 46/2026",
+  "extra": false
+ },
+ {
+  "slug": "kartoffel-gemuese-blech-mit-brokkoli-feta-und-kraeuterquark",
+  "first": "KW 46/2026",
+  "title": "Kartoffel-Gemüse-Blech mit Brokkoli, Feta & Kräuterquark",
+  "tags": [
+   "Vegetarisch",
+   "Blech",
+   "Kartoffel",
+   "Meal-Prep"
+  ],
+  "total": 55,
+  "last": "KW 46/2026",
+  "extra": false
+ },
+ {
   "slug": "kartoffel-lauch-suppe",
   "first": "KW 46/2026",
   "title": "Kartoffel-Lauch-Suppe",
@@ -172,6 +201,20 @@
   "tags": [
    "Vegetarisch",
    "Heißluftfritteuse",
+   "Eisen"
+  ],
+  "total": 30,
+  "last": "KW 46/2026",
+  "extra": false
+ },
+ {
+  "slug": "tomaten-linsen-suppe-mit-karotten",
+  "first": "KW 46/2026",
+  "title": "Tomaten-Linsen-Suppe mit Karotten",
+  "tags": [
+   "Vegetarisch",
+   "Suppe",
+   "Thermomix",
    "Eisen"
   ],
   "total": 30,
