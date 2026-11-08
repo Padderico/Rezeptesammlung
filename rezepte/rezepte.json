@@ -11,7 +11,8 @@
   ],
   "total": 40,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "frikadellen-aus-der-heissluftfritteuse-mit-kartoffel-karotten-stampf",
@@ -25,7 +26,8 @@
   ],
   "total": 45,
   "last": "KW 46/2026",
-  "extra": true
+  "extra": true,
+  "current": true
  },
  {
   "slug": "frischkaese-gemuese-wraps",
@@ -38,7 +40,8 @@
   ],
   "total": 10,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "fusilli-bolognese-mit-verstecktem-gemuese",
@@ -52,7 +55,8 @@
   ],
   "total": 40,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": false
  },
  {
   "slug": "gnocchi-blech-mit-paprika-zucchini-und-feta",
@@ -65,7 +69,8 @@
   ],
   "total": 40,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": false
  },
  {
   "slug": "gnocchi-hackfleisch-auflauf-mit-tomatensosse",
@@ -80,7 +85,8 @@
   ],
   "total": 35,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "kartoffel-gemuese-blech-mit-brokkoli-feta-und-kraeuterquark",
@@ -94,7 +100,8 @@
   ],
   "total": 55,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "kartoffel-lauch-suppe",
@@ -108,7 +115,8 @@
   ],
   "total": 35,
   "last": "KW 46/2026",
-  "extra": true
+  "extra": true,
+  "current": true
  },
  {
   "slug": "kartoffelgratin-mit-feldsalat-und-orangen-dressing",
@@ -123,7 +131,8 @@
   ],
   "total": 60,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "kuerbis-karotten-suppe-mit-kokos",
@@ -137,7 +146,8 @@
   ],
   "total": 35,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "lachs-aus-dem-varoma-mit-kartoffeln-gemuese-und-zitronen-dill-sosse",
@@ -151,7 +161,8 @@
   ],
   "total": 45,
   "last": "KW 46/2026",
-  "extra": true
+  "extra": true,
+  "current": true
  },
  {
   "slug": "one-pot-nudeln-mit-brokkoli-erbsen-und-frischkaese",
@@ -165,7 +176,8 @@
   ],
   "total": 25,
   "last": "KW 46/2026",
-  "extra": true
+  "extra": true,
+  "current": true
  },
  {
   "slug": "rindergulasch-mit-spaetzle-und-gurkensalat",
@@ -179,7 +191,8 @@
   ],
   "total": 100,
   "last": "KW 46/2026",
-  "extra": true
+  "extra": true,
+  "current": true
  },
  {
   "slug": "schweinegeschnetzeltes-mit-champignon-rahm-spaetzle-und-brokkoli",
@@ -192,7 +205,8 @@
   ],
   "total": 35,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "spinat-kaese-frittata-aus-der-heissluftfritteuse",
@@ -205,7 +219,8 @@
   ],
   "total": 30,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": false
  },
  {
   "slug": "tomaten-linsen-suppe-mit-karotten",
@@ -219,7 +234,8 @@
   ],
   "total": 30,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  },
  {
   "slug": "vesper-brett-mit-frischem-kraeuterquark",
@@ -232,6 +248,7 @@
   ],
   "total": 15,
   "last": "KW 46/2026",
-  "extra": false
+  "extra": false,
+  "current": true
  }
 ]

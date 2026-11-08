@@ -195,19 +195,21 @@ def main():
             if m["recipe"] not in used:
                 used.append(m["recipe"])
     used += [x for x in plan.get("prep", {}).get("recipes", []) + plan.get("extras", []) if x not in used]
+    for m in by_slug.values():
+        m["current"] = False
     for rid in used:
         r = plan["recipes"][rid]
         slug, content = page(rid, r, week_label)
         (OUT / f"{slug}.html").write_text(content, encoding="utf-8")
         entry = by_slug.get(slug, {"slug": slug, "first": week_label})
         entry.update({"title": r["title"], "tags": r.get("tags", []), "total": r["time"]["total"], "last": week_label,
-                      "extra": rid in plan.get("extras", [])})
+                      "extra": rid in plan.get("extras", []), "current": True})
         by_slug[slug] = entry
     manifest = sorted(by_slug.values(), key=lambda m: m["title"].lower())
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
 
     e = html.escape
-    current = [m for m in manifest if m["last"] == week_label]
+    current = [m for m in manifest if m.get("current")]
     items = lambda ms: "".join(
         f'<li><a href="rezepte/{e(m["slug"])}.html"><b>{e(m["title"])}</b><small>{m["total"]} Min. · {e(", ".join(m["tags"]))}</small></a></li>' for m in ms)
     index = f"""<!DOCTYPE html>
