@@ -41,7 +41,7 @@
   "total": 10,
   "last": "KW 46/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "fusilli-bolognese-mit-verstecktem-gemuese",
@@ -101,6 +101,21 @@
   "total": 55,
   "last": "KW 46/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "kartoffel-gemuese-blech-mit-feta-varoma-brokkoli-und-kraeuterquark",
+  "first": "KW 46/2026",
+  "title": "Kartoffel-Gemüse-Blech mit Feta, Varoma-Brokkoli & Kräuterquark",
+  "tags": [
+   "Vegetarisch",
+   "Blech",
+   "Kartoffel",
+   "Meal-Prep"
+  ],
+  "total": 55,
+  "last": "KW 46/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -147,6 +162,20 @@
   "total": 35,
   "last": "KW 46/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "kuerbissuppe-aus-dem-gefrierschrank",
+  "first": "KW 46/2026",
+  "title": "Kürbissuppe aus dem Gefrierschrank",
+  "tags": [
+   "Vegetarisch",
+   "Suppe",
+   "Vorrat"
+  ],
+  "total": 10,
+  "last": "KW 46/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -177,6 +206,20 @@
   "total": 25,
   "last": "KW 46/2026",
   "extra": true,
+  "current": true
+ },
+ {
+  "slug": "pfannkuchen-mit-selbst-gemachtem-apfelmus",
+  "first": "KW 46/2026",
+  "title": "Pfannkuchen mit selbst gemachtem Apfelmus",
+  "tags": [
+   "Vegetarisch",
+   "Thermomix",
+   "Kinderliebling"
+  ],
+  "total": 35,
+  "last": "KW 46/2026",
+  "extra": false,
   "current": true
  },
  {
