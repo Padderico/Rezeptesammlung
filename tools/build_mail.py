@@ -40,7 +40,7 @@ def main():
     def links(rid):
         r = plan["recipes"][rid]
         page = base + slugify(r["title"]) + ".html"
-        bring = ("https://api.getbring.com/rest/bringrecipes/deeplink?url=" + urllib.parse.quote(page, safe="")
+        bring = ("https://api.getbring.com/rest/bringrecipes/deeplink?url=" + urllib.parse.quote(r.get("bringUrl") or page, safe="")
                  + f"&source=web&baseQuantity={r['base']}&requestedQuantity={r['base']}")
         return r, page, bring
 

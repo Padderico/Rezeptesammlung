@@ -46,7 +46,7 @@ def build_html(plan):
 
     def links(r):
         page = base + slugify(r["title"]) + ".html"
-        bring = ("https://api.getbring.com/rest/bringrecipes/deeplink?url=" + urllib.parse.quote(page, safe="")
+        bring = ("https://api.getbring.com/rest/bringrecipes/deeplink?url=" + urllib.parse.quote(r.get("bringUrl") or page, safe="")
                  + f"&source=web&baseQuantity={r['base']}&requestedQuantity={r['base']}")
         return page, bring
 

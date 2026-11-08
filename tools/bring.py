@@ -264,6 +264,74 @@ def shopping_lines(items):
     return out
 
 
+def slugify(t):
+    t = t.lower().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss").replace("&", " und ")
+    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")
+
+
+def short_url(title):
+    """Kurze Import-Adresse: Bring lehnt Rezeptadressen ab etwa 100 Zeichen ab (getestet 8.11.2026)."""
+    import hashlib
+    s = slugify(title)
+    head = s[:24]
+    if len(s) > 24 and "-" in head:
+        head = head.rsplit("-", 1)[0]
+    return f"{SITE}b/{head}-{hashlib.sha1(s.encode()).hexdigest()[:4]}.html"
+
+
+def write_aliases():
+    """Legt für jede Rezeptseite unter b/ eine kurze Import-Seite an und setzt den Bring-Knopf der Rezeptseite darauf."""
+    import html as _h
+    out = ROOT / "b"
+    out.mkdir(exist_ok=True)
+    keep = set()
+    for f in sorted((ROOT / "rezepte").glob("*.html")):
+        h = f.read_text(encoding="utf-8")
+        m = re.search(r'<script type="application/ld\+json">(.*?)</script>', h, re.S)
+        if not m:
+            continue
+        ld = json.loads(m.group(1))
+        if ld.get("@type") != "Recipe":
+            continue
+        su = short_url(ld["name"])
+        name = su.rsplit("/", 1)[1]
+        keep.add(name)
+        try:
+            base = int(re.match(r"\d+", str(ld.get("recipeYield", "1"))).group(0))
+        except Exception:
+            base = 1
+        page = SITE + "rezepte/" + f.name
+        ld_json = json.dumps(ld, ensure_ascii=False, indent=1).replace("</", "<\\/")
+        (out / name).write_text(f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{_h.escape(ld["name"])}</title>
+<script type="application/ld+json">
+{ld_json}
+</script>
+<link rel="stylesheet" href="../rezepte/style.css">
+</head>
+<body>
+<main>
+<h1>{_h.escape(ld["name"])}</h1>
+<p class="meta">Kurzadresse für den Bring-Import.</p>
+<p><a class="bring" href="../rezepte/{f.name}">Zum Rezept</a></p>
+</main>
+</body>
+</html>
+""", encoding="utf-8")
+        new_h = re.sub(r'(<a class="bring" href=")[^"]*(")', lambda mm: mm.group(1) + _h.escape(deeplink(su, base)) + mm.group(2), h, count=1)
+        if new_h != h:
+            f.write_text(new_h, encoding="utf-8")
+    for old in out.glob("*.html"):
+        if old.name not in keep:
+            old.unlink()
+    return len(keep)
+
+
 def einkauf_urls(plan):
     w = plan["week"]
     base = f"{SITE}einkauf/kw{w['kw']}-{w['year']}"
@@ -289,6 +357,8 @@ def annotate_plan(plan, unknown):
                 unknown.add(i["n"])
             i["b"] = info["anzeige"]
     normalize_shopping(plan["shopping"], unknown)
+    for r in plan["recipes"].values():
+        r["bringUrl"] = short_url(r["title"])
     plan.setdefault("bring", {})["einkauf"] = einkauf_urls(plan)
     return plan
 
@@ -360,6 +430,8 @@ def main(argv):
             if fix and new_h != h:
                 f.write_text(new_h, encoding="utf-8")
         print(f"{changed} Seite(n) {'korrigiert' if fix else 'mit Abweichungen'}.")
+        if fix:
+            print(f"{write_aliases()} kurze Import-Adressen unter b/ aktualisiert.")
         return _report(unknown)
     print(__doc__)
     return 2

@@ -104,8 +104,7 @@ def page(rid, r, week_label):
         "recipeIngredient": ld_ingredients(r),
         "recipeInstructions": steps,
     }
-    bring = ("https://api.getbring.com/rest/bringrecipes/deeplink?url=" + url.replace(":", "%3A").replace("/", "%2F")
-             + f"&source=web&baseQuantity={r['base']}&requestedQuantity={r['base']}")
+    bring_href = bring.deeplink(bring.short_url(r["title"]), r["base"])
     e = html.escape
     ing = "".join(
         f'<li><span class="q">{e(qty(i, num_display))}</span><span>{e(i["n"])}{" <small>Vorrat</small>" if i.get("v") else ""}</span></li>'
@@ -133,7 +132,7 @@ def page(rid, r, week_label):
 <p class="back"><a href="../index.html">Alle Rezepte</a></p>
 <h1>{e(r['title'])}</h1>
 <p class="meta">{r['base']} Portionen · gesamt {r['time']['total']} Min. · aktiv {r['time']['active']} Min. · {e(', '.join(r.get('tags', [])))}</p>
-<p><a class="bring" href="{e(bring)}">In Bring übernehmen</a></p>
+<p><a class="bring" href="{e(bring_href)}">In Bring übernehmen</a></p>
 <div class="cols">
 <section><h2>Zutaten</h2><ul class="ing">{ing}</ul></section>
 <section>{'<h2>Vorbereiten</h2><ul>' + prep + '</ul>' if prep else ''}<h2>Zubereitung</h2><ol>{st}</ol></section>
@@ -231,6 +230,7 @@ def main():
     (ROOT / "index.html").write_text(index, encoding="utf-8")
     print(f"{len(used)} Rezeptseiten geschrieben, {len(manifest)} im Verzeichnis")
     einkauf_pages(plan)
+    print(f"{bring.write_aliases()} kurze Import-Adressen unter b/")
     rc = bring._report(UNKNOWN)
     if args.strict and rc:
         sys.exit(1)
