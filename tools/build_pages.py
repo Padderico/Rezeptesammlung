@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Erzeugt öffentliche Rezeptseiten (schema.org/Recipe für den Bring!-Import) aus einem Wochenplan-JSON.
 
-Aufruf:  python3 tools/build_pages.py pfad/zum/plan.json
+Aufruf:  python3 tools/build_pages.py pfad/zum/plan.json [--hide VORNAME]
 
 - schreibt rezepte/<slug>.html für jedes Rezept im Plan (Wochengerichte + Ersatzgerichte)
 - pflegt rezepte/rezepte.json (Verzeichnis aller Rezepte) und baut daraus index.html
-- persönliche Angaben (Namen) werden ersetzt; die Seiten sind öffentlich
+- per --hide übergebene Vornamen werden ersetzt; die Seiten sind öffentlich
 """
 import html
 import json
@@ -24,12 +24,17 @@ def slugify(t):
     return re.sub(r"[^a-z0-9]+", "-", t).strip("-")
 
 
+HIDE = []
+
+
 def anonym(t):
+    """Ersetzt per --hide übergebene Vornamen durch neutrale Formulierungen."""
     if not t:
         return t
-    for a, b in [("+ Anton", "+ Kind"), ("Antons Portion", "Kinderportion"), ("Antons Teller", "Kinderteller"),
-                 ("Für Anton", "Fürs Kind"), ("für Anton", "fürs Kind"), ("Anton", "das Kind")]:
-        t = t.replace(a, b)
+    for name in HIDE:
+        for a, b in [("+ " + name, "+ Kind"), (name + "s Portion", "Kinderportion"), (name + "s Teller", "Kinderteller"),
+                     ("Für " + name, "Fürs Kind"), ("für " + name, "fürs Kind"), (name, "das Kind")]:
+            t = t.replace(a, b)
     return t
 
 
@@ -170,7 +175,13 @@ ol li,ul li{margin-bottom:.5em}.set{display:inline-block;margin-top:4px;font:600
 
 
 def main():
-    plan = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("plan")
+    ap.add_argument("--hide", action="append", default=[], help="Vorname, der auf den öffentlichen Seiten ersetzt wird")
+    args = ap.parse_args()
+    HIDE.extend(args.hide)
+    plan = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
     OUT.mkdir(exist_ok=True)
     (OUT / "style.css").write_text(STYLE, encoding="utf-8")
     manifest_path = OUT / "rezepte.json"
@@ -179,7 +190,7 @@ def main():
     week = plan["week"]
     week_label = f"KW {week['kw']}/{week['year']}"
     used = []
-    for d in plan["days"]:
+    for d in plan.get("days", []):
         for m in d["meals"]:
             if m["recipe"] not in used:
                 used.append(m["recipe"])
