@@ -57,6 +57,14 @@ def main():
              "<p><b>So funktioniert's:</b> Bei jedem Rezept öffnet „In Bring übernehmen“ die Bring-App mit allen Zutaten, die Portionen kannst du dort anpassen. „Rezept online“ zeigt das Rezept im Browser.</p>",
              "<p><b>Gefällt dir etwas nicht?</b> Antworte einfach auf diese Mail und schreib kurz, was nicht passt. Dann kommen automatisch 4–6 neue Vorschläge. Schreibst du, welches Gericht du gegen welches tauschen möchtest, wird der Plan samt Einkaufsliste angepasst.</p>"]
         txt += [f"hier ist unser Speiseplan für die Woche vom {w['label']}. Alles als PDF: {pdf}", ""]
+        ek = plan.get("bring", {}).get("einkauf")
+        if ek:
+            dl = lambda u: ("https://api.getbring.com/rest/bringrecipes/deeplink?url=" + urllib.parse.quote(u, safe="")
+                            + "&source=web&baseQuantity=1&requestedQuantity=1")
+            h.append(f'<p><b>Einkauf auf einmal:</b> <a href="{e(dl(ek["super"]))}">Supermarkt-Liste in Bring übernehmen</a> · '
+                     f'<a href="{e(dl(ek["metzger"]))}">Metzger-Liste in Bring übernehmen</a>. Jeder Artikel landet auf seiner festen Kachel, '
+                     'im Bring-Dialog kannst du abwählen, was wir schon haben.</p>')
+            txt += [f"Einkauf auf einmal (Bring): Supermarkt {dl(ek['super'])}", f"Metzger {dl(ek['metzger'])}", ""]
         prep_ids = plan.get("prep", {}).get("recipes", [])
         prep_day = plan.get("prep", {}).get("short", "")
         if prep_ids:

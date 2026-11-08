@@ -10,8 +10,12 @@ Aufruf:  python3 tools/build_pages.py pfad/zum/plan.json [--hide VORNAME]
 import html
 import json
 import pathlib
+import copy
 import re
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import bring  # noqa: E402  (einheitliche Bring-Namen, tools/bring_namen.json)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "rezepte"
@@ -25,6 +29,7 @@ def slugify(t):
 
 
 HIDE = []
+UNKNOWN = set()
 
 
 def anonym(t):
@@ -73,24 +78,8 @@ def clean_name(n):
 
 
 def ld_ingredients(r):
-    merged = {}
-    order = []
-    for i in r["ingredients"]:
-        if i.get("v"):
-            continue
-        name = clean_name(i["n"])
-        key = (name, i.get("u"))
-        if key in merged and i.get("a") is not None and merged[key].get("a") is not None and i.get("a2") is None:
-            merged[key]["a"] += i["a"]
-        elif key not in merged:
-            merged[key] = dict(i, n=name)
-            order.append(key)
-    out = []
-    for k in order:
-        i = merged[k]
-        q = qty(i, num_ld)
-        out.append(f"{q} {i['n']}".strip())
-    return out
+    """Zutaten für den Bring-Import: einheitliche Kachelnamen aus tools/bring_namen.json, ohne Vorrat."""
+    return [anonym(x) for x in bring.recipe_lines(r["ingredients"], UNKNOWN)]
 
 
 def page(rid, r, week_label):
@@ -179,6 +168,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("plan")
     ap.add_argument("--hide", action="append", default=[], help="Vorname, der auf den öffentlichen Seiten ersetzt wird")
+    ap.add_argument("--strict", action="store_true", help="Abbruch, wenn eine Zutat nicht in tools/bring_namen.json steht")
     args = ap.parse_args()
     HIDE.extend(args.hide)
     plan = json.loads(pathlib.Path(args.plan).read_text(encoding="utf-8"))
@@ -228,6 +218,8 @@ def main():
 <ul class="list">{items([m for m in current if not m.get('extra')])}</ul>
 <h2>Ersatzgerichte dieser Woche</h2>
 <ul class="list">{items([m for m in current if m.get('extra')])}</ul>
+<h2>Einkaufsliste dieser Woche</h2>
+<ul class="list"><li><a href="einkauf/{e(bring.einkauf_urls(plan)['super'].rsplit('/', 1)[1])}"><b>Supermarkt</b><small>ganze Liste auf einmal in Bring</small></a></li><li><a href="einkauf/{e(bring.einkauf_urls(plan)['metzger'].rsplit('/', 1)[1])}"><b>Metzger</b><small>ganze Liste auf einmal in Bring</small></a></li></ul>
 <h2>Alle Rezepte ({len(manifest)})</h2>
 <ul class="list">{items(manifest)}</ul>
 <h2>Weitere</h2>
@@ -238,6 +230,60 @@ def main():
 """
     (ROOT / "index.html").write_text(index, encoding="utf-8")
     print(f"{len(used)} Rezeptseiten geschrieben, {len(manifest)} im Verzeichnis")
+    einkauf_pages(plan)
+    rc = bring._report(UNKNOWN)
+    if args.strict and rc:
+        sys.exit(1)
+
+
+def einkauf_pages(plan):
+    """Ganze Wocheneinkaufsliste als importierbare Seite (Supermarkt und Metzger getrennt)."""
+    e = html.escape
+    shop = bring.normalize_shopping(copy.deepcopy(plan["shopping"]), UNKNOWN)
+    urls = bring.einkauf_urls(plan)
+    w = plan["week"]
+    out = ROOT / "einkauf"
+    out.mkdir(exist_ok=True)
+    parts = {"super": ("Supermarkt", [it for g in shop["groups"] for it in g["items"]]),
+             "metzger": ("Metzger", shop["metzger"]["items"])}
+    for k, (label, items) in parts.items():
+        lines = [anonym(x) for x in bring.shopping_lines(items)]
+        title = f"Einkauf KW {w['kw']} – {label}"
+        ld = {"@context": "https://schema.org/", "@type": "Recipe", "name": title,
+              "author": {"@type": "Organization", "name": "Rezeptesammlung"}, "inLanguage": "de", "url": urls[k],
+              "recipeYield": "1", "recipeIngredient": lines,
+              "recipeInstructions": [{"@type": "HowToStep", "text": f"Einkaufsliste {label} für die Woche {w['label']}."}]}
+        ld_json = json.dumps(ld, ensure_ascii=False, indent=1).replace("</", "<\\/")
+        lis = "".join(f'<li><span class="q">{e(anonym(_q(it)))}</span><span>{e(it["n"])}</span></li>' for it in items if not it.get("have"))
+        page_html = f"""<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{e(title)}</title>
+<script type="application/ld+json">
+{ld_json}
+</script>
+<link rel="stylesheet" href="../rezepte/style.css">
+</head>
+<body>
+<main>
+<p class="back"><a href="../index.html">Alle Rezepte</a></p>
+<h1>{e(title)}</h1>
+<p class="meta">{e(w['label'])} · {len(lines)} Artikel, jeder auf seiner festen Bring-Kachel</p>
+<p><a class="bring" href="{e(bring.deeplink(urls[k]))}">Ganze Liste in Bring übernehmen</a></p>
+<ul class="ing">{lis}</ul>
+</main>
+</body>
+</html>
+"""
+        (out / urls[k].rsplit("/", 1)[1]).write_text(page_html, encoding="utf-8")
+    print(f"Einkaufslisten geschrieben: {urls['super']} · {urls['metzger']}")
+
+
+def _q(it):
+    return bring._flat(it.get("q")) or ""
 
 
 if __name__ == "__main__":

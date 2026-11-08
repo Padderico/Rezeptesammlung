@@ -94,6 +94,9 @@ def build_html(plan):
     for rid in plan.get("prep", {}).get("recipes", []) + plan.get("extras", []):
         if rid not in order:
             order.append(rid)
+    _ek = plan.get("bring", {}).get("einkauf")
+    _dl = lambda u: "https://api.getbring.com/rest/bringrecipes/deeplink?url=" + urllib.parse.quote(u, safe="") + "&source=web&baseQuantity=1&requestedQuantity=1"
+    ek_links = (f' <b>Ganze Liste in Bring:</b> <a href="{e(_dl(_ek["super"]))}">Supermarkt</a> · <a href="{e(_dl(_ek["metzger"]))}">Metzger</a> – jeder Artikel auf seiner festen Kachel.') if _ek else ""
     link_rows = ""
     for rid in order:
         r = plan["recipes"][rid]
@@ -193,7 +196,7 @@ ul, ol {{ margin:0; padding-left:5mm; }} li {{ margin-bottom:1mm; }}
 <div class="two">{infos}</div>
 <div class="page"><h2>Alle Links auf einen Blick</h2><p class="lead">Rezeptsammlung im Browser: <a href="{e(site)}">{e(site)}</a></p>
 <table class="lk"><thead><tr><th>Rezept</th><th>Bring</th><th>Online</th></tr></thead><tbody>{link_rows}</tbody></table></div>
-<div class="page"><h2>Einkaufsliste</h2><p class="lead">Alle Mengen der Woche, schon zusammengerechnet. Die Zutaten der Ersatzgerichte stehen nicht auf dieser Liste. Fleisch kommt vom Metzger.</p><div class="shopwrap">{shop}</div></div>
+<div class="page"><h2>Einkaufsliste</h2><p class="lead">Alle Mengen der Woche, schon zusammengerechnet. Die Zutaten der Ersatzgerichte stehen nicht auf dieser Liste. Fleisch kommt vom Metzger.{ek_links}</p><div class="shopwrap">{shop}</div></div>
 <div class="page"><h2>{e(p['title'])} <span class="small">· {e(p['when'])}</span></h2><p class="lead">{e(p['intro'])}</p>
 <table class="tl">{timeline}</table><h4>Was hält wie lange</h4>
 <table class="st"><thead><tr><th>Was</th><th>Wo</th><th>Haltbar / Auftauen</th></tr></thead><tbody>{storage}</tbody></table>
