@@ -40,6 +40,35 @@ def qty(i):
     return s + (" " + i["u"] if i.get("u") else "")
 
 
+def abend_checkliste(plan):
+    """Abend-Checkliste zum Abhaken: was für den nächsten Tag aufgetaut, eingeweicht oder bereitgestellt werden muss.
+
+    Inhalt aus plan["checklist"] = {"title", "intro", "evenings": [{"day", "for", "tag"?, "items": [...], "note"?}]}.
+    Fehlt der Block, werden die „Abends: …“-Erinnerungen der Tage verwendet.
+    """
+    c = plan.get("checklist")
+    if not c:
+        days = plan.get("days", [])
+        nxt = {i: days[i + 1]["name"] for i in range(len(days) - 1)}
+        ev = []
+        for i, d in enumerate(days):
+            items = [re.sub(r"^Abends(\s+[^:]*)?:\s*", "", x) for x in d.get("reminders", []) if x.startswith("Abends")]
+            if items:
+                ev.append({"day": d["name"] + "abend", "for": "für " + nxt.get(i, "morgen"), "items": items})
+        if not ev:
+            return ""
+        c = {"title": "Abend-Checkliste", "intro": "Jeden Abend kurz abhaken, ob für morgen alles vorbereitet ist.", "evenings": ev}
+    cards = ""
+    for ev in c["evenings"]:
+        tag = ev.get("tag", "")
+        items = "".join(f'<li><span class="cb"></span><span>{e(x)}</span></li>' for x in ev["items"])
+        note = f'<p class="small" style="margin-top:1.5mm">{e(ev["note"])}</p>' if ev.get("note") else ""
+        cards += (f'<div class="eve {"iron" if "Eisen" in tag else ""}"><h3><span>{e(ev["day"])} <span class="for">{e(ev.get("for", ""))}</span></span>'
+                  f'{f"<span class=tag>{e(tag)}</span>" if tag else ""}</h3><ul class="tick">{items}</ul>{note}</div>')
+    return (f'<div class="page"><h2>{e(c.get("title", "Abend-Checkliste"))}</h2>'
+            f'<p class="lead">{e(c.get("intro", ""))}</p><div class="checks">{cards}</div></div>')
+
+
 def build_html(plan):
     base = plan["bring"]["publicBase"]
     site = base.rsplit("rezepte/", 1)[0]
@@ -131,6 +160,7 @@ def build_html(plan):
                 body += recipe(m["recipe"], label, m.get("note", ""))
         days_html += f'<div class="day"><h2>{e(d["name"])}, {e(d["date"])} <span class="small">· {e(d["place"])} · Hauptmahlzeit: {e(d["main"])}</span></h2>{f"<div class=rem><h4>Nicht vergessen</h4><ul>{rem}</ul></div>" if rem else ""}{body}</div>'
 
+    checklist_html = abend_checkliste(plan)
     extras_html = "".join(recipe(rid, "Ersatzgericht") for rid in plan.get("extras", []))
     infos = "".join(f'<div class="panel"><h4>{e(i["title"])}</h4><ul>{"".join(f"<li>{e(x)}</li>" for x in i["items"])}</ul></div>' for i in plan.get("infos", []))
     notice = f'<div class="panel p"><b>Diese Woche:</b> {e(plan["notice"])}</div>' if plan.get("notice") else ""
@@ -186,6 +216,17 @@ ul, ol {{ margin:0; padding-left:5mm; }} li {{ margin-bottom:1mm; }}
 .shop .q {{ color:var(--muted); white-space:nowrap; }}
 .tl .t {{ font-family:"DejaVu Sans Mono", monospace; color:#8F430B; white-space:nowrap; width:18mm; }}
 .lk td:nth-child(2), .lk td:nth-child(3) {{ width:18mm; white-space:nowrap; }}
+.checks {{ display:grid; grid-template-columns:1fr 1fr; gap:4mm; }}
+.eve {{ border:1px solid var(--line); border-radius:3mm; padding:3mm 4mm; break-inside:avoid; }}
+.eve.iron {{ border:1.5px solid var(--pumpkin); }}
+.eve h3 {{ font-size:12pt; display:flex; justify-content:space-between; align-items:baseline; gap:2mm; }}
+.eve .for {{ font-size:8.5pt; color:var(--muted); font-weight:400; }}
+.eve .tag {{ font-size:7pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; background:var(--soft); color:var(--accent); border-radius:2mm; padding:.4mm 2mm; white-space:nowrap; }}
+.eve.iron .tag {{ background:var(--psoft); color:#8F430B; }}
+.tick {{ list-style:none; padding:0; margin:2mm 0 0; }}
+.tick li {{ display:grid; grid-template-columns:6mm 1fr; gap:2mm; align-items:start; padding:1.6mm 0; border-bottom:1px dashed var(--line); margin:0; }}
+.tick li:last-child {{ border-bottom:0; }}
+.tick .cb {{ width:4.2mm; height:4.2mm; border:1.3px solid var(--ink); border-radius:.8mm; margin-top:.2mm; }}
 </style></head><body>
 <h1>Speiseplan KW {w['kw']}</h1>
 <p class="kw">{e(w['label'])} · Thermomix-Angaben für den TM31</p>
@@ -194,6 +235,7 @@ ul, ol {{ margin:0; padding-left:5mm; }} li {{ margin-bottom:1mm; }}
 <p class="small">Fett = Hauptmahlzeit des Tages.</p>
 {notice}
 <div class="two">{infos}</div>
+{checklist_html}
 <div class="page"><h2>Alle Links auf einen Blick</h2><p class="lead">Rezeptsammlung im Browser: <a href="{e(site)}">{e(site)}</a></p>
 <table class="lk"><thead><tr><th>Rezept</th><th>Bring</th><th>Online</th></tr></thead><tbody>{link_rows}</tbody></table></div>
 <div class="page"><h2>Einkaufsliste</h2><p class="lead">Alle Mengen der Woche, schon zusammengerechnet. Die Zutaten der Ersatzgerichte stehen nicht auf dieser Liste. Fleisch kommt vom Metzger.{ek_links}</p><div class="shopwrap">{shop}</div></div>
