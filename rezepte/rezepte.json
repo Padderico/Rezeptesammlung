@@ -12,6 +12,67 @@
   "total": 45,
   "last": "KW 46/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "brokkoli-nudelauflauf-mit-kaesesosse",
+  "first": "KW 47/2026",
+  "title": "Brokkoli-Nudelauflauf mit Käsesoße",
+  "tags": [
+   "Vegetarisch",
+   "Pasta",
+   "Thermomix",
+   "Ofen",
+   "One-Pot"
+  ],
+  "total": 45,
+  "last": "KW 47/2026",
+  "extra": true,
+  "current": true
+ },
+ {
+  "slug": "cremige-maronen-karotten-suppe",
+  "first": "KW 47/2026",
+  "title": "Cremige Maronen-Karotten-Suppe",
+  "tags": [
+   "Vegetarisch",
+   "Suppe",
+   "Thermomix",
+   "One-Pot",
+   "Vorkochen"
+  ],
+  "total": 40,
+  "last": "KW 47/2026",
+  "extra": false,
+  "current": true
+ },
+ {
+  "slug": "fischstaebchen-aus-der-heissluftfritteuse-mit-kartoffelpueree-und-erbsen",
+  "first": "KW 47/2026",
+  "title": "Fischstäbchen aus der Heißluftfritteuse mit Kartoffelpüree & Erbsen",
+  "tags": [
+   "Fisch",
+   "Heißluftfritteuse",
+   "Thermomix",
+   "Kartoffel"
+  ],
+  "total": 35,
+  "last": "KW 47/2026",
+  "extra": true,
+  "current": true
+ },
+ {
+  "slug": "flammkuchen-mit-lauch-und-zwiebeln",
+  "first": "KW 47/2026",
+  "title": "Flammkuchen mit Lauch & Zwiebeln",
+  "tags": [
+   "Vegetarisch",
+   "Ofen",
+   "Thermomix"
+  ],
+  "total": 30,
+  "last": "KW 47/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -27,7 +88,7 @@
   "total": 45,
   "last": "KW 46/2026",
   "extra": true,
-  "current": true
+  "current": false
  },
  {
   "slug": "frischkaese-gemuese-wraps",
@@ -86,6 +147,21 @@
   "total": 35,
   "last": "KW 46/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "hackbaellchen-in-tomatensosse-mit-nudeln",
+  "first": "KW 47/2026",
+  "title": "Hackbällchen in Tomatensoße mit Nudeln",
+  "tags": [
+   "Fleisch",
+   "Pasta",
+   "Thermomix",
+   "Varoma"
+  ],
+  "total": 45,
+  "last": "KW 47/2026",
+  "extra": true,
   "current": true
  },
  {
@@ -116,7 +192,7 @@
   "total": 55,
   "last": "KW 46/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "kartoffel-lauch-suppe",
@@ -131,7 +207,7 @@
   "total": 35,
   "last": "KW 46/2026",
   "extra": true,
-  "current": true
+  "current": false
  },
  {
   "slug": "kartoffelgratin-mit-feldsalat-und-orangen-dressing",
@@ -142,10 +218,11 @@
    "Kartoffel",
    "Thermomix",
    "Ofen",
+   "One-Pot",
    "Eisen"
   ],
-  "total": 60,
-  "last": "KW 46/2026",
+  "total": 65,
+  "last": "KW 47/2026",
   "extra": false,
   "current": true
  },
@@ -176,7 +253,7 @@
   "total": 10,
   "last": "KW 46/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "lachs-aus-dem-varoma-mit-kartoffeln-gemuese-und-zitronen-dill-sosse",
@@ -190,6 +267,36 @@
   ],
   "total": 45,
   "last": "KW 46/2026",
+  "extra": true,
+  "current": false
+ },
+ {
+  "slug": "mildes-haehnchen-gemuese-curry-mit-reis",
+  "first": "KW 47/2026",
+  "title": "Mildes Hähnchen-Gemüse-Curry mit Reis",
+  "tags": [
+   "Fleisch",
+   "Thermomix",
+   "Varoma",
+   "One-Pot"
+  ],
+  "total": 40,
+  "last": "KW 47/2026",
+  "extra": true,
+  "current": true
+ },
+ {
+  "slug": "minestrone-mit-sternchennudeln",
+  "first": "KW 47/2026",
+  "title": "Minestrone mit Sternchennudeln",
+  "tags": [
+   "Vegetarisch",
+   "Suppe",
+   "Thermomix",
+   "One-Pot"
+  ],
+  "total": 35,
+  "last": "KW 47/2026",
   "extra": true,
   "current": true
  },
@@ -206,6 +313,23 @@
   "total": 25,
   "last": "KW 46/2026",
   "extra": true,
+  "current": false
+ },
+ {
+  "slug": "one-pot-nudeln-mit-lachs-und-spinat",
+  "first": "KW 47/2026",
+  "title": "One-Pot-Nudeln mit Lachs & Spinat",
+  "tags": [
+   "Fisch",
+   "Pasta",
+   "Thermomix",
+   "Varoma",
+   "One-Pot",
+   "Eisen"
+  ],
+  "total": 30,
+  "last": "KW 47/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -219,6 +343,37 @@
   ],
   "total": 35,
   "last": "KW 46/2026",
+  "extra": false,
+  "current": false
+ },
+ {
+  "slug": "raclette-mit-pellkartoffeln-gemuese-und-fruehlingsdip",
+  "first": "KW 47/2026",
+  "title": "Raclette mit Pellkartoffeln, Gemüse & Frühlingsdip",
+  "tags": [
+   "Fleisch",
+   "Thermomix",
+   "Varoma",
+   "Mit Besuch"
+  ],
+  "total": 60,
+  "last": "KW 47/2026",
+  "extra": false,
+  "current": true
+ },
+ {
+  "slug": "rindergulasch-mit-karotten-und-spaetzle",
+  "first": "KW 47/2026",
+  "title": "Rindergulasch mit Karotten & Spätzle",
+  "tags": [
+   "Fleisch",
+   "Thermomix",
+   "One-Pot",
+   "Eisen",
+   "Vorkochen"
+  ],
+  "total": 110,
+  "last": "KW 47/2026",
   "extra": false,
   "current": true
  },
@@ -235,7 +390,7 @@
   "total": 100,
   "last": "KW 46/2026",
   "extra": true,
-  "current": true
+  "current": false
  },
  {
   "slug": "schweinegeschnetzeltes-mit-champignon-rahm-spaetzle-und-brokkoli",
@@ -249,7 +404,7 @@
   "total": 35,
   "last": "KW 46/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "spinat-kaese-frittata-aus-der-heissluftfritteuse",
@@ -278,6 +433,21 @@
   "total": 30,
   "last": "KW 46/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "tomatensuppe-mit-feta-broeseln",
+  "first": "KW 47/2026",
+  "title": "Tomatensuppe mit Feta-Bröseln",
+  "tags": [
+   "Vegetarisch",
+   "Suppe",
+   "Thermomix",
+   "One-Pot"
+  ],
+  "total": 30,
+  "last": "KW 47/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -292,6 +462,6 @@
   "total": 15,
   "last": "KW 46/2026",
   "extra": false,
-  "current": true
+  "current": false
  }
 ]
