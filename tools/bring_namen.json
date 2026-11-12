@@ -1,6 +1,7 @@
 {
   "hinweis": "Ein Produkt = eine Bring-Kachel. 'key' ist der Name, der im Rezept-Import (schema.org recipeIngredient) stehen muss: bei Katalogartikeln der Bring-Katalogschlüssel (Schweizer Schreibweise, z. B. Rahm, Peperoni, Pelati), sonst ein fester eigener Name. 'anzeige' ist, wie die Kachel in der deutschen Bring-App heißt und wie der Artikel in Einkaufsliste und Kopiertext heißt. 'varianten' sind andere Schreibweisen, die darauf abgebildet werden; 'zusatz' legt für eine Variante einen Hinweis fest, der in die Mengenangabe der Kachel wandert; 'stueck' legt die Zähleinheit fest (z. B. Zehe). Neue Zutaten hier eintragen, bevor ein Rezept veröffentlicht wird. Geprüft mit dem Bring-Rezeptparser am 8.11.2026.",
   "einheiten_bring": ["g", "kg", "ml", "l", "EL", "TL", "Bund"],
+  "nie_einkaufen": ["Wasser", "Leitungswasser", "heißes Wasser", "kaltes Wasser"],
   "nicht_einkaufen": ["vorhanden", "eingefroren", "aus dem gefrierschrank", "eurer", "eure", "euer", "vorrat"],
   "hinweise_weglassen": ["soße", "sosse", "dressing", "marinade", "kräuterquark", "metzger", "vom metzger", "beim metzger", "varoma", "saft", "dose", "aus der dose", "für die form", "zum braten", "dip"],
   "adjektive": {
@@ -152,6 +153,13 @@
     {"key": "Gefrierbeutel", "anzeige": "Gefrierbeutel", "varianten": []},
     {"key": "Griess", "anzeige": "Grieß", "varianten": ["Weichweizengrieß", "Weichweizengriess", "Griess"]},
     {"key": "Backpulver", "anzeige": "Backpulver", "varianten": []},
-    {"key": "Zimt", "anzeige": "Zimt", "varianten": ["Zimt gemahlen", "Zimtpulver"]}
+    {"key": "Zimt", "anzeige": "Zimt", "varianten": ["Zimt gemahlen", "Zimtpulver"]},
+    {"key": "Muskat", "anzeige": "Muskat", "varianten": ["Muskatnuss", "Muskatnuß", "Muskatpulver"]},
+    {"key": "Lorbeerblätter", "anzeige": "Lorbeerblätter", "varianten": ["Lorbeerblatt", "Lorbeer"], "stueck": {"Lorbeerblatt": "Blatt", "Lorbeerblätter": "Blatt"}},
+    {"key": "Majoran", "anzeige": "Majoran", "varianten": []},
+    {"key": "Oregano", "anzeige": "Oregano", "varianten": []},
+    {"key": "Currypulver", "anzeige": "Currypulver", "varianten": ["Curry", "Currypulver mild"]},
+    {"key": "Maronen", "anzeige": "Maronen", "varianten": ["Marone", "Esskastanien", "Maroni"]},
+    {"key": "Muffinförmchen", "anzeige": "Muffinförmchen", "varianten": ["Papierförmchen", "Muffin-Förmchen"]}
   ]
 }

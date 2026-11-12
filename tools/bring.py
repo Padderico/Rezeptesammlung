@@ -22,6 +22,7 @@ CFG = json.loads((ROOT / "tools" / "bring_namen.json").read_text(encoding="utf-8
 SITE = "https://padderico.github.io/Rezeptesammlung/"
 UNITS = set(CFG["einheiten_bring"])
 SKIP = [s.lower() for s in CFG["nicht_einkaufen"]]
+NOBUY = set(s.lower() for s in CFG.get("nie_einkaufen", []))  # z. B. Wasser: nie in Bring, aber auch kein „Vorrat“
 DROP = set(s.lower() for s in CFG["hinweise_weglassen"])
 ADJ = {v.lower(): k for k, vs in CFG["adjektive"].items() for v in vs}
 PLURAL = {"Zehe": "Zehen", "Knolle": "Knollen", "Stange": "Stangen", "Filet": "Filets", "Kugel": "Kugeln", "Dose": "Dosen",
@@ -97,6 +98,8 @@ def parse_name(n):
     parens = [p.strip() for p in re.findall(r"\(([^)]*)\)", orig)]
     skip = any(p.lower() in SKIP or p.lower().startswith("vorhanden") for p in parens) or "aus dem gefrierschrank" in low
     base = re.sub(r"\s*\([^)]*\)", "", orig).strip()
+    if base.lower() in NOBUY:
+        return {"key": base, "anzeige": base, "zusatz": [], "stueck": None, "skip": True, "nobuy": True, "known": True}
     tail = []
     res = _hit(base)
     if not res and ", " in base:
@@ -351,7 +354,8 @@ def annotate_plan(plan, unknown):
                 continue
             info = parse_name(i["n"])
             if info["skip"]:
-                i["v"] = True
+                if not info.get("nobuy"):
+                    i["v"] = True
                 continue
             if not info["known"]:
                 unknown.add(i["n"])

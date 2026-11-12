@@ -161,6 +161,9 @@ def build_html(plan):
         days_html += f'<div class="day"><h2>{e(d["name"])}, {e(d["date"])} <span class="small">· {e(d["place"])} · Hauptmahlzeit: {e(d["main"])}</span></h2>{f"<div class=rem><h4>Nicht vergessen</h4><ul>{rem}</ul></div>" if rem else ""}{body}</div>'
 
     checklist_html = abend_checkliste(plan)
+    _any_v = any(i.get("v") for r in plan["recipes"].values() for i in r["ingredients"])
+    bring_hint = (", Vorratsartikel wie Salz und Öl sind nicht dabei." if _any_v
+                  else ". Auch Gewürze und Grundzutaten sind dabei: Was ihr schon habt, beim Übernehmen einfach abwählen.")
     extras_html = "".join(recipe(rid, "Ersatzgericht") for rid in plan.get("extras", []))
     infos = "".join(f'<div class="panel"><h4>{e(i["title"])}</h4><ul>{"".join(f"<li>{e(x)}</li>" for x in i["items"])}</ul></div>' for i in plan.get("infos", []))
     notice = f'<div class="panel p"><b>Diese Woche:</b> {e(plan["notice"])}</div>' if plan.get("notice") else ""
@@ -230,7 +233,7 @@ ul, ol {{ margin:0; padding-left:5mm; }} li {{ margin-bottom:1mm; }}
 </style></head><body>
 <h1>Speiseplan KW {w['kw']}</h1>
 <p class="kw">{e(w['label'])} · Thermomix-Angaben für den TM31</p>
-<p class="lead">Jedes Rezept hat zwei Links: <b>In Bring übernehmen</b> öffnet die Bring-App mit allen Zutaten. Die Portionszahl lässt sich dort anpassen, Vorratsartikel wie Salz und Öl sind nicht dabei. <b>Rezept online öffnen</b> zeigt das Rezept im Browser.</p>
+<p class="lead">Jedes Rezept hat zwei Links: <b>In Bring übernehmen</b> öffnet die Bring-App mit allen Zutaten. Die Portionszahl lässt sich dort anpassen{bring_hint} <b>Rezept online öffnen</b> zeigt das Rezept im Browser.</p>
 <table class="week"><thead><tr><th>Tag</th><th>Mittag</th><th>Abend</th><th></th></tr></thead><tbody>{rows}</tbody></table>
 <p class="small">Fett = Hauptmahlzeit des Tages.</p>
 {notice}
