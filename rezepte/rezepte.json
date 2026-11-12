@@ -73,7 +73,7 @@
   "total": 30,
   "last": "KW 47/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "frikadellen-aus-der-heissluftfritteuse-mit-kartoffel-karotten-stampf",
@@ -150,6 +150,21 @@
   "current": false
  },
  {
+  "slug": "griessbrei-mit-apfel-zimt-kompott",
+  "first": "KW 47/2026",
+  "title": "Grießbrei mit Apfel-Zimt-Kompott",
+  "tags": [
+   "Vegetarisch",
+   "Thermomix",
+   "Leicht",
+   "Süß"
+  ],
+  "total": 30,
+  "last": "KW 47/2026",
+  "extra": false,
+  "current": true
+ },
+ {
   "slug": "hackbaellchen-in-tomatensosse-mit-nudeln",
   "first": "KW 47/2026",
   "title": "Hackbällchen in Tomatensoße mit Nudeln",
@@ -160,6 +175,21 @@
    "Varoma"
   ],
   "total": 45,
+  "last": "KW 47/2026",
+  "extra": true,
+  "current": true
+ },
+ {
+  "slug": "karotten-kaese-muffins-mit-fruehlingsquark",
+  "first": "KW 47/2026",
+  "title": "Karotten-Käse-Muffins mit Frühlingsquark",
+  "tags": [
+   "Vegetarisch",
+   "Ofen",
+   "Leicht",
+   "Thermomix"
+  ],
+  "total": 40,
   "last": "KW 47/2026",
   "extra": true,
   "current": true
@@ -193,6 +223,21 @@
   "last": "KW 46/2026",
   "extra": false,
   "current": false
+ },
+ {
+  "slug": "kartoffel-karotten-puffer-vom-blech-mit-fruehlingsquark",
+  "first": "KW 47/2026",
+  "title": "Kartoffel-Karotten-Puffer vom Blech mit Frühlingsquark",
+  "tags": [
+   "Vegetarisch",
+   "Ofen",
+   "Leicht",
+   "Kartoffel"
+  ],
+  "total": 45,
+  "last": "KW 47/2026",
+  "extra": true,
+  "current": true
  },
  {
   "slug": "kartoffel-lauch-suppe",
@@ -367,12 +412,13 @@
   "title": "Rindergulasch mit Karotten & Spätzle",
   "tags": [
    "Fleisch",
-   "Thermomix",
+   "Ofen",
    "One-Pot",
    "Eisen",
-   "Vorkochen"
+   "Vorkochen",
+   "Einfrieren"
   ],
-  "total": 110,
+  "total": 175,
   "last": "KW 47/2026",
   "extra": false,
   "current": true

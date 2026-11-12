@@ -149,6 +149,9 @@
     {"key": "Sojasauce", "anzeige": "Sojasauce", "varianten": ["Sojasoße", "Sojasauce salzreduziert"]},
     {"key": "Paprikapulver", "anzeige": "Paprikapulver", "varianten": ["Paprika edelsüß", "Paprikapulver edelsüß"]},
     {"key": "Backpapier", "anzeige": "Backpapier", "varianten": []},
-    {"key": "Gefrierbeutel", "anzeige": "Gefrierbeutel", "varianten": []}
+    {"key": "Gefrierbeutel", "anzeige": "Gefrierbeutel", "varianten": []},
+    {"key": "Griess", "anzeige": "Grieß", "varianten": ["Weichweizengrieß", "Weichweizengriess", "Griess"]},
+    {"key": "Backpulver", "anzeige": "Backpulver", "varianten": []},
+    {"key": "Zimt", "anzeige": "Zimt", "varianten": ["Zimt gemahlen", "Zimtpulver"]}
   ]
 }
