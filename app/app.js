@@ -62,7 +62,7 @@
   /* ---------- Zustand (nur auf diesem Gerät) ---------- */
   const LS = "kochbuddy.v1";
   const defaults = () => ({
-    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {},
+    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {}, dealcheck: {}, swaps: {},
     settings: { sound: true, vibrate: true, scale: 1, theme: "auto", eat: { Mittag: "12:00", Abend: "18:00" }, installHint: true },
   });
   let S = defaults();
@@ -71,7 +71,7 @@
     S = { ...defaults(), ...raw, settings: { ...defaults().settings, ...(raw.settings || {}) } };
   } catch (e) { /* frisch starten */ }
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { /* voll oder gesperrt */ } };
-  const bag = (name, key) => (S[name][key] = S[name][key] || {});
+  const bag = (name, key) => { S[name] = S[name] || {}; return (S[name][key] = S[name][key] || {}); };
   function toggle(name, key, idx) { const b = bag(name, key); if (b[idx]) delete b[idx]; else b[idx] = 1; save(); return !!b[idx]; }
 
   /* ---------- Mengen ---------- */
@@ -194,8 +194,12 @@
     const view = $("#view");
     inCooking = parts[0] === "k";
     document.body.classList.toggle("cooking", inCooking);
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", rezepte: "rezepte" }[parts[0] || ""] ?? "";
+    if (parts[0] === "verbinden") {
+      if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
+      navTo("#/", "replace"); return;
+    }
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", rezepte: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -204,6 +208,7 @@
       else if (parts[0] === "k") await renderCook(view, parts[1]);
       else if (parts[0] === "vorkochen") await renderPrep(view);
       else if (parts[0] === "checkliste") await renderChecklist(view);
+      else if (parts[0] === "angebote") await renderDeals(view);
       else if (parts[0] === "rezepte") await renderAll(view);
       else await renderWeek(view);
     } catch (e) {
@@ -216,7 +221,7 @@
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
      Tabs stapeln sich nicht: Woche -> Vorkochen -> Checkliste, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/vorkochen", "#/checkliste", "#/rezepte"];
+  const TABS = ["#/", "#/vorkochen", "#/checkliste", "#/angebote", "#/rezepte"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -255,7 +260,7 @@
   let noticeOpen = false;
   async function renderWeek(view) {
     if (!weekId) { view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><p class="empty">Noch kein Wochenplan da.</p>`; return; }
-    const w = await week();
+    const w = withSwaps(await week());
     const t = today();
     const todayDay = w.days.find((d) => d.iso === t);
     const isPrepDay = addDays(w.week.start, -1) === t;
@@ -282,9 +287,15 @@
     const rest = ordered.filter((d) => d !== todayDay);
     if (rest.length) html += `<div class="section-title">${todayDay ? "Weitere Tage" : "Die Woche"}</div>` + rest.map((d) => dayCard(w, d, !!expanded[d.id], d.iso < t)).join("");
     if (w.extras && w.extras.length) {
-      html += `<div class="section-title">Ersatzgerichte</div><div class="card">${w.extrasIntro ? `<p class="muted small" style="margin-top:0">${esc(w.extrasIntro)}</p>` : ""}<ul class="r-list" style="margin:0">${w.extras.map((id) => {
-        const r = w.recipes[id]; return r ? `<li><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a></li>` : "";
-      }).join("")}</ul></div>`;
+      const canDrop = !embedded && w.days.some((d) => d.meals.some((m) => slotOpen(d.iso, m.slot)));
+      html += `<div class="section-title">Ersatzgerichte</div><div class="card">${w.extrasIntro ? `<p class="muted small" style="margin-top:0">${esc(w.extrasIntro)}</p>` : ""}`;
+      if (canDrop) html += `<p class="small" style="margin:0 0 10px"><b>Tauschen:</b> Griff <span aria-hidden="true">⠿</span> festhalten und auf einen Tag ziehen – oder „Tauschen“ antippen.</p>`;
+      html += `<ul class="r-list" style="margin:0">${w.extras.map((id) => {
+        const r = w.recipes[id];
+        return r ? `<li class="xitem">${canDrop ? `<span class="grip" data-grip="${id}" role="button" aria-label="${esc(r.title)} auf einen Tag ziehen">⠿</span>` : ""}<a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a>${canDrop ? `<button class="btn small" data-swapopen="${id}">Tauschen</button>` : ""}</li>` : "";
+      }).join("")}</ul>`;
+      if (canDrop) html += `<p class="small muted" style="margin:12px 0 0">${ghToken() ? `Tauschen ist eingerichtet · <a href="#" data-act="gh-qr">Weiteres Gerät verbinden</a>` : `<a href="#" data-act="gh-setup">Tauschen auf diesem Gerät einrichten</a>`}</p>`;
+      html += `</div>`;
     }
     html += `<p class="small muted" id="stand" style="text-align:center;margin:22px 0 0">${standLine(w)}</p>`;
     view.innerHTML = html;
@@ -310,9 +321,9 @@
       if (!r) continue;
       const ref = `w:${weekId}:${m.recipe}`;
       const prog = progress(ref, r);
-      h += `<div class="meal"><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? " · Hauptmahlzeit" : ""}</span>
+      h += `<div class="meal"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? " · Hauptmahlzeit" : ""}</span>
         <a href="#/r/${ref}" style="color:inherit;text-decoration:none"><b>${esc(r.title)}</b></a>
-        <span class="chips">${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min. · aktiv ${r.time.active}</span>`}${prog ? `<span class="chip">${prog}</span>` : ""}</span>`;
+        <span class="chips">${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost" style="min-height:30px" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min. · aktiv ${r.time.active}</span>`}${prog ? `<span class="chip">${prog}</span>` : ""}</span>`;
       if (open) {
         if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
         const nts = m.mode === "aufwaermen" ? noteTimers(m.note) : [];
@@ -530,6 +541,289 @@
     view.innerHTML = h;
   }
 
+  /* ---------- Tauschen: Ersatzgerichte per Ziehen auf einen Tag ----------
+     Getauscht wird sofort in der App; gespeichert wird in tausch/<woche>.json im privaten Datenrepo.
+     Die stündliche Antwort-Aufgabe übernimmt offene Tausche abends gegen 21 Uhr in Plan, Bring-Liste und PDF. */
+  const GH_REPO = "Padderico/Einkaufsbuddy-Daten";
+  const GH_KEY = "kochbuddy.gh";
+  const ghToken = () => { try { return JSON.parse(localStorage.getItem(GH_KEY) || "{}").token || ""; } catch (e) { return ""; } };
+  const setGhToken = (t) => { try { if (t) localStorage.setItem(GH_KEY, JSON.stringify({ token: t, at: Date.now() })); else localStorage.removeItem(GH_KEY); } catch (e) { /* gesperrt */ } };
+  const validToken = (t) => /^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t || "");
+  async function gh(method, path, body) {
+    const t = ghToken();
+    if (!t) throw Object.assign(new Error("Kein Schlüssel auf diesem Gerät"), { code: "notoken" });
+    let res;
+    try {
+      res = await fetch(`https://api.github.com/repos/${GH_REPO}${path}`, {
+        method, cache: "no-store",
+        headers: { Authorization: `Bearer ${t}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(body ? { "Content-Type": "application/json" } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (e) { throw Object.assign(new Error("Gerade kein Netz"), { code: "offline" }); }
+    if (method === "GET" && res.status === 404) return null;
+    if (res.status === 401) throw Object.assign(new Error("Schlüssel ungültig oder abgelaufen"), { code: "auth" });
+    if (res.status === 403 || res.status === 404) throw Object.assign(new Error("Schlüssel darf das Datenrepo nicht beschreiben"), { code: "auth" });
+    if (!res.ok) throw Object.assign(new Error("GitHub antwortet " + res.status), { code: res.status });
+    return res.status === 204 ? null : res.json();
+  }
+  const b64e = (s) => { const b = new TextEncoder().encode(s); let x = ""; for (let i = 0; i < b.length; i += 0x8000) x += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(x); };
+  const b64d = (s) => new TextDecoder().decode(Uint8Array.from(atob(String(s).replace(/\s/g, "")), (c) => c.charCodeAt(0)));
+  const swapPath = (wid) => `/contents/tausch/${wid}.json`;
+  function swapState(wid) { S.swaps = S.swaps || {}; return (S.swaps[wid] = S.swaps[wid] || { list: [], ops: [] }); }
+  function applyOps(list, ops) {
+    let l = list.slice();
+    for (const o of ops) {
+      if (o.op === "add") { l = l.filter((s) => !(s.iso === o.swap.iso && s.slot === o.swap.slot && s.status === "offen")); l.push(o.swap); }
+      if (o.op === "remove") l = l.filter((s) => !(s.id === o.id && s.status === "offen"));
+    }
+    return l;
+  }
+  const swapsFor = (wid) => { const st = swapState(wid); return applyOps(st.list || [], st.ops || []); };
+  async function pullSwaps(wid) {
+    const r = await gh("GET", swapPath(wid));
+    const list = r ? JSON.parse(b64d(r.content)).swaps || [] : [];
+    const st = swapState(wid), before = JSON.stringify(st.list);
+    st.list = list; st.at = Date.now(); save();
+    return before !== JSON.stringify(list);
+  }
+  async function pushSwaps(wid) {
+    const st = swapState(wid);
+    if (!st.ops.length) return false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const r = await gh("GET", swapPath(wid));
+      const data = r ? JSON.parse(b64d(r.content)) : { week: wid, swaps: [] };
+      const ops = st.ops.slice();
+      data.week = wid; data.swaps = applyOps(data.swaps || [], ops); data.updated = new Date().toISOString();
+      const msg = ops.map((o) => (o.op === "add" ? `${o.swap.dayName} ${o.swap.slot}: ${o.swap.toTitle}` : "Tausch zurückgenommen")).join("; ");
+      try {
+        await gh("PUT", swapPath(wid), { message: `Koch-App: ${msg}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+        st.list = data.swaps; st.ops = st.ops.slice(ops.length); st.at = Date.now(); save();
+        return true;
+      } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+    }
+    throw Object.assign(new Error("Speichern kollidierte mehrfach"), { code: "conflict" });
+  }
+  let syncing = null;
+  function syncSwaps(quiet) {
+    if (!ghToken() || embedded) return Promise.resolve(false);
+    if (syncing) return syncing;
+    syncing = (async () => {
+      let changed = false;
+      try {
+        if (!weekId) await loadIndex();
+        const wid = weekId;
+        if (!wid) return false;
+        if (await pushSwaps(wid)) changed = true;
+        if (await pullSwaps(wid)) changed = true;
+      } catch (e) {
+        if (e.code === "auth" && !quiet) { toast(`Tausch nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
+        else if (e.code !== "offline" && !quiet) toast(`Tausch noch nicht gespeichert (${e.message}) – neuer Versuch folgt`);
+      }
+      return changed;
+    })().finally(() => { syncing = null; });
+    return syncing;
+  }
+  /** Woche mit den Tauschen aus der App anzeigen (noch nicht übernommene bzw. nur in der App gültige) */
+  function withSwaps(w) {
+    const list = swapsFor(weekId).filter((s) => s.status === "offen" || s.status === "nur-app");
+    if (!list.length) return w;
+    const days = w.days.map((d) => ({ ...d, meals: d.meals.map((m) => {
+      const s = list.find((x) => x.iso === d.iso && x.slot === m.slot && x.from === m.recipe && w.recipes[x.to]);
+      return s ? { ...m, recipe: s.to, mode: "kochen", badge: "", note: s.status === "offen" ? "In der App getauscht. Der Buddy übernimmt es heute gegen 21 Uhr in Plan, Bring-Liste und PDF." : "In der App getauscht.", _swap: s } : m;
+    }) }));
+    const used = new Set(days.flatMap((d) => d.meals.map((m) => m.recipe)));
+    const extras = [...new Set([...(w.extras || []), ...list.map((s) => s.from)])].filter((id) => !used.has(id) && w.recipes[id]);
+    return { ...w, days, extras };
+  }
+  let pendingSwap = null;
+  async function performSwap(toId, iso, slot) {
+    const w0 = await week(), w = withSwaps(w0);
+    const d = w.days.find((x) => x.iso === iso), m = d && d.meals.find((x) => x.slot === slot);
+    if (!m || !w0.recipes[toId]) return;
+    const from = m._swap ? m._swap.from : m.recipe;
+    if (from === toId) { if (m._swap) unswap(m._swap.id); return; }
+    const swap = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), week: weekId, day: d.id, dayName: d.name, iso, slot, from, to: toId,
+      fromTitle: (w0.recipes[from] || {}).title || from, toTitle: w0.recipes[toId].title, at: new Date().toISOString(), status: "offen" };
+    if (!ghToken()) { pendingSwap = swap; tokenSheet(); return; }
+    swapState(weekId).ops.push({ op: "add", swap }); save();
+    const meatFrom = ((w0.recipes[from] || {}).tags || []).includes("Fleisch"), meatTo = (w0.recipes[toId].tags || []).includes("Fleisch");
+    rerenderSoft();
+    toast(`${d.name} ${slot}: ${shortTitle(swap.toTitle)}${meatFrom !== meatTo ? " – damit ändern sich die Fleischtage" : ""}. Übernahme heute gegen 21 Uhr.`);
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(25);
+    syncSwaps();
+  }
+  function unswap(id) {
+    swapState(weekId).ops.push({ op: "remove", id }); save();
+    rerenderSoft(); toast("Tausch zurückgenommen"); syncSwaps();
+  }
+  // Heute: Mittag bis 14 Uhr, Abend bis 21 Uhr tauschbar; künftige Tage immer.
+  const slotOpen = (iso, slot) => { const t = today(); if (iso > t) return true; if (iso < t) return false; const hNow = new Date().getHours(); return /mittag/i.test(slot) ? hNow < 14 : hNow < 21; };
+  function dropTargets(w, buttons) {
+    const t = today();
+    const tag = buttons ? "button" : "div";
+    const days = w.days.filter((d) => d.iso >= t && d.meals.some((m) => slotOpen(d.iso, m.slot)));
+    if (!days.length) return `<p class="empty">In dieser Woche sind keine Tage mehr übrig.</p>`;
+    return days.map((d) => `<div class="dz-day"><div class="eyebrow">${esc(d.name)} ${esc(d.date)}</div><div class="dz-row">${d.meals.filter((m) => slotOpen(d.iso, m.slot)).map((m) => {
+      const r = w.recipes[m.recipe];
+      return `<${tag} class="dz" data-drop="${d.iso}|${esc(m.slot)}"${buttons ? ` data-swapto="${d.iso}|${esc(m.slot)}"` : ""}><small>${esc(m.slot)}${m._swap ? " · getauscht" : ""}</small><b>${esc(r ? shortTitle(r.title) : m.recipe)}</b></${tag}>`;
+    }).join("")}</div></div>`).join("");
+  }
+  async function swapSheet(toId) {
+    const w = withSwaps(await week()), r = w.recipes[toId];
+    if (!r) return;
+    openSheet(`<h2>${esc(r.title)}</h2><p class="small muted" style="margin:4px 0 8px">Wohin damit? Das bisherige Gericht wandert zu den Ersatzgerichten. Der Buddy übernimmt den Tausch heute gegen 21 Uhr in Plan, Bring-Liste und PDF und schickt Anja eine kurze Mail.</p>${dropTargets(w, true)}`, { swap: toId });
+  }
+  function tokenSheet(problem) {
+    openSheet(`<h2>Tauschen einrichten</h2>
+      ${problem ? `<p class="notice" style="margin:8px 0">${esc(problem)}</p>` : ""}
+      <p class="small" style="margin:6px 0">Damit der Buddy deinen Tausch abends übernimmt, legt die App ihn in eurem privaten Datenrepo ab. Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel.</p>
+      <ol class="small" style="padding-left:20px;margin:8px 0">
+        <li>Auf github.com einloggen und „Fine-grained token“ erstellen (Knopf unten).</li>
+        <li>Name „Kochbuddy“, Ablaufdatum so spät wie möglich.</li>
+        <li>Repository access: <b>Only select repositories</b> → <b>Einkaufsbuddy-Daten</b>.</li>
+        <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+        <li>„Generate token“, Schlüssel kopieren und hier einfügen.</li>
+      </ol>
+      <a class="btn small" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub öffnen</a>
+      <input class="field" style="margin-top:12px" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" data-ghtoken>
+      <button class="btn primary big" style="margin-top:10px" data-act="gh-save">Prüfen und speichern</button>
+      <p class="small muted" style="margin:10px 0 0">Schon auf einem anderen Gerät eingerichtet? Dort bei den Ersatzgerichten „Weiteres Gerät verbinden“ antippen und den QR-Code mit diesem Gerät scannen.</p>`);
+  }
+  async function saveToken() {
+    const inp = $("[data-ghtoken]"), t = ((inp && inp.value) || "").trim();
+    if (!validToken(t)) { toast("Das sieht nicht nach einem GitHub-Schlüssel aus (beginnt mit github_pat_)"); return; }
+    const old = ghToken();
+    setGhToken(t);
+    try {
+      const repo = await gh("GET", "");
+      if (!repo) throw Object.assign(new Error("Datenrepo nicht gefunden – beim Schlüssel „Einkaufsbuddy-Daten“ auswählen"), { code: "auth" });
+    } catch (e) { setGhToken(old); toast(e.code === "offline" ? "Gerade kein Netz – bitte später nochmal" : e.message); return; }
+    closeSheet(); toast("Tauschen ist auf diesem Gerät eingerichtet");
+    if (pendingSwap) { const s = pendingSwap; pendingSwap = null; await performSwap(s.to, s.iso, s.slot); }
+    else { await syncSwaps(true); rerenderSoft(); }
+  }
+  async function qrSheet() {
+    const t = ghToken();
+    if (!t) { tokenSheet(); return; }
+    const url = `${location.origin}${location.pathname}#/verbinden/${t}`;
+    let svg = "";
+    try { const qr = (await import("./vendor/qrcode.mjs")).default(0, "M"); qr.addData(url); qr.make(); svg = qr.createSvgTag({ cellSize: 5, margin: 3, scalable: true }); } catch (e) { svg = ""; }
+    openSheet(`<h2>Weiteres Gerät verbinden</h2><p class="small" style="margin:6px 0 10px">Mit der Kamera des anderen Geräts scannen. Danach kann auch dort getauscht werden.</p>
+      <div class="qrbox">${svg || "QR-Code konnte nicht erzeugt werden."}</div>
+      <p class="small muted" style="margin:10px 0">Der Code enthält den Schlüssel – nur mit euren eigenen Geräten scannen.</p>
+      <button class="btn small ghost" data-act="gh-remove">Schlüssel auf diesem Gerät entfernen</button>`);
+  }
+  // Ziehen: Griff festhalten, Ablagefläche mit allen restlichen Tagen erscheint oben; auf dem Tablet geht auch direkt die Tageskarte.
+  let drag = null;
+  document.addEventListener("pointerdown", (e) => {
+    const g = e.target.closest("[data-grip]");
+    if (!g || drag) return;
+    e.preventDefault();
+    drag = { id: g.dataset.grip, x0: e.clientX, y0: e.clientY, started: false, pid: e.pointerId };
+    try { g.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    if (!drag.started) { if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return; startDrag(); }
+    e.preventDefault();
+    const gh0 = $("#ghost");
+    if (gh0) { const half = gh0.offsetWidth / 2 + 8; gh0.style.left = Math.min(window.innerWidth - half, Math.max(half, e.clientX)) + "px"; gh0.style.top = e.clientY + "px"; }
+    const hit = (document.elementFromPoint(e.clientX, e.clientY) || { closest: () => null }).closest("[data-drop]");
+    $$(".hot").forEach((x) => x !== hit && x.classList.remove("hot"));
+    if (hit) hit.classList.add("hot");
+    drag.hit = hit;
+  }, { passive: false });
+  document.addEventListener("pointerup", (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const d = drag; endDrag();
+    if (!d.started) { swapSheet(d.id); return; }
+    if (d.hit) { const [iso, slot] = d.hit.dataset.drop.split("|"); performSwap(d.id, iso, slot); }
+  });
+  document.addEventListener("pointercancel", () => { if (drag) endDrag(); });
+  async function startDrag() {
+    drag.started = true;
+    document.body.classList.add("dragging");
+    const w = withSwaps(await week()), r = w.recipes[drag.id];
+    if (!drag) return;
+    const g = document.createElement("div"); g.id = "ghost"; g.textContent = r ? shortTitle(r.title) : "";
+    g.style.left = drag.x0 + "px"; g.style.top = drag.y0 + "px"; document.body.appendChild(g);
+    const p = document.createElement("div"); p.id = "droppanel";
+    p.innerHTML = `<div class="spread"><b>Auf einen Tag ziehen</b><span class="small muted">loslassen zum Tauschen</span></div>${dropTargets(w, false)}`;
+    document.body.appendChild(p);
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(20);
+  }
+  function endDrag() {
+    drag = null;
+    document.body.classList.remove("dragging");
+    ["#ghost", "#droppanel"].forEach((s) => { const el = $(s); if (el) el.remove(); });
+    $$(".hot").forEach((x) => x.classList.remove("hot"));
+  }
+
+  /* ---------- Angebote: Schnäppchen-Seiten aus dem neuesten Wochen-PDF ---------- */
+  const DEALS_KEY = "kochbuddy.deals";
+  let dealFilter = "Alle";
+  const pdfUrl = (w) => new URL(`../wochenplan/Speiseplan-KW${w.kw}-${w.year}.pdf`, location.href).href;
+  const KEEP_CAPS = new Set(["EDEKA", "REWE", "ALDI", "SÜD", "dm", "E", "XXL"]);
+  const niceShop = (s) => (s || "").split(/\s+/).map((x) => (/^[A-ZÄÖÜ]{3,}$/.test(x) && !KEEP_CAPS.has(x) ? x.charAt(0) + x.slice(1).toLowerCase() : x)).join(" ");
+  const shopKey = (s) => niceShop(s).split(" ")[0];
+  async function renderDeals(view) {
+    const w0 = weeks[0];
+    const head = (sub) => `<header class="top"><div><div class="eyebrow">${esc(sub)}</div><h1>Angebote</h1></div></header>`;
+    if (!w0) { view.innerHTML = head("Angebote") + `<p class="empty">Noch kein Wochenplan da.</p>`; return; }
+    const url = pdfUrl(w0);
+    let cache = null;
+    try { cache = JSON.parse(localStorage.getItem(DEALS_KEY) || "null"); } catch (e) { cache = null; }
+    const fresh = cache && cache.url === url && cache.built === (w0.built || "");
+    if (fresh) drawDeals(view, w0, cache.data, url);
+    else view.innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<p class="loading">Lese die Angebote aus dem Wochen-PDF …</p>`;
+    if (fresh && Date.now() - (cache.at || 0) < 10 * 60000) return;
+    try {
+      const mod = await import("./deals.mjs");
+      const res = await mod.loadDeals(url);
+      const data = { ...res.data, pages: res.pages };
+      try { localStorage.setItem(DEALS_KEY, JSON.stringify({ url, built: w0.built || "", at: Date.now(), data })); } catch (e) { /* voll */ }
+      if (location.hash.startsWith("#/angebote") && (!fresh || JSON.stringify(data) !== JSON.stringify(cache.data))) drawDeals($("#view"), w0, data, url);
+    } catch (e) {
+      if (!fresh && location.hash.startsWith("#/angebote")) {
+        $("#view").innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<div class="card"><h2>Gerade nicht lesbar</h2><p class="muted">${navigator.onLine === false ? "Ohne Netz – die Angebote waren auf diesem Gerät noch nicht gespeichert." : "Das Wochen-PDF ließ sich gerade nicht auslesen."}</p><a class="btn" href="${esc(url)}">PDF öffnen</a> <button class="btn ghost" data-act="deals-retry">Nochmal versuchen</button></div>`;
+      }
+    }
+  }
+  function drawDeals(view, w0, d, url) {
+    const ck = bag("dealcheck", `kw${w0.kw}-${w0.year}`);
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w0.kw} · aus dem Wochen-PDF</div><h1>Angebote</h1></div></header>`;
+    if (!d.items || !d.items.length) {
+      h += `<div class="card"><h2>Keine Angebotsseite</h2><p class="muted">In diesem Wochen-PDF gibt es diesmal keine Seite „Schnäppchen der Woche“.</p><a class="btn" href="${esc(url)}">PDF öffnen</a></div>`;
+      if (d.pages && d.pages.length) h += `<button class="btn ghost" data-act="deals-render">Seite als Bild anzeigen</button><div id="dealpages"></div>`;
+      view.innerHTML = h; view.dataset.pdf = url; view.dataset.pages = (d.pages || []).join(","); return;
+    }
+    if (d.subtitle) h += `<p class="muted small" style="margin:0 0 6px;font-weight:700">${esc(d.subtitle)}</p>`;
+    const shops = ["Alle", ...new Set(d.items.map((it) => shopKey(it.shop)))];
+    h += `<div class="section-title" style="margin-top:14px">Die stärksten Angebote</div>`;
+    if (shops.length > 2) h += `<div class="seg">${shops.map((s) => `<button data-shopfilter="${esc(s)}" aria-pressed="${dealFilter === s}">${esc(s)}</button>`).join("")}</div>`;
+    h += d.items.filter((it) => dealFilter === "Alle" || shopKey(it.shop) === dealFilter).map((it) => `<article class="deal${it.save >= 45 || /Bestpreis|Schnäppchen|Black/i.test(it.rating) ? " hot" : ""}">
+      <div class="deal-top"><div style="min-width:0"><div class="eyebrow"><span class="rank">${it.rank}</span>${esc(niceShop(it.shop))}</div><b class="dn">${esc(it.name)}</b>${it.meta ? `<div class="small muted">${esc(it.meta)}</div>` : ""}</div>
+      <div class="dp"><b>${esc(it.price)}</b>${it.normal ? `<small>statt ${esc(it.normal)}</small>` : ""}</div></div>
+      ${it.save != null ? `<div class="barrow"><span class="pct">−${it.save} %</span><span class="bar"><i style="width:${Math.max(3, Math.min(100, it.save))}%"></i></span>${it.rating ? `<span class="chip${/Bestpreis|Schnäppchen|Black/i.test(it.rating) ? " pump" : ""}">${esc(it.rating)}</span>` : ""}</div>` : ""}
+      ${it.maker ? `<p class="small" style="margin:4px 0"><b>Hersteller:</b> ${esc(it.maker)}</p>` : ""}${it.note ? `<p class="small muted" style="margin:4px 0 0">${esc(it.note)}</p>` : ""}</article>`).join("");
+    if (d.plan && d.plan.length) {
+      h += `<div class="section-title">Einkaufszettel zum Abhaken</div>` + d.plan.map((s, i) => `<section class="card"><h3>${esc(s.shop)}</h3>${s.when ? `<p class="small muted" style="margin:2px 0 4px">${esc(s.when)}</p>` : ""}<ul class="checks">${s.items.map((x, j) => checkRow(ck[`${i}:${j}`], esc(x), `data-dealcheck="${i}:${j}"`)).join("")}</ul></section>`).join("");
+    }
+    if (d.tips && d.tips.length) h += `<div class="section-title">So kaufst du am besten ein</div><div class="card tipgrid">${d.tips.map((t) => `<div><b>${esc(t.label)}</b>${esc(t.text)}</div>`).join("")}</div>`;
+    if (d.intro && d.intro.length) h += `<div class="section-title">Hinweise</div>` + d.intro.map((p, i) => (i === 0 ? `<div class="tip"><p style="margin:0">${esc(p)}</p></div>` : `<p class="small muted">${esc(p)}</p>`)).join("");
+    if (d.watch && d.watch.length) h += `<div class="section-title">Preiswecker – noch nicht kaufen</div><div class="card">${d.watch.map((x) => `<p class="small" style="margin:4px 0 8px">${x.name ? `<b>${esc(x.name)}:</b> ` : ""}${esc(x.text)}</p>`).join("")}</div>`;
+    if (d.makers && d.makers.length) h += `<details class="card"><summary><b>Wer steckt hinter der Eigenmarke?</b></summary>${d.makers.map((x) => `<p class="small" style="margin:8px 0 0">${x.name ? `<b>${esc(x.name)}:</b> ` : ""}${esc(x.text)}</p>`).join("")}</details>`;
+    h += `<p class="small muted" style="margin:18px 0 0">${esc(d.sources || "")}</p><div class="links"><a class="btn small" href="${esc(url)}">Ganzes Wochen-PDF öffnen</a></div>`;
+    view.innerHTML = h;
+  }
+  async function renderDealPages() {
+    const view = $("#view"), url = view.dataset.pdf, pages = (view.dataset.pages || "").split(",").filter(Boolean).map(Number);
+    const box = $("#dealpages"); if (!box || !pages.length) return;
+    const mod = await import("./deals.mjs");
+    box.innerHTML = "";
+    for (const n of pages) { const c = document.createElement("canvas"); c.style.cssText = "display:block;margin:12px 0;border-radius:8px;background:#fff"; box.appendChild(c); await mod.renderPage(url, n, c, Math.min(box.clientWidth || 380, 900)); }
+  }
+
   /* ---------- Alle Rezepte ---------- */
   let filter = { q: "", tag: "Alle" };
   async function renderAll(view) {
@@ -701,6 +995,7 @@
     const s = $("#sheet");
     s.innerHTML = `<div class="panel"><div class="grab"></div>${html}</div>`;
     s.dataset.timer = data.timer || "";
+    s.dataset.swap = data.swap || "";
     s.hidden = false;
   }
   const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; };
@@ -713,7 +1008,7 @@
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") closeSheet(); return; }
     const d = el.dataset, view = $("#view");
@@ -749,11 +1044,22 @@
       stopRing(); dismissAlarmIfNone(); renderDock(); rerenderSoft(); updateWake();
       return;
     }
+    if (d.swapopen) { swapSheet(d.swapopen); return; }
+    if (d.swapto) { const id = $("#sheet").dataset.swap; closeSheet(); const [iso, slot] = d.swapto.split("|"); performSwap(id, iso, slot); return; }
+    if (d.unswap) { unswap(d.unswap); return; }
+    if (d.dealcheck) { const w0 = weeks[0]; el.classList.toggle("on", toggle("dealcheck", `kw${w0.kw}-${w0.year}`, d.dealcheck)); return; }
+    if (d.shopfilter) { dealFilter = d.shopfilter; rerenderSoft(); return; }
     if (d.tadd) { adjustTimer($("#sheet").dataset.timer, +d.tadd); return; }
     if (d.tact) { timerAct($("#sheet").dataset.timer, d.tact); closeSheet(); return; }
     if (d.quick) { askNotify(); addTimer({ min: +d.quick * 60, title: "Timer", label: `${d.quick} Min.`, sub: $("[data-qlabel]") ? $("[data-qlabel]").value : "" }); closeSheet(); toast(`Timer ${d.quick} Min. läuft`); return; }
     switch (d.act) {
       case "back": e.preventDefault(); goBack(d.fallback || "#/"); break;
+      case "gh-setup": e.preventDefault(); tokenSheet(); break;
+      case "gh-save": saveToken(); break;
+      case "gh-qr": e.preventDefault(); qrSheet(); break;
+      case "gh-remove": setGhToken(""); closeSheet(); rerenderSoft(); toast("Schlüssel entfernt – Tauschen ist hier aus"); break;
+      case "deals-retry": localStorage.removeItem(DEALS_KEY); rerenderSoft(); break;
+      case "deals-render": el.disabled = true; renderDealPages().catch(() => toast("PDF-Seite ließ sich nicht anzeigen")); break;
       case "home": e.preventDefault(); navTo("#/", "jump"); break;
       case "cook-next": cookGo(1, true); break;
       case "cook-prev": cookGo(-1, false); break;
@@ -798,7 +1104,7 @@
   async function codeVersion() {
     if (embedded) return null;
     try {
-      const tags = await Promise.all(["app.js", "app.css", "index.html"].map((f) =>
+      const tags = await Promise.all(["app.js", "app.css", "index.html", "deals.mjs"].map((f) =>
         fetch(f, { method: "HEAD", cache: "no-cache" }).then((r) => (r.ok ? r.headers.get("etag") || r.headers.get("last-modified") || "" : ""))));
       return tags.join("|");
     } catch (e) { return null; }
@@ -835,6 +1141,7 @@
       let result = "same";
       const v = online(await codeVersion()); // geht direkt ans Netz – schlägt fehl, wenn das Handy offline ist
       try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
+      if (v && ghToken() && (await syncSwaps(true))) result = "changed";
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
@@ -859,6 +1166,7 @@
   setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, 10 * 60000);
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
+  if (ghToken()) syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
   route().then(() => { if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
   setInterval(() => { if (location.hash.startsWith("#/vorkochen") && S.block[weekId] && $("#sheet").hidden) rerenderSoft(); }, 30000);

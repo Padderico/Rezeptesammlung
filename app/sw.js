@@ -1,7 +1,7 @@
 /* Kochbuddy – Service Worker.
    Alles kommt frisch vom GitHub-Repo (Plan, Rezepte und der App-Code selbst). Der Speicher auf dem Handy ist nur
    der Rückfall ohne Netz bzw. bei sehr langsamem WLAN. Schriften und Icons ändern sich nie und kommen aus dem Speicher. */
-const VERSION = "kochbuddy-2";
+const VERSION = "kochbuddy-3";
 const SHELL = [
   "./", "index.html", "app.css", "app.js", "manifest.webmanifest", "favicon.svg",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/badge-96.png",
