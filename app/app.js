@@ -11,7 +11,6 @@
   const DEV_SHORT = { tm: "TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd" };
   const CHECK = '<span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
   const CLOCK = '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>';
-  const GEAR = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
   const CLOSE = '<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const LIST = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>';
 
@@ -195,17 +194,17 @@
     const view = $("#view");
     inCooking = parts[0] === "k";
     document.body.classList.toggle("cooking", inCooking);
-    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", rezepte: "rezepte", einstellungen: "" }[parts[0] || ""] ?? "";
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", rezepte: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
-      if (!weeks.length && parts[0] !== "einstellungen") await loadIndex();
+      if (!weeks.length) await loadIndex();
       if (!parts.length) await renderWeek(view);
       else if (parts[0] === "r") await renderRecipe(view, parts[1]);
       else if (parts[0] === "k") await renderCook(view, parts[1]);
       else if (parts[0] === "vorkochen") await renderPrep(view);
       else if (parts[0] === "checkliste") await renderChecklist(view);
       else if (parts[0] === "rezepte") await renderAll(view);
-      else if (parts[0] === "einstellungen") renderSettings(view);
       else await renderWeek(view);
     } catch (e) {
       view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><div class="card"><h2>Gerade nicht ladbar</h2><p class="muted">Ohne Internet zeigt die App die zuletzt geöffneten Daten. Diese hier waren noch nicht gespeichert.</p><p class="small muted">${esc(e.message)}</p><button class="btn primary" data-act="reload">Nochmal versuchen</button></div>`;
@@ -213,7 +212,43 @@
     updateWake();
     renderDock();
   }
-  window.addEventListener("hashchange", () => { route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { trackNav(); route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
+
+  /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
+     Tabs stapeln sich nicht: Woche -> Vorkochen -> Checkliste, dann Zurück = Woche, nochmal Zurück = App zu. */
+  const TABS = ["#/", "#/vorkochen", "#/checkliste", "#/rezepte"];
+  const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
+  // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
+  const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
+  const navStack = new Array(st0).fill(null).concat([curHash()]);
+  history.replaceState({ ...(history.state || {}), kb: st0 }, "");
+  let pendingNav = null;
+  function trackNav() {
+    const h = curHash(), st = history.state;
+    if (pendingNav && pendingNav.type === "replace" && pendingNav.target === h) navStack[navStack.length - 1] = h;
+    else if (st && typeof st.kb === "number") { navStack.length = st.kb + 1; navStack[st.kb] = h; } // Zurück/Vor
+    else navStack.push(h); // neuer Eintrag
+    history.replaceState({ kb: navStack.length - 1 }, "");
+    if (pendingNav && pendingNav.ensure && pendingNav.target !== h) { const t = pendingNav.target; pendingNav = { type: "replace", target: t }; location.replace(t); return; }
+    pendingNav = null;
+  }
+  function navTo(target, mode) {
+    if (target === curHash()) return false;
+    const i = navStack.lastIndexOf(target);
+    if (mode !== "push" && i >= 0 && i < navStack.length - 1) { pendingNav = { type: "jump", target, ensure: true }; history.go(i - (navStack.length - 1)); return true; }
+    if (mode === "replace") { pendingNav = { type: "replace", target }; location.replace(target); return true; }
+    pendingNav = { type: "push", target }; location.hash = target; return true;
+  }
+  function goBack(fallback) {
+    if (navStack.length > 1) { pendingNav = null; history.back(); }
+    else navTo(fallback, "replace");
+  }
+  function tabTo(target) {
+    const cur = curHash();
+    if (target === cur) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if (navStack.includes(target)) navTo(target, "jump");
+    else navTo(target, TABS.includes(cur) && cur !== "#/" ? "replace" : "push");
+  }
 
   /* ---------- Woche ---------- */
   const expanded = {};
@@ -224,7 +259,7 @@
     const t = today();
     const todayDay = w.days.find((d) => d.iso === t);
     const isPrepDay = addDays(w.week.start, -1) === t;
-    let html = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · Speiseplan</div><h1>${esc(shortLabel(w))}</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    let html = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · Speiseplan</div><h1>${esc(shortLabel(w))}</h1></div></header>`;
     if (weeks.length > 1) {
       html += `<div class="seg" role="group" aria-label="Woche wählen">${weeks.slice().reverse().map((x) =>
         `<button data-week="${x.id}" aria-pressed="${x.id === weekId}">KW ${x.kw}</button>`).join("")}</div>`;
@@ -309,7 +344,7 @@
     const fromWeek = ref.startsWith("w:");
     const slot = fromWeek ? mealSlot(ref) : null;
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
-    let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}">‹ ${fromWeek ? "Woche" : "Alle Rezepte"}</a>`;
+    let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">‹ Zurück</a>`;
     h += `<div class="r-head"><h1>${esc(r.title)}</h1><div class="chips">${tagChips(r.tags, 6)}</div></div>`;
     h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div></div>`;
     h += `<div class="r-cols"><div class="sticky">`;
@@ -373,8 +408,7 @@
     const n = r.steps.length, i = Math.min(cookStep, n);
     const doneCount = Object.keys(steps).length;
     const c = S.cook[ref] || {};
-    const back = ref.startsWith("w:") ? `#/r/${ref}` : `#/r/${ref}`;
-    let h = `<div class="cook-top"><a class="icon-btn" href="${back}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Fertig"} · ${doneCount}/${n} erledigt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte">${LIST}</button></div>`;
+    let h = `<div class="cook-top"><a class="icon-btn" href="#/r/${esc(ref)}" data-act="back" data-fallback="#/r/${esc(ref)}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Fertig"} · ${doneCount}/${n} erledigt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte">${LIST}</button></div>`;
     h += `<div class="progress"><i style="width:${(doneCount / n) * 100}%"></i></div>`;
     if (showList) {
       h += `<div class="card"><h3>Alle Schritte</h3><ol class="steps-list">${r.steps.map((st, x) => `<li class="${steps[x] ? "done" : ""}" data-jump="${x}"><span class="stxt">${esc(phaseOf(st.t).text)}</span>${st.set ? `<div class="small muted">${esc(DEV_SHORT[st.dev] || "")} · ${esc(st.set)}</div>` : ""}</li>`).join("")}</ol></div>`;
@@ -386,7 +420,7 @@
       h += `<div class="done-hero"><div class="big">🍽</div><h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
       if (r.kid) h += `<div class="tip"><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div>`;
       if (r.store) h += `<div class="card"><h3>Aufbewahren</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
-      h += `<div class="links"><a class="btn primary" href="#/">Zur Woche</a><button class="btn ghost" data-act="cook-restart">Von vorn</button></div>`;
+      h += `<div class="links"><a class="btn primary" href="#/" data-act="home">Zur Woche</a><button class="btn ghost" data-act="cook-restart">Von vorn</button></div>`;
       view.innerHTML = h + cookFoot(i, n);
       return;
     }
@@ -441,7 +475,7 @@
     let cur = -1;
     if (el != null) (p.timeline || []).forEach((x, i) => { if (off(x.t) <= el) cur = i; });
     const nextI = cur + 1 < (p.timeline || []).length ? cur + 1 : -1;
-    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · ${esc(p.short === "So" ? "Sonntag" : p.short || "")}</div><h1>${esc(p.title || "Vorkochen")}</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · ${esc(p.short === "So" ? "Sonntag" : p.short || "")}</div><h1>${esc(p.title || "Vorkochen")}</h1></div></header>`;
     if (!p.timeline) { view.innerHTML = h + `<p class="empty">Diese Woche gibt es keinen Vorkoch-Block.</p>`; return; }
     if (p.when) h += `<p class="muted" style="margin:0 0 6px;font-weight:700">${esc(p.when)}</p>`;
     if (p.intro) h += `<p>${esc(p.intro)}</p>`;
@@ -482,7 +516,7 @@
     const w = await week();
     const c = w.checklist || {};
     const cur = currentEvening(w);
-    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw}</div><h1>${esc(c.title || "Abend-Checkliste")}</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw}</div><h1>${esc(c.title || "Abend-Checkliste")}</h1></div></header>`;
     if (c.intro) h += `<p class="muted">${esc(c.intro)}</p>`;
     const evs = (c.evenings || []).map((e, i) => ({ e, i }));
     if (cur) evs.sort((a, b) => (a.i === cur.i ? -1 : b.i === cur.i ? 1 : 0));
@@ -502,7 +536,7 @@
     let list;
     try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
     const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
-    let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>`;
     h += `<input class="search" type="search" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search>`;
     h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
     h += `<ul class="r-list" id="rlist"></ul>`;
@@ -516,31 +550,6 @@
       (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
     $("#rlist", view).innerHTML = items.map((m) => `<li><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
       `<li class="empty">Nichts gefunden.</li>`;
-  }
-
-  /* ---------- Einstellungen ---------- */
-  function renderSettings(view) {
-    const st = S.settings;
-    const perm = "Notification" in window ? Notification.permission : "unsupported";
-    let h = `<a class="back" href="#/">‹ Woche</a><header class="top"><div><div class="eyebrow">Kochbuddy</div><h1>Einstellungen</h1></div></header>`;
-    h += `<div class="card"><h3>Anzeige</h3>
-      <div class="set-row"><span>Schriftgröße</span><div class="seg" style="padding:0">${[[1, "A"], [1.15, "A+"], [1.3, "A++"]].map(([v, l]) => `<button data-scale="${v}" aria-pressed="${st.scale === v}">${l}</button>`).join("")}</div></div>
-      <div class="set-row"><span>Farben</span><div class="seg" style="padding:0">${[["auto", "Auto"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<button data-theme="${v}" aria-pressed="${st.theme === v}">${l}</button>`).join("")}</div></div></div>`;
-    h += `<div class="card"><h3>Timer & Wecker</h3>
-      <div class="set-row"><span>Ton</span><label class="switch"><input type="checkbox" data-set="sound" ${st.sound ? "checked" : ""}><span></span></label></div>
-      <div class="set-row"><span>Vibration</span><label class="switch"><input type="checkbox" data-set="vibrate" ${st.vibrate ? "checked" : ""}><span></span></label></div>
-      <div class="set-row"><span>Benachrichtigungen<br><small class="muted">${{ granted: "erlaubt", denied: "blockiert – in den Android-Einstellungen der App erlauben", default: "noch nicht gefragt", unsupported: "hier nicht verfügbar" }[perm]}</small></span>${perm === "default" ? '<button class="btn small" data-act="notify">Erlauben</button>' : ""}</div>
-      <div class="set-row"><span>Alarm testen</span><button class="btn small" data-act="test-alarm">Test</button></div>
-      <p class="small muted" style="margin:10px 0 0">Beim Kochen bleibt der Bildschirm automatisch an, solange ein Timer läuft. Wenn du die App verlässt oder das Handy sperrst, kann Android den Alarm verzögern – dann kommt er als Benachrichtigung, sobald das Handy wieder aufwacht.</p></div>`;
-    h += `<div class="card"><h3>Essenszeiten</h3><p class="small muted" style="margin:4px 0 6px">Daraus rechnet die App, wann du anfangen musst.</p>
-      <div class="set-row"><span>Mittag</span><input class="field" style="width:auto" type="time" value="${esc(st.eat.Mittag)}" data-eatdef="Mittag"></div>
-      <div class="set-row"><span>Abend</span><input class="field" style="width:auto" type="time" value="${esc(st.eat.Abend)}" data-eatdef="Abend"></div></div>`;
-    h += `<div class="card"><h3>App</h3>
-      <div class="set-row"><span>${standalone() ? "Läuft als installierte App" : "Auf dem Startbildschirm installieren"}</span>${!standalone() ? (installEvt ? '<button class="btn small primary" data-act="install">Installieren</button>' : "") : "✓"}</div>
-      ${!standalone() && !installEvt ? '<p class="small muted" style="margin:6px 0 0">In Chrome: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.</p>' : ""}
-      <div class="set-row"><span>Plan & Rezepte vom GitHub-Repo<br><small class="muted">${weeks.length ? `${standLine().replace(/ · <a .*<\/a>/, "")} · neueste KW ${weeks[0].kw}` : ""}<br>Lädt automatisch beim Öffnen und alle 10 Minuten.</small></span><button class="btn small" data-act="reload">Jetzt prüfen</button></div>
-      <div class="set-row"><span>Alle Häkchen und Timer löschen</span><button class="btn small ghost" data-act="wipe">Zurücksetzen</button></div></div>`;
-    view.innerHTML = h;
   }
 
   /* ---------- Timer ---------- */
@@ -702,7 +711,10 @@
   /* ---------- Klicks ---------- */
   document.addEventListener("click", async (e) => {
     unlockAudio();
-    const el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-scale],[data-theme],[data-alarm],[data-tadd],[data-tact],[data-quick]");
+    const tab = e.target.closest("#nav a");
+    if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick]");
+    if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") closeSheet(); return; }
     const d = el.dataset, view = $("#view");
     if (d.start) { e.preventDefault(); startFromChip(JSON.parse(d.start)); return; }
@@ -718,7 +730,7 @@
     if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); return; }
     if (d.cl) { const [i, j] = d.cl.split(":"); toggle("check", `${weekId}:${i}`, j); rerenderSoft(); return; }
     if (d.tl != null) { const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on"); return; }
-    if (d.go != null) { const ref = view.dataset.ref; S.cook[ref] = { ...(S.cook[ref] || { start: Date.now() }), step: +d.go }; cookRef = null; save(); location.hash = `#/k/${ref}`; return; }
+    if (d.go != null) { const ref = view.dataset.ref; S.cook[ref] = { ...(S.cook[ref] || { start: Date.now() }), step: +d.go }; cookRef = null; save(); navTo(`#/k/${ref}`, "push"); return; }
     if (d.jump != null) { cookStep = +d.jump; showList = false; S.cook[cookRef].step = cookStep; save(); drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); return; }
     if (d.expand) { if (!view.querySelector(`.today [data-expand="${d.expand}"]`)) { expanded[d.expand] = !expanded[d.expand]; rerenderSoft(); } return; }
     if (d.week) { weekId = d.week; weekManual = d.week !== (pickWeek(weeks) || {}).id; rerenderSoft(); return; }
@@ -727,8 +739,6 @@
       S.portions[ref] = Math.max(1, Math.min(12, portions(ref, r) + +d.portion)); save(); rerenderSoft(); return;
     }
     if (d.tag) { filter.tag = d.tag; $$("[data-tag]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tag === d.tag)); drawList(view); return; }
-    if (d.scale) { S.settings.scale = +d.scale; save(); applySettings(); renderSettings(view); return; }
-    if (d.theme) { S.settings.theme = d.theme; save(); applySettings(); renderSettings(view); return; }
     if (d.alarm) {
       const id = $("#alarm").dataset.id, t = S.timers.find((x) => x.id === id);
       if (t) {
@@ -743,6 +753,8 @@
     if (d.tact) { timerAct($("#sheet").dataset.timer, d.tact); closeSheet(); return; }
     if (d.quick) { askNotify(); addTimer({ min: +d.quick * 60, title: "Timer", label: `${d.quick} Min.`, sub: $("[data-qlabel]") ? $("[data-qlabel]").value : "" }); closeSheet(); toast(`Timer ${d.quick} Min. läuft`); return; }
     switch (d.act) {
+      case "back": e.preventDefault(); goBack(d.fallback || "#/"); break;
+      case "home": e.preventDefault(); navTo("#/", "jump"); break;
       case "cook-next": cookGo(1, true); break;
       case "cook-prev": cookGo(-1, false); break;
       case "cook-list": showList = !showList; drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); break;
@@ -752,24 +764,17 @@
       case "block-reset": blockTimers(false); delete S.block[weekId]; save(); rerenderSoft(); break;
       case "new-timer": newTimerSheet(); break;
       case "quick-go": { const m = parseFloat(($("[data-qmin]") || {}).value); if (m > 0) { askNotify(); addTimer({ min: m * 60, title: ($("[data-qlabel]").value || "Timer").trim(), label: `${fmt(m)} Min.` }); closeSheet(); } break; }
-      case "notify": if ("Notification" in window) await Notification.requestPermission(); renderSettings(view); break;
-      case "test-alarm": addTimer({ min: 3, title: "Test", sub: "So klingt der Alarm", label: "Test" }); toast("Alarm in 3 Sekunden"); break;
       case "install": if (installEvt) { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; rerenderSoft(); } break;
       case "notice": noticeOpen = !noticeOpen; el.classList.toggle("clamp", !noticeOpen); break;
       case "nohint": S.settings.installHint = false; save(); rerenderSoft(); break;
       case "reload": e.preventDefault(); { const r = await checkUpdates(true); toast(r === "offline" ? "Gerade kein Netz – du siehst den letzten Stand" : r === "changed" ? "Plan aktualisiert" : "Alles aktuell"); rerenderSoft(); } break;
       case "apply-update": location.reload(); break;
-      case "wipe": if (confirmWipe()) { const keep = S.settings; S = defaults(); S.settings = keep; save(); stopRing(); $("#alarm").hidden = true; rerenderSoft(); toast("Alles zurückgesetzt"); } break;
     }
   });
-  let wipeArmed = 0;
-  function confirmWipe() { if (Date.now() - wipeArmed < 4000) return true; wipeArmed = Date.now(); toast("Nochmal tippen zum Löschen"); return false; }
 
   document.addEventListener("change", (e) => {
     const el = e.target;
     if (el.dataset.eat) { S.eat[el.dataset.eat] = el.value; save(); getRecipe(el.dataset.eat).then((r) => ($("#plan-out").innerHTML = planText(r, el.value))); }
-    if (el.dataset.eatdef) { S.settings.eat[el.dataset.eatdef] = el.value; save(); }
-    if (el.dataset.set) { S.settings[el.dataset.set] = el.checked; save(); }
     if (el.dataset.act === "block-beep") { S.block[weekId].beep = el.checked; save(); unlockAudio(); askNotify(); blockTimers(el.checked); }
   });
   document.addEventListener("input", (e) => { if (e.target.dataset.search != null) { filter.q = e.target.value; drawList($("#view")); } });
@@ -777,7 +782,7 @@
   /* ---------- Einstellungen anwenden, Installation ---------- */
   function applySettings() {
     const st = S.settings, dark = st.theme === "dark" || (st.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.dataset.scheme = dark ? "dark" : "light";
     document.documentElement.style.setProperty("--scale", st.scale);
     const meta = $('meta[name="theme-color"]'); if (meta) meta.content = dark ? "#0E1715" : "#0D6657";
   }

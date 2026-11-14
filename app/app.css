@@ -18,7 +18,7 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
 }
-:root[data-theme="dark"] {
+:root[data-scheme="dark"] {
   --paper: #0E1715; --surface: #15221E; --ink: #E4EEE9; --muted: #9BB0A8; --line: #2A3C36;
   --accent: #62C6B1; --accent-ink: #0B1A16; --accent-soft: #163A33;
   --pumpkin: #F0954A; --pumpkin-soft: #3A2414; --pumpkin-ink: #F6B47A;
