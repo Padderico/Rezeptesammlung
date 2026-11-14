@@ -172,7 +172,18 @@
     "One-Pot"
    ],
    "src": "rezept"
+  },
+  "i:toskanische-tomaten-brot-suppe": {
+   "v": "nope",
+   "at": "2026-11-14T18:55:03.249Z",
+   "t": "Toskanische Tomaten-Brot-Suppe",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Italienisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-14T18:54:57.021Z"
+ "updated": "2026-11-14T18:55:11.767Z"
 }
