@@ -342,8 +342,11 @@ def app_data(plan, used, manifest):
                  meals=[_pick(m, ("slot", "kind", "recipe", "mode", "note", "badge")) for m in d.get("meals", [])])
             for d in plan.get("days", [])]
     prep = _pick(plan.get("prep", {}), ("title", "short", "when", "intro", "timeline", "recipes", "recipeNote", "storage"))
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    built = datetime.now(ZoneInfo("Europe/Berlin")).isoformat(timespec="minutes")
     week = _anon_deep({
-        "v": 1,
+        "v": 1, "built": built,
         "week": _pick(w, ("kw", "year", "label", "start")),
         "notice": plan.get("notice", ""),
         "days": days, "prep": prep,
@@ -363,9 +366,9 @@ def app_data(plan, used, manifest):
     idx_path = APP_DATA / "wochen.json"
     idx = json.loads(idx_path.read_text(encoding="utf-8")) if idx_path.exists() else {"weeks": []}
     weeks = [x for x in idx.get("weeks", []) if x.get("file") != fname]
-    weeks.append({"kw": w["kw"], "year": w["year"], "label": w["label"], "start": w["start"], "file": fname})
+    weeks.append({"kw": w["kw"], "year": w["year"], "label": w["label"], "start": w["start"], "file": fname, "built": built})
     weeks = sorted(weeks, key=lambda x: x["start"], reverse=True)[:APP_WEEKS_KEPT]
-    idx_path.write_text(json.dumps({"weeks": weeks}, ensure_ascii=False, indent=1), encoding="utf-8")
+    idx_path.write_text(json.dumps({"built": built, "weeks": weeks}, ensure_ascii=False, indent=1), encoding="utf-8")
     # gleich vormerken, damit der Wochen-Commit die App-Daten sicher mitnimmt
     if (ROOT / ".git").exists():
         import subprocess

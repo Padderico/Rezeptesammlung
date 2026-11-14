@@ -1,5 +1,7 @@
-/* Kochbuddy – Service Worker: App offline verfügbar, Wochendaten immer frisch, wenn Netz da ist. */
-const VERSION = "kochbuddy-1";
+/* Kochbuddy – Service Worker.
+   Alles kommt frisch vom GitHub-Repo (Plan, Rezepte und der App-Code selbst). Der Speicher auf dem Handy ist nur
+   der Rückfall ohne Netz bzw. bei sehr langsamem WLAN. Schriften und Icons ändern sich nie und kommen aus dem Speicher. */
+const VERSION = "kochbuddy-2";
 const SHELL = [
   "./", "index.html", "app.css", "app.js", "manifest.webmanifest", "favicon.svg",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/badge-96.png",
@@ -7,9 +9,14 @@ const SHELL = [
   "fonts/bricolage-grotesque-latin-600-normal.woff2", "fonts/bricolage-grotesque-latin-800-normal.woff2",
   "fonts/ibm-plex-mono-latin-600-normal.woff2",
 ];
+const SLOW_MS = 4000; // so lange wird aufs Netz gewartet, wenn schon eine gespeicherte Fassung da ist
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(VERSION)
+      .then((c) => Promise.all(SHELL.map((u) => fetch(u, { cache: "no-cache" }).then((r) => (r.ok ? c.put(u, r) : null)).catch(() => null))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {
@@ -20,40 +27,32 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-const isData = (url) => url.pathname.includes("/daten/") || url.pathname.endsWith("/rezepte/rezepte.json");
+function networkFirst(url, fallbackUrl) {
+  const net = fetch(url, { cache: "no-cache", credentials: "same-origin" }).then((res) => {
+    if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(url, copy)); }
+    return res;
+  });
+  const stored = caches.match(url, { ignoreSearch: true }).then((hit) => hit || (fallbackUrl ? caches.match(fallbackUrl) : undefined));
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (r) => { if (!done && r) { done = true; resolve(r); } };
+    const slow = setTimeout(() => stored.then(finish), SLOW_MS);
+    net.then((res) => { clearTimeout(slow); if (res.ok || done) finish(res); else stored.then((hit) => finish(hit || res)); })
+      .catch(() => { clearTimeout(slow); stored.then((hit) => { if (!done) { done = true; resolve(hit || Response.error()); } }); });
+  });
+}
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-
-  if (isData(url)) {
-    // Netz zuerst (neuer Plan am Donnerstag), sonst die zuletzt geladene Fassung.
-    e.respondWith(
-      fetch(req).then((res) => {
-        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
-        return res;
-      }).catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || Response.error()))
-    );
+  if (/\/(fonts|icons)\//.test(url.pathname)) {
+    e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
     return;
   }
-
-  if (req.mode === "navigate") {
-    e.respondWith(fetch(req).catch(() => caches.match("index.html")));
-    return;
-  }
-
-  // App-Dateien: sofort aus dem Speicher, im Hintergrund aktualisieren.
-  e.respondWith(
-    caches.match(req).then((hit) => {
-      const net = fetch(req).then((res) => {
-        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); }
-        return res;
-      }).catch(() => hit);
-      return hit || net;
-    })
-  );
+  url.hash = "";
+  e.respondWith(networkFirst(url.href, req.mode === "navigate" ? "index.html" : null));
 });
 
 self.addEventListener("notificationclick", (e) => {

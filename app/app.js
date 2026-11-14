@@ -29,13 +29,14 @@
     if (!res.ok) throw new Error(res.status + " " + path);
     return (memo[path] = await res.json());
   }
-  let weeks = [], weekId = null, lastLoad = 0;
+  let weeks = [], weekId = null, lastLoad = 0, weekManual = false, builtAt = null;
   const weekFile = (id) => `daten/wochen/${id}.json`;
   async function loadIndex(fresh) {
     const idx = await getJSON("daten/wochen.json", fresh);
     weeks = (idx.weeks || []).map((w) => ({ ...w, id: w.file.replace(/\.json$/, "") }));
+    builtAt = idx.built || null;
     lastLoad = Date.now();
-    if (!weekId || !weeks.some((w) => w.id === weekId)) weekId = (pickWeek(weeks) || {}).id || null;
+    if (!weekManual || !weekId || !weeks.some((w) => w.id === weekId)) { weekManual = false; weekId = (pickWeek(weeks) || {}).id || null; }
   }
   const week = (id = weekId) => getJSON(weekFile(id));
   async function getRecipe(ref) {
@@ -212,7 +213,7 @@
     updateWake();
     renderDock();
   }
-  window.addEventListener("hashchange", () => { route(); if (!inCooking) window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
 
   /* ---------- Woche ---------- */
   const expanded = {};
@@ -250,7 +251,16 @@
         const r = w.recipes[id]; return r ? `<li><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a></li>` : "";
       }).join("")}</ul></div>`;
     }
+    html += `<p class="small muted" id="stand" style="text-align:center;margin:22px 0 0">${standLine(w)}</p>`;
     view.innerHTML = html;
+    renderedDay = today();
+  }
+  function standLine(w) {
+    if (embedded) return "Vorschau-Stand";
+    const b = (w && w.built) || builtAt;
+    const bt = b ? new Date(b) : null;
+    const plan = bt && !isNaN(bt) ? `Plan vom ${DAYS[bt.getDay()].slice(0, 2)} ${pad(bt.getDate())}.${pad(bt.getMonth() + 1)}., ${hm(bt)}` : "Plan";
+    return `${plan} · ${lastOnline ? `zuletzt geprüft ${hm(lastOnline)}` : "noch nicht online geprüft"} · <a href="#" data-act="reload">jetzt aktualisieren</a>`;
   }
   function dayCard(w, d, open, past) {
     const isToday = d.iso === today();
@@ -528,7 +538,7 @@
     h += `<div class="card"><h3>App</h3>
       <div class="set-row"><span>${standalone() ? "Läuft als installierte App" : "Auf dem Startbildschirm installieren"}</span>${!standalone() ? (installEvt ? '<button class="btn small primary" data-act="install">Installieren</button>' : "") : "✓"}</div>
       ${!standalone() && !installEvt ? '<p class="small muted" style="margin:6px 0 0">In Chrome: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.</p>' : ""}
-      <div class="set-row"><span>Wochenplan neu laden<br><small class="muted">${weeks.length ? `${weeks.length} Woche(n) gespeichert, neueste KW ${weeks[0].kw}` : ""}</small></span><button class="btn small" data-act="reload">Aktualisieren</button></div>
+      <div class="set-row"><span>Plan & Rezepte vom GitHub-Repo<br><small class="muted">${weeks.length ? `${standLine().replace(/ · <a .*<\/a>/, "")} · neueste KW ${weeks[0].kw}` : ""}<br>Lädt automatisch beim Öffnen und alle 10 Minuten.</small></span><button class="btn small" data-act="reload">Jetzt prüfen</button></div>
       <div class="set-row"><span>Alle Häkchen und Timer löschen</span><button class="btn small ghost" data-act="wipe">Zurücksetzen</button></div></div>`;
     view.innerHTML = h;
   }
@@ -674,7 +684,7 @@
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible") return;
     tick(); updateWake();
-    if (Date.now() - lastLoad > 30 * 60000 && !embedded) loadIndex(true).then(() => { if (!inCooking) rerenderSoft(); }).catch(() => {});
+    if (Date.now() - lastCheck > 60000) checkUpdates();
   });
 
   /* ---------- Schublade, Toast ---------- */
@@ -711,7 +721,7 @@
     if (d.go != null) { const ref = view.dataset.ref; S.cook[ref] = { ...(S.cook[ref] || { start: Date.now() }), step: +d.go }; cookRef = null; save(); location.hash = `#/k/${ref}`; return; }
     if (d.jump != null) { cookStep = +d.jump; showList = false; S.cook[cookRef].step = cookStep; save(); drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); return; }
     if (d.expand) { if (!view.querySelector(`.today [data-expand="${d.expand}"]`)) { expanded[d.expand] = !expanded[d.expand]; rerenderSoft(); } return; }
-    if (d.week) { weekId = d.week; rerenderSoft(); return; }
+    if (d.week) { weekId = d.week; weekManual = d.week !== (pickWeek(weeks) || {}).id; rerenderSoft(); return; }
     if (d.portion) {
       const ref = view.dataset.ref, r = await getRecipe(ref);
       S.portions[ref] = Math.max(1, Math.min(12, portions(ref, r) + +d.portion)); save(); rerenderSoft(); return;
@@ -747,7 +757,8 @@
       case "install": if (installEvt) { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; rerenderSoft(); } break;
       case "notice": noticeOpen = !noticeOpen; el.classList.toggle("clamp", !noticeOpen); break;
       case "nohint": S.settings.installHint = false; save(); rerenderSoft(); break;
-      case "reload": Object.keys(memo).forEach((k) => delete memo[k]); try { await loadIndex(true); toast("Wochenplan aktualisiert"); } catch (er) { toast("Gerade kein Netz"); } rerenderSoft(); break;
+      case "reload": e.preventDefault(); { const r = await checkUpdates(true); toast(r === "offline" ? "Gerade kein Netz – du siehst den letzten Stand" : r === "changed" ? "Plan aktualisiert" : "Alles aktuell"); rerenderSoft(); } break;
+      case "apply-update": location.reload(); break;
       case "wipe": if (confirmWipe()) { const keep = S.settings; S = defaults(); S.settings = keep; save(); stopRing(); $("#alarm").hidden = true; rerenderSoft(); toast("Alles zurückgesetzt"); } break;
     }
   });
@@ -776,9 +787,71 @@
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; if (!location.hash || location.hash === "#/") rerenderSoft(); });
   window.addEventListener("appinstalled", () => { installEvt = null; toast("Installiert – du findest den Kochbuddy jetzt bei deinen Apps"); });
 
+  /* ---------- Immer aktuell: Plan, Rezepte und App-Code vom GitHub-Repo ---------- */
+  let lastCheck = 0, codeTag = null, updateReady = false, swReg = null, renderedDay = null, checking = null, lastOnline = 0;
+  function online(v) { if (v) { lastOnline = Date.now(); const el = $("#stand"); if (el) week().then((w) => (el.innerHTML = standLine(w))).catch(() => {}); } return v; }
+  async function codeVersion() {
+    if (embedded) return null;
+    try {
+      const tags = await Promise.all(["app.js", "app.css", "index.html"].map((f) =>
+        fetch(f, { method: "HEAD", cache: "no-cache" }).then((r) => (r.ok ? r.headers.get("etag") || r.headers.get("last-modified") || "" : ""))));
+      return tags.join("|");
+    } catch (e) { return null; }
+  }
+  const idle = () => !inCooking && $("#alarm").hidden && $("#sheet").hidden && !S.timers.some((t) => t.state !== "gone") && !location.hash.startsWith("#/vorkochen");
+  function markUpdate() { updateReady = true; applyUpdateIfIdle(); }
+  function applyUpdateIfIdle() {
+    if (!updateReady) return;
+    // Läuft gerade etwas (Timer, Kochmodus, Vorkochen), wird nicht ungefragt neu geladen – der Ton braucht nach einem Neuladen erst wieder einen Tipp.
+    if (idle()) { location.reload(); return; }
+    if (!$("#upd")) {
+      const b = document.createElement("div");
+      b.id = "upd"; b.className = "toast"; b.style.cursor = "pointer"; b.dataset.act = "apply-update";
+      b.textContent = "Neue App-Version bereit – hier tippen zum Neuladen";
+      document.body.appendChild(b);
+    }
+  }
+  async function refreshData() {
+    const key = weekId ? weekFile(weekId) : null;
+    const before = JSON.stringify([weeks, key && memo[key]]);
+    const old = { ...memo };
+    Object.keys(memo).forEach((k) => delete memo[k]);
+    try {
+      await loadIndex(true);
+      if (weekId) await week();
+    } catch (e) { Object.assign(memo, old); throw e; }
+    return before !== JSON.stringify([weeks, weekId && memo[weekFile(weekId)]]);
+  }
+  function checkUpdates(manual) {
+    if (embedded) return Promise.resolve("same");
+    if (checking) return checking;
+    lastCheck = Date.now();
+    checking = (async () => {
+      let result = "same";
+      const v = online(await codeVersion()); // geht direkt ans Netz – schlägt fehl, wenn das Handy offline ist
+      try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
+      if (!v) result = result === "changed" ? "changed" : "offline";
+      if (swReg && v) swReg.update().catch(() => {});
+      if (v && codeTag && v !== codeTag) markUpdate();
+      if (v && !codeTag) codeTag = v;
+      const dayChanged = renderedDay && renderedDay !== today();
+      if ((result === "changed" || dayChanged) && !manual) {
+        if (!inCooking && $("#sheet").hidden) { rerenderSoft(); if (result === "changed") toast("Neuer Stand vom Speiseplan geladen"); }
+      }
+      return result;
+    })().finally(() => { checking = null; });
+    return checking;
+  }
+
   /* ---------- Start ---------- */
   applySettings();
-  if ("serviceWorker" in navigator && !embedded && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && !embedded && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => (swReg = r)).catch(() => {});
+    let hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController) markUpdate(); hadController = true; });
+  }
+  codeVersion().then((v) => { codeTag = v; online(v); });
+  setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, 10 * 60000);
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
   route().then(() => { if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
