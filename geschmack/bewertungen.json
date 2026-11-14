@@ -1,4 +1,41 @@
 {
  "info": "Bewertungen aus dem Kochbuddy (Tab Entdecken). v: super = unbedingt bald einplanen, like = mag ich, nope = lieber nicht. Schlüssel: i:<id> = Idee aus app/daten/ideen.json, a:<slug> = Rezept aus rezepte/.",
- "items": {}
+ "items": {
+  "a:one-pot-nudeln-mit-brokkoli-erbsen-und-frischkaese": {
+   "v": "like",
+   "at": "2026-11-14T18:53:42.938Z",
+   "t": "One-Pot-Nudeln mit Brokkoli, Erbsen & Frischkäse",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "src": "rezept"
+  },
+  "i:blumenkohl-kartoffel-auflauf": {
+   "v": "nope",
+   "at": "2026-11-14T18:53:46.116Z",
+   "t": "Blumenkohl-Kartoffel-Auflauf",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Auflauf",
+    "Kartoffel"
+   ],
+   "src": "idee"
+  },
+  "i:risotto-mit-erbsen-und-zitrone": {
+   "v": "like",
+   "at": "2026-11-14T18:53:49.256Z",
+   "t": "Risotto mit Erbsen und Zitrone",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "src": "idee"
+  }
+ },
+ "updated": "2026-11-14T18:53:57.929Z"
 }
