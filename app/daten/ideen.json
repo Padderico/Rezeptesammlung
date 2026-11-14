@@ -1,7 +1,30 @@
 {
  "v": 1,
  "info": "Gerichtsideen für den Tab „Entdecken“ der Koch-App. ideas: alle Ideen (neue hinten anhängen, id eindeutig, nie löschen; Felder id, t = Titel, d = ein Satz, tags, min = Minuten ca., art = Bild aus: tomate, kuerbis, kartoffel, nudel, reis, fisch, huhn, rind, wurst, gemuese, blatt, kaese, suppe, auflauf, brot, suess, pilz, bohne). days: Stapel pro Tag {\"JJJJ-MM-TT\": [\"i:<id>\", …]} – die stündliche Antwort-Aufgabe legt den Stapel für morgen an, sobald heute geswiped wurde.",
- "days": {},
+ "days": {
+  "2026-11-15": [
+   "i:cremige-haehnchen-gnocchi-pfanne-mit-spinat",
+   "i:risotto-mit-haehnchen-und-lauch",
+   "i:kritharaki-topf-mit-rinderhack-und-tomaten",
+   "i:schweinelendchen-in-apfel-rahm-mit-kartoffelpueree",
+   "i:haehnchen-in-milder-erdnusssosse-mit-reis",
+   "i:rinderschmortopf-mit-pflaumen-und-couscous",
+   "i:krautgulasch-mit-schweinefleisch-und-salzkartoffeln",
+   "i:fischfrikassee-mit-erbsen-karotten-und-reis",
+   "i:udon-nudeln-mit-lachs-und-brokkoli-in-sesamsosse",
+   "i:lachs-kartoffel-pfanne-mit-lauch-und-dill-sahne",
+   "i:one-pot-pasta-mit-kuerbis-und-frischkaese",
+   "i:bandnudeln-in-champignon-rahm-mit-erbsen",
+   "i:spinat-risotto-mit-frischkaese",
+   "i:graupenrisotto-mit-karotten-und-bergkaese",
+   "i:hirse-karotten-taler-mit-fruehlingsquark",
+   "i:krautspaetzle-mit-roestzwiebeln",
+   "i:mildes-kartoffel-spinat-curry-mit-reis",
+   "i:milde-gemuese-biryani-mit-joghurt",
+   "i:pierogi-mit-kartoffel-kaese-fuellung",
+   "i:gebratene-griessschnitten-mit-apfel-birnen-kompott"
+  ]
+ },
  "ideas": [
   {
    "id": "kuerbisrisotto-mit-parmesan",
@@ -1724,6 +1747,260 @@
    ],
    "min": 30,
    "art": "suppe"
+  },
+  {
+   "id": "cremige-haehnchen-gnocchi-pfanne-mit-spinat",
+   "t": "Cremige Hähnchen-Gnocchi-Pfanne mit Spinat",
+   "d": "Gnocchi, zarte Hähnchenstreifen und Spinat in milder Frischkäsesoße aus einer Pfanne.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "huhn"
+  },
+  {
+   "id": "risotto-mit-haehnchen-und-lauch",
+   "t": "Risotto mit Hähnchen und Lauch",
+   "d": "Cremig gerührt vom Thermomix, mit zartem Hähnchen und mildem Lauch der Saison.",
+   "tags": [
+    "Fleisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 40,
+   "art": "reis"
+  },
+  {
+   "id": "kritharaki-topf-mit-rinderhack-und-tomaten",
+   "t": "Kritharaki-Topf mit Rinderhack und Tomaten",
+   "d": "Kleine Reisnudeln garen direkt in der Tomatensoße, mit einem Hauch Zimt und Feta.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Griechisch",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "nudel"
+  },
+  {
+   "id": "schweinelendchen-in-apfel-rahm-mit-kartoffelpueree",
+   "t": "Schweinelendchen in Apfel-Rahm mit Kartoffelpüree",
+   "d": "Zarte Medaillons in fruchtig-milder Apfel-Sahne-Soße, dazu Püree aus dem Thermomix.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "haehnchen-in-milder-erdnusssosse-mit-reis",
+   "t": "Hähnchen in milder Erdnusssoße mit Reis",
+   "d": "Cremige Erdnuss-Kokos-Soße mit Karotten und Paprika, ganz ohne Schärfe.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 30,
+   "art": "huhn"
+  },
+  {
+   "id": "rinderschmortopf-mit-pflaumen-und-couscous",
+   "t": "Rinderschmortopf mit Pflaumen und Couscous",
+   "d": "Mürbe geschmortes Rind mit Trockenpflaumen und Zimt, mild und gut vorzukochen.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Orientalisch",
+    "Vorkochen",
+    "Eisen"
+   ],
+   "min": 120,
+   "art": "rind"
+  },
+  {
+   "id": "krautgulasch-mit-schweinefleisch-und-salzkartoffeln",
+   "t": "Krautgulasch mit Schweinefleisch und Salzkartoffeln",
+   "d": "Klassiker aus dem Schmortopf: Schweinegulasch mit mildem Sauerkraut und Paprika.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Deutsch",
+    "Vorkochen"
+   ],
+   "min": 90,
+   "art": "rind"
+  },
+  {
+   "id": "fischfrikassee-mit-erbsen-karotten-und-reis",
+   "t": "Fischfrikassee mit Erbsen, Karotten und Reis",
+   "d": "Wie Hühnerfrikassee, nur mit grätenfreiem Seelachs: mild, cremig und schnell gemacht.",
+   "tags": [
+    "Fisch",
+    "Thermomix",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "udon-nudeln-mit-lachs-und-brokkoli-in-sesamsosse",
+   "t": "Udon-Nudeln mit Lachs und Brokkoli in Sesamsoße",
+   "d": "Dicke weiche Nudeln, gedämpfter Brokkoli und Lachs in milder Sesam-Honig-Soße.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch"
+   ],
+   "min": 25,
+   "art": "fisch"
+  },
+  {
+   "id": "lachs-kartoffel-pfanne-mit-lauch-und-dill-sahne",
+   "t": "Lachs-Kartoffel-Pfanne mit Lauch und Dill-Sahne",
+   "d": "Gebratene Kartoffelwürfel, Lauch und Lachsstücke in leichter Dill-Sahne.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "One-Pot",
+    "Deutsch"
+   ],
+   "min": 30,
+   "art": "fisch"
+  },
+  {
+   "id": "one-pot-pasta-mit-kuerbis-und-frischkaese",
+   "t": "One-Pot-Pasta mit Kürbis und Frischkäse",
+   "d": "Hokkaido schmilzt beim Garen zur orangen Sahnesoße: Nudeln, Soße, fertig.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "min": 25,
+   "art": "kuerbis"
+  },
+  {
+   "id": "bandnudeln-in-champignon-rahm-mit-erbsen",
+   "t": "Bandnudeln in Champignon-Rahm mit Erbsen",
+   "d": "Feine Pilzrahmsoße mit Erbsen und Parmesan, in 20 Minuten auf dem Tisch.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Pfanne"
+   ],
+   "min": 20,
+   "art": "pilz"
+  },
+  {
+   "id": "spinat-risotto-mit-frischkaese",
+   "t": "Spinat-Risotto mit Frischkäse",
+   "d": "Grünes Risotto mit Blattspinat und Frischkäse, besonders cremig und reich an Eisen.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "blatt"
+  },
+  {
+   "id": "graupenrisotto-mit-karotten-und-bergkaese",
+   "t": "Graupenrisotto mit Karotten und Bergkäse",
+   "d": "Perlgraupen statt Reis, mit süßen Karotten und würzigem Bergkäse, herzhaft und regional.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "reis"
+  },
+  {
+   "id": "hirse-karotten-taler-mit-fruehlingsquark",
+   "t": "Hirse-Karotten-Taler mit Frühlingsquark",
+   "d": "Knusprige Bratlinge aus Hirse, Karotte und Käse, dazu frischer Frühlingsquark.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "gemuese"
+  },
+  {
+   "id": "krautspaetzle-mit-roestzwiebeln",
+   "t": "Krautspätzle mit Röstzwiebeln",
+   "d": "Spätzle mit goldbraun geschmortem Weißkraut aus der Pfanne, fein mit Kümmel.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 35,
+   "art": "gemuese"
+  },
+  {
+   "id": "mildes-kartoffel-spinat-curry-mit-reis",
+   "t": "Mildes Kartoffel-Spinat-Curry mit Reis",
+   "d": "Kartoffeln und Blattspinat in sanfter Kokos-Tomaten-Soße, ganz ohne Schärfe.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Indisch",
+    "One-Pot",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "kartoffel"
+  },
+  {
+   "id": "milde-gemuese-biryani-mit-joghurt",
+   "t": "Milde Gemüse-Biryani mit Joghurt",
+   "d": "Duftender Gewürzreis mit Karotten, Erbsen und Paprika aus einem Topf.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Indisch"
+   ],
+   "min": 40,
+   "art": "reis"
+  },
+  {
+   "id": "pierogi-mit-kartoffel-kaese-fuellung",
+   "t": "Pierogi mit Kartoffel-Käse-Füllung",
+   "d": "Weiche Teigtaschen mit cremiger Füllung, in Butter geschwenkt, dazu Frühlingsquark.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Osteuropäisch"
+   ],
+   "min": 60,
+   "art": "kaese"
+  },
+  {
+   "id": "gebratene-griessschnitten-mit-apfel-birnen-kompott",
+   "t": "Gebratene Grießschnitten mit Apfel-Birnen-Kompott",
+   "d": "Omas Klassiker: Grieß fest werden lassen, goldbraun braten, dazu warmes Kompott.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Süß",
+    "Deutsch"
+   ],
+   "min": 75,
+   "art": "suess"
   }
  ]
 }
