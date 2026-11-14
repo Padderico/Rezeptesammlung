@@ -1,5 +1,20 @@
 {
  "week": "kw47-2026",
- "swaps": [],
- "updated": "2026-11-14T17:33:23.637Z"
+ "swaps": [
+  {
+   "id": "mwgoqbyd8nng",
+   "week": "kw47-2026",
+   "day": "do",
+   "dayName": "Donnerstag",
+   "iso": "2026-11-19",
+   "slot": "Abend",
+   "from": "muffins",
+   "to": "minestrone",
+   "fromTitle": "Karotten-Käse-Muffins mit Frühlingsquark",
+   "toTitle": "Minestrone mit Sternchennudeln",
+   "at": "2026-11-14T17:34:03.013Z",
+   "status": "offen"
+  }
+ ],
+ "updated": "2026-11-14T17:34:03.691Z"
 }
