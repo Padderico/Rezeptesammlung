@@ -183,7 +183,52 @@
     "Italienisch"
    ],
    "src": "idee"
+  },
+  "i:ofenhaehnchen-mit-kartoffeln-und-karotten": {
+   "v": "nope",
+   "at": "2026-11-14T18:55:14.043Z",
+   "t": "Ofenhähnchen mit Kartoffeln und Karotten",
+   "tags": [
+    "Fleisch",
+    "Blech",
+    "Ofen"
+   ],
+   "src": "idee"
+  },
+  "i:schwarzwaelder-forellenfilet-mit-zitronenbutter": {
+   "v": "nope",
+   "at": "2026-11-14T18:55:16.623Z",
+   "t": "Schwarzwälder Forellenfilet mit Zitronenbutter",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Regional"
+   ],
+   "src": "idee"
+  },
+  "a:rindergulasch-mit-spaetzle-und-gurkensalat": {
+   "v": "like",
+   "at": "2026-11-14T18:55:23.328Z",
+   "t": "Rindergulasch mit Spätzle & Gurkensalat",
+   "tags": [
+    "Fleisch",
+    "Thermomix",
+    "Eisen",
+    "Vorkochen"
+   ],
+   "src": "rezept"
+  },
+  "i:lachsrisotto-mit-erbsen": {
+   "v": "like",
+   "at": "2026-11-14T18:55:27.190Z",
+   "t": "Lachsrisotto mit Erbsen",
+   "tags": [
+    "Fisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-14T18:55:11.767Z"
+ "updated": "2026-11-14T18:55:28.040Z"
 }
