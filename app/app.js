@@ -1,0 +1,787 @@
+/* Kochbuddy – Koch-App zum Wochenplan. Daten: daten/wochen.json, daten/wochen/<kw>.json, daten/rezepte/<slug>.json
+   (schreibt tools/build_pages.py jede Woche mit). Fortschritt und Timer bleiben lokal auf dem Gerät. */
+"use strict";
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pad = (n) => String(n).padStart(2, "0");
+  const DAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+  const DEV = { tm: "Thermomix TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd" };
+  const DEV_SHORT = { tm: "TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd" };
+  const CHECK = '<span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
+  const CLOCK = '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>';
+  const GEAR = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+  const CLOSE = '<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const LIST = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>';
+
+  /* ---------- Daten ---------- */
+  const EMB = document.getElementById("embedded-data");
+  const embedded = EMB ? JSON.parse(EMB.textContent) : null;
+  const memo = {};
+  async function getJSON(path, fresh) {
+    if (embedded) {
+      if (!(path in embedded.files)) throw new Error("nicht enthalten: " + path);
+      return embedded.files[path];
+    }
+    if (memo[path] && !fresh) return memo[path];
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status + " " + path);
+    return (memo[path] = await res.json());
+  }
+  let weeks = [], weekId = null, lastLoad = 0;
+  const weekFile = (id) => `daten/wochen/${id}.json`;
+  async function loadIndex(fresh) {
+    const idx = await getJSON("daten/wochen.json", fresh);
+    weeks = (idx.weeks || []).map((w) => ({ ...w, id: w.file.replace(/\.json$/, "") }));
+    lastLoad = Date.now();
+    if (!weekId || !weeks.some((w) => w.id === weekId)) weekId = (pickWeek(weeks) || {}).id || null;
+  }
+  const week = (id = weekId) => getJSON(weekFile(id));
+  async function getRecipe(ref) {
+    const [kind, a, b] = ref.split(":");
+    if (kind === "w") { const w = await week(a); const r = w.recipes[b]; if (!r) throw new Error("Rezept fehlt"); return r; }
+    return getJSON(`daten/rezepte/${a}.json`);
+  }
+
+  /* ---------- Datum ---------- */
+  const toIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = () => toIso(new Date());
+  const addDays = (iso, n) => { const [y, m, d] = iso.split("-").map(Number); return toIso(new Date(y, m - 1, d + n)); };
+  const hm = (ts) => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  function pickWeek(list) {
+    const t = today();
+    // Eine Planwoche reicht vom Vorkoch-Sonntag davor bis Samstag.
+    const cur = list.find((w) => addDays(w.start, -1) <= t && t <= addDays(w.start, 5));
+    if (cur) return cur;
+    const next = list.filter((w) => w.start > t).sort((a, b) => (a.start < b.start ? -1 : 1))[0];
+    return next || list[0];
+  }
+  const shortLabel = (w) => (w.week ? w.week.label : w.label).replace(/\s\d{4}$/, "");
+
+  /* ---------- Zustand (nur auf diesem Gerät) ---------- */
+  const LS = "kochbuddy.v1";
+  const defaults = () => ({
+    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {},
+    settings: { sound: true, vibrate: true, scale: 1, theme: "auto", eat: { Mittag: "12:00", Abend: "18:00" }, installHint: true },
+  });
+  let S = defaults();
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS) || "{}");
+    S = { ...defaults(), ...raw, settings: { ...defaults().settings, ...(raw.settings || {}) } };
+  } catch (e) { /* frisch starten */ }
+  const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { /* voll oder gesperrt */ } };
+  const bag = (name, key) => (S[name][key] = S[name][key] || {});
+  function toggle(name, key, idx) { const b = bag(name, key); if (b[idx]) delete b[idx]; else b[idx] = 1; save(); return !!b[idx]; }
+
+  /* ---------- Mengen ---------- */
+  const FR = [[0, ""], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"], [1, ""]];
+  function fmt(v) {
+    let w = Math.floor(v + 1e-9), f = v - w, best = FR[0], bd = 1;
+    for (const x of FR) { const d = Math.abs(f - x[0]); if (d < bd) { bd = d; best = x; } }
+    if (bd < 0.04) { if (best[0] === 1) return String(w + 1); return (w ? String(w) : "") + best[1] || "0"; }
+    return String(Math.round(v * 100) / 100).replace(".", ",");
+  }
+  function scaleVal(v, u, k) {
+    if (k === 1) return v;
+    let x = v * k;
+    if (u === "g" || u === "ml") x = x >= 100 ? Math.round(x / 10) * 10 : x >= 20 ? Math.round(x / 5) * 5 : Math.max(1, Math.round(x));
+    else if (u === "kg" || u === "l") x = Math.round(x * 20) / 20;
+    else if (!u) x = x < 5 ? Math.max(0.5, Math.round(x * 2) / 2) : Math.round(x);
+    else x = Math.max(0.25, Math.round(x * 4) / 4);
+    return x;
+  }
+  function amount(i, k) {
+    if (i.a == null) return "";
+    let s = fmt(scaleVal(i.a, i.u, k));
+    if (i.a2 != null) s += "–" + fmt(scaleVal(i.a2, i.u, k));
+    return s + (i.u ? " " + i.u : "");
+  }
+  const portions = (ref, r) => S.portions[ref] || r.base || 3;
+
+  /* ---------- Zeiten im Text erkennen ---------- */
+  const UNIT = { Sek: 1, Min: 60, Std: 3600 };
+  function durations(s) {
+    const out = [], re = /(je\s+)?(\d+(?:,\d+)?)(?:\s*[–-]\s*(\d+(?:,\d+)?))?\s*(Sek|Min|Std)\.?/g;
+    let m;
+    while ((m = re.exec(s || ""))) {
+      const mul = UNIT[m[4]], a = parseFloat(m[2].replace(",", ".")) * mul, b = m[3] ? parseFloat(m[3].replace(",", ".")) * mul : null;
+      out.push({ min: a, max: b, start: m.index, end: m.index + m[0].length, text: m[0].replace(/^je\s+/, ""), each: !!m[1] });
+    }
+    return out;
+  }
+  function contextLabel(s, d) {
+    const after = s.slice(d.end).replace(/^[\s.]+/, "");
+    if (/^(länger|mehr|weniger|später|vorher|bevor|Kochzeit|Garzeit|Backzeit|Zeit)/i.test(after)) return null;
+    if (/\bmit\s*$/i.test(s.slice(Math.max(0, d.start - 6), d.start))) return null;
+    const before = s.slice(Math.max(0, d.start - 12), d.start);
+    let lab = after.split(/[,.;:(]|\s(?:und|dann|bis|sonst|damit|dabei)\s/)[0].trim().split(/\s+/).slice(0, 4).join(" ");
+    if (/nach\s*$/i.test(before) && lab) lab = "dann " + lab;
+    return lab || "Timer";
+  }
+  const durText = (d) => d.text.replace(/\s+/g, " ");
+  function stepTimers(st) {
+    const list = [];
+    for (const d of durations(st.set)) {
+      if (d.min < 60) continue;
+      list.push({ ...d, label: (DEV_SHORT[st.dev] || "") + (d.each ? " · je Seite" : ""), main: true });
+      break;
+    }
+    for (const d of durations(st.t)) {
+      if (d.min < 60 || list.some((x) => x.min === d.min && x.max === d.max)) continue;
+      const lab = contextLabel(st.t, d);
+      if (lab) list.push({ ...d, label: lab });
+    }
+    return list;
+  }
+  function noteTimers(note) {
+    return durations(note).filter((d) => d.min >= 60).map((d) => ({ ...d, label: contextLabel(note, d) })).filter((d) => d.label);
+  }
+  const PHASE = /^((?:Am\s)?(?:Sonntag|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Vortag|Vorabend)(?:abend|mittag|morgen|früh|vormittag|nachmittag)?)\s*:\s*/i;
+  const phaseOf = (t) => { const m = (t || "").match(PHASE); return m ? { phase: m[1], text: t.slice(m[0].length) } : { phase: null, text: t || "" }; };
+
+  /* Zutaten, die in einem Schritt vorkommen (für "schon im Topf") */
+  const ADJ = new Set("frisch frische frischer frisches braune braun rote rot gelbe gelb grüne grün kleine klein große groß vorwiegend festkochend mehligkochend festkochende edelsüß mittelscharf scharf salzarm gehackt gehackte tiefgekühlt tk getrocknet gemahlen gerieben geriebener natur griechischer weiche weich kalte kalt warme warm junge jung reife reif säuerlich säuerliche dünne dicke oder und für die der das zum zur mit von etwas nach geschmack bio optional dressing".split(" "));
+  const HEADS = ["käse", "öl", "brühe", "nudeln", "sahne", "milch", "mehl", "zucker", "essig", "saft", "mark", "pulver", "senf", "butter", "quark", "salz", "pfeffer", "tomaten", "reis", "salat"];
+  function stems(ing) {
+    const base = (ing.n || "").replace(/\(.*?\)/g, " ").split(",")[0];
+    const out = new Set();
+    const add = (w) => {
+      w = (w || "").toLowerCase().replace(/[^a-zäöüß]/g, "");
+      if (w.length < 3 || ADJ.has(w)) return;
+      for (const h of HEADS) if (w.endsWith(h) && w !== h) out.add(h);
+      let s = w;
+      for (const suf of ["en", "n", "e", "s"]) if (s.length > 4 && s.endsWith(suf)) { s = s.slice(0, -suf.length); break; }
+      out.add(s);
+    };
+    base.split(/[\s-]+/).forEach(add);
+    if (ing.b) add(ing.b);
+    return [...out];
+  }
+  function ingsForStep(r, text) {
+    const t = " " + (text || "").toLowerCase() + " ";
+    const hit = [];
+    r.ingredients.forEach((ing, i) => {
+      const ss = stems(ing);
+      if (ss.some((s) => (s === "öl" ? /[\s(]öl[\s,.)]/.test(t) : t.includes(s)))) hit.push(i);
+    });
+    return hit;
+  }
+
+  /* ---------- Darstellung: Bausteine ---------- */
+  const tagClass = (t) => (t === "Fleisch" ? "meat" : t === "Fisch" ? "fish" : t === "Vegetarisch" ? "veg" : "");
+  const tagChips = (tags, max = 4) => (tags || []).slice(0, max).map((t) => `<span class="chip ${tagClass(t)}">${esc(t)}</span>`).join("");
+  function readout(st) {
+    if (!st.dev && !st.set) return "";
+    const segs = (st.set || "").split("·").map((x) => x.trim()).filter(Boolean)
+      .map((x) => `<span class="seg-v${/\d\s*(Sek|Min|Std)/.test(x) ? " t" : ""}">${esc(x)}</span>`).join("");
+    return `<div class="readout"><span class="dev">${esc(DEV[st.dev] || st.dev || "")}</span>${segs}</div>`;
+  }
+  const checkRow = (on, inner, attrs) => `<li class="check${on ? " on" : ""}" ${attrs}>${CHECK}<span class="txt">${inner}</span></li>`;
+  function timerChip(t, ctx) {
+    const run = S.timers.find((x) => x.ctx === ctx && x.state !== "gone");
+    if (run) return `<button class="timer-chip running" data-timer-open="${run.id}" data-live="${run.id}">${CLOCK}<span>${clock(remaining(run))}</span></button>`;
+    return `<button class="timer-chip" data-start='${esc(JSON.stringify(t))}'>${CLOCK}<span>${esc(durText(t))}${t.label ? " · " + esc(t.label) : ""}</span></button>`;
+  }
+  const shortTitle = (title) => title.split(/\s(?:mit|aus|in|vom|&)\s/)[0];
+  const excerpt = (s, n = 70) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, "") + " …" : s);
+
+  /* ---------- Router ---------- */
+  let inCooking = false;
+  async function route() {
+    const h = decodeURIComponent(location.hash.slice(1) || "/");
+    const parts = h.split("/").filter(Boolean);
+    const view = $("#view");
+    inCooking = parts[0] === "k";
+    document.body.classList.toggle("cooking", inCooking);
+    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", rezepte: "rezepte", einstellungen: "" }[parts[0] || ""] ?? "";
+    $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
+    try {
+      if (!weeks.length && parts[0] !== "einstellungen") await loadIndex();
+      if (!parts.length) await renderWeek(view);
+      else if (parts[0] === "r") await renderRecipe(view, parts[1]);
+      else if (parts[0] === "k") await renderCook(view, parts[1]);
+      else if (parts[0] === "vorkochen") await renderPrep(view);
+      else if (parts[0] === "checkliste") await renderChecklist(view);
+      else if (parts[0] === "rezepte") await renderAll(view);
+      else if (parts[0] === "einstellungen") renderSettings(view);
+      else await renderWeek(view);
+    } catch (e) {
+      view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><div class="card"><h2>Gerade nicht ladbar</h2><p class="muted">Ohne Internet zeigt die App die zuletzt geöffneten Daten. Diese hier waren noch nicht gespeichert.</p><p class="small muted">${esc(e.message)}</p><button class="btn primary" data-act="reload">Nochmal versuchen</button></div>`;
+    }
+    updateWake();
+    renderDock();
+  }
+  window.addEventListener("hashchange", () => { route(); if (!inCooking) window.scrollTo(0, 0); });
+
+  /* ---------- Woche ---------- */
+  const expanded = {};
+  let noticeOpen = false;
+  async function renderWeek(view) {
+    if (!weekId) { view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><p class="empty">Noch kein Wochenplan da.</p>`; return; }
+    const w = await week();
+    const t = today();
+    const todayDay = w.days.find((d) => d.iso === t);
+    const isPrepDay = addDays(w.week.start, -1) === t;
+    let html = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · Speiseplan</div><h1>${esc(shortLabel(w))}</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    if (weeks.length > 1) {
+      html += `<div class="seg" role="group" aria-label="Woche wählen">${weeks.slice().reverse().map((x) =>
+        `<button data-week="${x.id}" aria-pressed="${x.id === weekId}">KW ${x.kw}</button>`).join("")}</div>`;
+    }
+    if (installEvt && S.settings.installHint && !standalone()) {
+      html += `<div class="banner"><p>Als App auf dem Handy installieren?</p><button class="btn small" data-act="install">Installieren</button><button class="icon-btn" style="width:40px;height:40px;background:transparent;border:0;color:inherit" data-act="nohint" aria-label="Ausblenden">${CLOSE}</button></div>`;
+    }
+    if (embedded) html += `<div class="banner" style="background:var(--readout);color:var(--readout-ink)"><p style="font-weight:400">Vorschau im Claude-Fenster. Als installierte App auf dem Handy laufen Alarmton, Benachrichtigung und „Bildschirm bleibt an“ zuverlässig.</p></div>`;
+    if (w.notice) html += `<div class="notice${noticeOpen ? "" : " clamp"}" data-act="notice"><span>${esc(w.notice)}</span></div>`;
+    if (isPrepDay && w.prep && w.prep.timeline) {
+      html += `<a class="card today" style="display:block;text-decoration:none;color:inherit" href="#/vorkochen"><div class="eyebrow">Heute · Sonntag</div><h2>${esc(w.prep.title || "Vorkoch-Block")}</h2><p class="muted">${esc(w.prep.when || "")}</p><span class="btn primary" style="margin-top:6px">Vorkochen starten</span></a>`;
+    }
+    const ordered = todayDay ? [todayDay, ...w.days.filter((d) => d !== todayDay && d.iso > t), ...w.days.filter((d) => d !== todayDay && d.iso < t)] : w.days;
+    if (todayDay) html += dayCard(w, todayDay, true);
+    const ev = currentEvening(w);
+    if (ev && t >= addDays(w.week.start, -1) && t <= addDays(w.week.start, 5)) {
+      const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length;
+      html += `<a class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit" href="#/checkliste"><div style="flex:1"><div class="eyebrow">Heute Abend ${esc(ev.e.for || "")}</div><b>${done}/${ev.e.items.length} vorbereitet</b>${ev.e.tag ? ` <span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</div><span class="muted">›</span></a>`;
+    }
+    const rest = ordered.filter((d) => d !== todayDay);
+    if (rest.length) html += `<div class="section-title">${todayDay ? "Weitere Tage" : "Die Woche"}</div>` + rest.map((d) => dayCard(w, d, !!expanded[d.id], d.iso < t)).join("");
+    if (w.extras && w.extras.length) {
+      html += `<div class="section-title">Ersatzgerichte</div><div class="card">${w.extrasIntro ? `<p class="muted small" style="margin-top:0">${esc(w.extrasIntro)}</p>` : ""}<ul class="r-list" style="margin:0">${w.extras.map((id) => {
+        const r = w.recipes[id]; return r ? `<li><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a></li>` : "";
+      }).join("")}</ul></div>`;
+    }
+    view.innerHTML = html;
+  }
+  function dayCard(w, d, open, past) {
+    const isToday = d.iso === today();
+    const rem = bag("rem", `${weekId}:${d.id}`);
+    let h = `<section class="card${isToday ? " today" : ""}${open ? "" : " compact"}" ${past && !open ? 'style="opacity:.62"' : ""}>`;
+    h += `<div class="day-h" data-expand="${d.id}"><h2>${esc(d.name)}${isToday ? ' <span class="chip">Heute</span>' : ""}</h2><span class="date">${esc(d.date)}${isToday ? "" : open ? " ▴" : " ▾"}</span></div>`;
+    if (open && d.reminders && d.reminders.length) {
+      h += `<ul class="checks small" style="margin:6px 0 4px">${d.reminders.map((x, i) => checkRow(rem[i], esc(x), `data-rem="${d.id}:${i}"`)).join("")}</ul>`;
+    }
+    for (const m of d.meals) {
+      const r = w.recipes[m.recipe];
+      if (!r) continue;
+      const ref = `w:${weekId}:${m.recipe}`;
+      const prog = progress(ref, r);
+      h += `<div class="meal"><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? " · Hauptmahlzeit" : ""}</span>
+        <a href="#/r/${ref}" style="color:inherit;text-decoration:none"><b>${esc(r.title)}</b></a>
+        <span class="chips">${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min. · aktiv ${r.time.active}</span>`}${prog ? `<span class="chip">${prog}</span>` : ""}</span>`;
+      if (open) {
+        if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
+        const nts = m.mode === "aufwaermen" ? noteTimers(m.note) : [];
+        h += `<div class="go">${nts.map((x, i) => timerChip({ min: x.min, max: x.max, text: x.text, label: x.label, title: shortTitle(r.title), sub: "Aufwärmen", ctx: `${ref}:n${i}` }, `${ref}:n${i}`)).join("")}
+          <a class="btn small${m.mode === "aufwaermen" ? "" : " primary"}" href="#/${m.mode === "aufwaermen" ? "r" : "k"}/${ref}">${m.mode === "aufwaermen" ? "Rezept" : prog ? "Weiterkochen" : "Kochen"}</a></div>`;
+      }
+      h += `</div>`;
+    }
+    return h + `</section>`;
+  }
+  function progress(ref, r) {
+    const n = Object.keys(S.steps[ref] || {}).length;
+    if (!n) return "";
+    return n >= r.steps.length ? "Gekocht ✓" : `Schritt ${n}/${r.steps.length}`;
+  }
+  function currentEvening(w) {
+    const evs = (w.checklist && w.checklist.evenings) || [];
+    const name = DAYS[new Date().getDay()];
+    const i = evs.findIndex((e) => (e.day || "").startsWith(name));
+    return i < 0 ? null : { i, e: evs[i] };
+  }
+
+  /* ---------- Rezept ---------- */
+  async function renderRecipe(view, ref) {
+    const r = await getRecipe(ref);
+    const p = portions(ref, r), k = p / (r.base || 3);
+    const ing = bag("ing", ref), pre = bag("prep", ref), steps = bag("steps", ref);
+    const nDone = Object.keys(steps).length;
+    const fromWeek = ref.startsWith("w:");
+    const slot = fromWeek ? mealSlot(ref) : null;
+    const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
+    let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}">‹ ${fromWeek ? "Woche" : "Alle Rezepte"}</a>`;
+    h += `<div class="r-head"><h1>${esc(r.title)}</h1><div class="chips">${tagChips(r.tags, 6)}</div></div>`;
+    h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div></div>`;
+    h += `<div class="r-cols"><div class="sticky">`;
+    h += `<a class="btn primary big" href="#/k/${ref}">${nDone && nDone < r.steps.length ? `Weiterkochen · Schritt ${nDone + 1}` : nDone ? "Nochmal kochen" : "Kochmodus starten"}</a>`;
+    h += `<div class="card plan"><div class="line"><span><b>Essen um</b></span><input type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div></div>`;
+    h += `<div class="card"><div class="spread"><h3>Zutaten</h3><div class="stepper"><button data-portion="-1" aria-label="Weniger">−</button><output>${p} Port.</output><button data-portion="1" aria-label="Mehr">+</button></div></div>`;
+    if (p !== (r.base || 3)) h += `<p class="small muted">Umgerechnet von ${r.base} Portionen. Garzeiten und die Füllmenge im Mixtopf (max. 2 l) im Blick behalten.</p>`;
+    else if (r.servingsNote) h += `<p class="small muted">${esc(r.servingsNote)}</p>`;
+    h += `<ul class="checks ing">${r.ingredients.map((i, n) => checkRow(ing[n], `<span class="q">${esc(amount(i, k))}</span><span>${esc(i.n)}</span>`, `data-ing="${n}"`)).join("")}</ul></div>`;
+    h += `</div><div>`;
+    if (r.prep && r.prep.length) h += `<div class="card"><h3>Vorbereiten</h3><ul class="checks">${r.prep.map((x, n) => checkRow(pre[n], esc(x), `data-prep="${n}"`)).join("")}</ul></div>`;
+    h += `<div class="card"><h3>Zubereitung</h3><ol class="steps-list">${r.steps.map((st, n) => {
+      const ph = phaseOf(st.t);
+      return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${esc(ph.text)}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">⏱ ${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
+    }).join("")}</ol></div>`;
+    if (r.kid) h += `<div class="tip"><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div>`;
+    if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
+    h += `<div class="links">${r.bring ? `<a class="btn small" href="${esc(r.bring)}">In Bring übernehmen</a>` : ""}${r.page ? `<a class="btn small ghost" href="${esc(r.page)}">Rezeptseite</a>` : ""}${nDone || Object.keys(ing).length || Object.keys(pre).length ? `<button class="btn small ghost" data-act="reset-recipe">Häkchen zurücksetzen</button>` : ""}</div>`;
+    h += `</div></div>`;
+    view.innerHTML = h;
+    view.dataset.ref = ref;
+  }
+  function mealSlot(ref) {
+    const [, wid, rid] = ref.split(":");
+    const w = memo[weekFile(wid)] || (embedded && embedded.files[weekFile(wid)]);
+    if (!w) return null;
+    for (const d of w.days) for (const m of d.meals) if (m.recipe === rid && m.mode !== "aufwaermen") return m.slot;
+    return null;
+  }
+  function planText(r, eat) {
+    const now = Date.now(), total = r.time.total * 60000;
+    if (eat) {
+      const [H, M] = eat.split(":").map(Number);
+      const d = new Date(); d.setHours(H, M, 0, 0);
+      let start = d.getTime() - total, tomorrow = false;
+      if (d.getTime() < now - 2 * 3600000) { start += 86400000; tomorrow = true; }
+      if (start > now) return `<span>${tomorrow ? "Morgen spätestens" : "Spätestens"} anfangen um</span><span class="big-time">${hm(start)}</span>`;
+      return `<span>Schon knapp: jetzt starten, fertig ca.</span><span class="big-time">${hm(now + total)}</span>`;
+    }
+    return `<span>Jetzt starten, fertig ca.</span><span class="big-time">${hm(now + total)}</span>`;
+  }
+
+  /* ---------- Kochmodus ---------- */
+  let cookRef = null, cookStep = 0, showList = false;
+  async function renderCook(view, ref) {
+    const r = await getRecipe(ref);
+    if (cookRef !== ref) {
+      cookRef = ref; showList = false;
+      const done = bag("steps", ref);
+      const c = S.cook[ref];
+      cookStep = c && c.step != null ? c.step : r.steps.findIndex((_, i) => !done[i]);
+      if (cookStep < 0) cookStep = 0;
+    }
+    const c0 = S.cook[ref];
+    if (!c0 || !c0.start || Date.now() - (c0.touched || c0.start) > 6 * 3600000) { S.cook[ref] = { ...(c0 || {}), start: Date.now(), touched: Date.now(), step: cookStep }; save(); }
+    drawCook(view, r, ref);
+  }
+  function drawCook(view, r, ref) {
+    const steps = bag("steps", ref), ing = bag("ing", ref);
+    const k = portions(ref, r) / (r.base || 3);
+    const n = r.steps.length, i = Math.min(cookStep, n);
+    const doneCount = Object.keys(steps).length;
+    const c = S.cook[ref] || {};
+    const back = ref.startsWith("w:") ? `#/r/${ref}` : `#/r/${ref}`;
+    let h = `<div class="cook-top"><a class="icon-btn" href="${back}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Fertig"} · ${doneCount}/${n} erledigt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte">${LIST}</button></div>`;
+    h += `<div class="progress"><i style="width:${(doneCount / n) * 100}%"></i></div>`;
+    if (showList) {
+      h += `<div class="card"><h3>Alle Schritte</h3><ol class="steps-list">${r.steps.map((st, x) => `<li class="${steps[x] ? "done" : ""}" data-jump="${x}"><span class="stxt">${esc(phaseOf(st.t).text)}</span>${st.set ? `<div class="small muted">${esc(DEV_SHORT[st.dev] || "")} · ${esc(st.set)}</div>` : ""}</li>`).join("")}</ol></div>`;
+      h += `<div class="card"><h3>Alle Zutaten</h3><ul class="checks ing">${r.ingredients.map((x, m) => checkRow(ing[m], `<span class="q">${esc(amount(x, k))}</span><span>${esc(x.n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
+      view.innerHTML = h + cookFoot(i, n, true);
+      return;
+    }
+    if (i >= n) {
+      h += `<div class="done-hero"><div class="big">🍽</div><h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
+      if (r.kid) h += `<div class="tip"><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div>`;
+      if (r.store) h += `<div class="card"><h3>Aufbewahren</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
+      h += `<div class="links"><a class="btn primary" href="#/">Zur Woche</a><button class="btn ghost" data-act="cook-restart">Von vorn</button></div>`;
+      view.innerHTML = h + cookFoot(i, n);
+      return;
+    }
+    const st = r.steps[i], ph = phaseOf(st.t);
+    const timers = stepTimers(st);
+    const hits = ingsForStep(r, st.t);
+    h += `<div class="cook-cols"><div class="cook-step">`;
+    h += `<div class="num">SCHRITT ${i + 1}${steps[i] ? " · ERLEDIGT" : ""}</div>${ph.phase ? `<span class="phase" style="margin-top:8px">${esc(ph.phase)}</span>` : ""}`;
+    h += `<p class="stxt">${esc(ph.text)}</p>${readout(st)}`;
+    if (timers.length) h += `<div class="cook-timers">${timers.map((t, x) => timerChip({ min: t.min, max: t.max, text: t.text, label: t.label, title: shortTitle(r.title), sub: `Schritt ${i + 1}: ${excerpt(t.main ? ph.text : t.label + " – " + ph.text)}`, ctx: `${ref}:${i}:${x}` }, `${ref}:${i}:${x}`)).join("")}</div>`;
+    h += `</div><div>`;
+    if (hits.length) {
+      h += `<div class="card cook-ings"><h3>In diesem Schritt</h3><p class="small muted" style="margin:2px 0 4px">Abhaken, was schon drin ist.</p><ul class="checks ing">${hits.map((m) => checkRow(ing[m], `<span class="q">${esc(amount(r.ingredients[m], k))}</span><span>${esc(r.ingredients[m].n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
+    }
+    const left = r.ingredients.length - Object.keys(ing).length;
+    h += `<button class="btn ghost small" data-act="cook-list" style="margin-top:4px">Alle Zutaten & Schritte${left > 0 ? ` · ${left} Zutaten offen` : ""}</button>`;
+    h += `<div class="cook-meta"><span>${c.start ? `Gestartet ${hm(c.start)} · geplant fertig ${hm(c.start + r.time.total * 60000)}` : ""}</span>${wakeLock ? '<span class="wake">Bildschirm bleibt an</span>' : ""}</div>`;
+    h += `</div></div>`;
+    view.innerHTML = h + cookFoot(i, n);
+  }
+  const cookFoot = (i, n, list) => `<div class="cook-foot"><div class="in">${list
+    ? `<button class="btn big" data-act="cook-list" style="grid-column:1/-1">Zurück zum Schritt</button>`
+    : i >= n ? `<button class="btn big" data-act="cook-prev" style="grid-column:1/-1">‹ Letzter Schritt</button>`
+    : `<button class="btn big" data-act="cook-prev" ${i === 0 ? "disabled" : ""}>‹ Zurück</button><button class="btn big primary" data-act="cook-next">${i === n - 1 ? "Erledigt · fertig" : "Erledigt · weiter ›"}</button>`}</div></div>`;
+  async function cookGo(delta, markDone) {
+    const r = await getRecipe(cookRef);
+    if (markDone) { bag("steps", cookRef)[cookStep] = 1; }
+    cookStep = Math.max(0, Math.min(r.steps.length, cookStep + delta));
+    S.cook[cookRef] = { ...(S.cook[cookRef] || { start: Date.now() }), step: cookStep, touched: Date.now() };
+    save();
+    drawCook($("#view"), r, cookRef);
+    window.scrollTo(0, 0);
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(15);
+  }
+  // Wischen im Kochmodus
+  let touchX = null, touchY = null;
+  document.addEventListener("touchstart", (e) => { if (inCooking && !showList) { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; } }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    if (touchX == null) return;
+    const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+    touchX = null;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6 && !e.target.closest(".dock,#dock,.sheet")) cookGo(dx < 0 ? 1 : -1, dx < 0);
+  }, { passive: true });
+
+  /* ---------- Vorkochen (Sonntag) ---------- */
+  async function renderPrep(view) {
+    const w = await week();
+    const p = w.prep || {};
+    const B = S.block[weekId] || {};
+    const off = (t) => { const [a, b] = String(t).split(":").map(Number); return (a * 60 + b) * 60000; };
+    const el = B.start ? Date.now() - B.start : null;
+    let cur = -1;
+    if (el != null) (p.timeline || []).forEach((x, i) => { if (off(x.t) <= el) cur = i; });
+    const nextI = cur + 1 < (p.timeline || []).length ? cur + 1 : -1;
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · ${esc(p.short === "So" ? "Sonntag" : p.short || "")}</div><h1>${esc(p.title || "Vorkochen")}</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    if (!p.timeline) { view.innerHTML = h + `<p class="empty">Diese Woche gibt es keinen Vorkoch-Block.</p>`; return; }
+    if (p.when) h += `<p class="muted" style="margin:0 0 6px;font-weight:700">${esc(p.when)}</p>`;
+    if (p.intro) h += `<p>${esc(p.intro)}</p>`;
+    h += `<div class="card">`;
+    if (!B.start) h += `<button class="btn primary big" data-act="block-start">Jetzt mit dem Vorkochen starten</button><p class="small muted" style="margin:8px 0 0">Die Zeitleiste bekommt dann echte Uhrzeiten, der aktuelle Schritt wird markiert.</p>`;
+    else {
+      h += `<div class="spread"><div><div class="eyebrow">Gestartet ${hm(B.start)}</div><b>${nextI >= 0 ? `Als Nächstes um ${hm(B.start + off(p.timeline[nextI].t))} (in ${Math.max(0, Math.ceil((B.start + off(p.timeline[nextI].t) - Date.now()) / 60000))} Min.)` : "Letzter Schritt erreicht"}</b></div><button class="btn small ghost" data-act="block-reset">Neu starten</button></div>`;
+      h += `<div class="set-row"><span>Bei jedem Zeitpunkt erinnern</span><label class="switch"><input type="checkbox" data-act="block-beep" ${B.beep ? "checked" : ""}><span></span></label></div>`;
+    }
+    h += `<ul class="tl" style="margin-top:8px">${p.timeline.map((x, i) => `<li class="${i === cur ? "now" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : esc(x.t)}</span><span class="tx">${esc(x.text)}</span></li>`).join("")}</ul></div>`;
+    if (p.recipes && p.recipes.length) {
+      h += `<div class="section-title">Rezepte im Vorkoch-Block</div><ul class="r-list">${p.recipes.map((id) => {
+        const r = w.recipes[id]; return r ? `<li><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="small muted">${esc(p.recipeNote || "")}</span></a></li>` : "";
+      }).join("")}</ul>`;
+    }
+    if (p.storage && p.storage.length) {
+      h += `<div class="section-title">Was wohin kommt</div><div class="card"><table class="storage">${p.storage.map((s) => `<tr><td>${esc(s.what)}</td><td>${esc(s.where)}<div class="small muted">${esc(s.until || "")}</div></td></tr>`).join("")}</table></div>`;
+    }
+    view.innerHTML = h;
+  }
+  function blockTimers(beep) {
+    const B = S.block[weekId];
+    S.timers = S.timers.filter((t) => !(t.ctx || "").startsWith(`block:${weekId}:`));
+    if (beep && B && B.start) {
+      week().then((w) => {
+        (w.prep.timeline || []).forEach((x, i) => {
+          const [a, b] = x.t.split(":").map(Number), at = B.start + (a * 60 + b) * 60000;
+          if (at > Date.now() + 5000) addTimer({ title: "Vorkochen", sub: x.text, label: `+${x.t}`, ctx: `block:${weekId}:${i}`, endAt: at, min: (at - Date.now()) / 1000 }, true);
+        });
+        save(); renderDock(); scheduleTimers();
+      });
+    }
+    save(); renderDock();
+  }
+
+  /* ---------- Abend-Checkliste ---------- */
+  async function renderChecklist(view) {
+    const w = await week();
+    const c = w.checklist || {};
+    const cur = currentEvening(w);
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw}</div><h1>${esc(c.title || "Abend-Checkliste")}</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    if (c.intro) h += `<p class="muted">${esc(c.intro)}</p>`;
+    const evs = (c.evenings || []).map((e, i) => ({ e, i }));
+    if (cur) evs.sort((a, b) => (a.i === cur.i ? -1 : b.i === cur.i ? 1 : 0));
+    h += evs.map(({ e, i }) => {
+      const b = bag("check", `${weekId}:${i}`);
+      const n = Object.keys(b).length;
+      return `<section class="card${cur && cur.i === i ? " today" : ""}"><div class="spread"><div><h2>${esc(e.day)}${cur && cur.i === i ? ' <span class="chip">Heute</span>' : ""}</h2><div class="muted small" style="font-weight:700">${esc(e.for || "")} · ${n}/${e.items.length}</div></div>${e.tag ? `<span class="chip pump">${esc(e.tag)}</span>` : ""}</div>
+        <ul class="checks" style="margin-top:6px">${e.items.map((x, j) => checkRow(b[j], esc(x), `data-cl="${i}:${j}"`)).join("")}</ul>${e.note ? `<p class="small muted" style="margin:6px 0 0">${esc(e.note)}</p>` : ""}</section>`;
+    }).join("");
+    if (!evs.length) h += `<p class="empty">Keine Checkliste in diesem Plan.</p>`;
+    view.innerHTML = h;
+  }
+
+  /* ---------- Alle Rezepte ---------- */
+  let filter = { q: "", tag: "Alle" };
+  async function renderAll(view) {
+    let list;
+    try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
+    const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
+    let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div><a class="icon-btn" href="#/einstellungen" aria-label="Einstellungen">${GEAR}</a></header>`;
+    h += `<input class="search" type="search" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search>`;
+    h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
+    h += `<ul class="r-list" id="rlist"></ul>`;
+    view.innerHTML = h;
+    view._list = list;
+    drawList(view);
+  }
+  function drawList(view) {
+    const q = filter.q.toLowerCase().trim();
+    const items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
+      (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
+    $("#rlist", view).innerHTML = items.map((m) => `<li><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
+      `<li class="empty">Nichts gefunden.</li>`;
+  }
+
+  /* ---------- Einstellungen ---------- */
+  function renderSettings(view) {
+    const st = S.settings;
+    const perm = "Notification" in window ? Notification.permission : "unsupported";
+    let h = `<a class="back" href="#/">‹ Woche</a><header class="top"><div><div class="eyebrow">Kochbuddy</div><h1>Einstellungen</h1></div></header>`;
+    h += `<div class="card"><h3>Anzeige</h3>
+      <div class="set-row"><span>Schriftgröße</span><div class="seg" style="padding:0">${[[1, "A"], [1.15, "A+"], [1.3, "A++"]].map(([v, l]) => `<button data-scale="${v}" aria-pressed="${st.scale === v}">${l}</button>`).join("")}</div></div>
+      <div class="set-row"><span>Farben</span><div class="seg" style="padding:0">${[["auto", "Auto"], ["light", "Hell"], ["dark", "Dunkel"]].map(([v, l]) => `<button data-theme="${v}" aria-pressed="${st.theme === v}">${l}</button>`).join("")}</div></div></div>`;
+    h += `<div class="card"><h3>Timer & Wecker</h3>
+      <div class="set-row"><span>Ton</span><label class="switch"><input type="checkbox" data-set="sound" ${st.sound ? "checked" : ""}><span></span></label></div>
+      <div class="set-row"><span>Vibration</span><label class="switch"><input type="checkbox" data-set="vibrate" ${st.vibrate ? "checked" : ""}><span></span></label></div>
+      <div class="set-row"><span>Benachrichtigungen<br><small class="muted">${{ granted: "erlaubt", denied: "blockiert – in den Android-Einstellungen der App erlauben", default: "noch nicht gefragt", unsupported: "hier nicht verfügbar" }[perm]}</small></span>${perm === "default" ? '<button class="btn small" data-act="notify">Erlauben</button>' : ""}</div>
+      <div class="set-row"><span>Alarm testen</span><button class="btn small" data-act="test-alarm">Test</button></div>
+      <p class="small muted" style="margin:10px 0 0">Beim Kochen bleibt der Bildschirm automatisch an, solange ein Timer läuft. Wenn du die App verlässt oder das Handy sperrst, kann Android den Alarm verzögern – dann kommt er als Benachrichtigung, sobald das Handy wieder aufwacht.</p></div>`;
+    h += `<div class="card"><h3>Essenszeiten</h3><p class="small muted" style="margin:4px 0 6px">Daraus rechnet die App, wann du anfangen musst.</p>
+      <div class="set-row"><span>Mittag</span><input class="field" style="width:auto" type="time" value="${esc(st.eat.Mittag)}" data-eatdef="Mittag"></div>
+      <div class="set-row"><span>Abend</span><input class="field" style="width:auto" type="time" value="${esc(st.eat.Abend)}" data-eatdef="Abend"></div></div>`;
+    h += `<div class="card"><h3>App</h3>
+      <div class="set-row"><span>${standalone() ? "Läuft als installierte App" : "Auf dem Startbildschirm installieren"}</span>${!standalone() ? (installEvt ? '<button class="btn small primary" data-act="install">Installieren</button>' : "") : "✓"}</div>
+      ${!standalone() && !installEvt ? '<p class="small muted" style="margin:6px 0 0">In Chrome: Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.</p>' : ""}
+      <div class="set-row"><span>Wochenplan neu laden<br><small class="muted">${weeks.length ? `${weeks.length} Woche(n) gespeichert, neueste KW ${weeks[0].kw}` : ""}</small></span><button class="btn small" data-act="reload">Aktualisieren</button></div>
+      <div class="set-row"><span>Alle Häkchen und Timer löschen</span><button class="btn small ghost" data-act="wipe">Zurücksetzen</button></div></div>`;
+    view.innerHTML = h;
+  }
+
+  /* ---------- Timer ---------- */
+  const clock = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
+  const remaining = (t) => (t.state === "pause" ? t.rem : t.state === "done" ? 0 : Math.max(0, (t.end - Date.now()) / 1000));
+  function addTimer(o, quiet) {
+    const t = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: o.title || "Timer", sub: o.sub || "", label: o.label || "", ctx: o.ctx || "",
+      total: o.min, extra: o.max ? o.max - o.min : 0, end: o.endAt || Date.now() + o.min * 1000, state: "run" };
+    S.timers.push(t);
+    if (!quiet) { save(); scheduleTimers(); renderDock(); refreshLive(); updateWake(); }
+    return t;
+  }
+  function startFromChip(data) {
+    unlockAudio(); askNotify();
+    addTimer(data);
+    toast(`Timer läuft: ${durText(data)}`);
+    rerenderSoft();
+  }
+  let tickHandle = null, timeouts = [];
+  function scheduleTimers() {
+    timeouts.forEach(clearTimeout); timeouts = [];
+    for (const t of S.timers) if (t.state === "run") timeouts.push(setTimeout(tick, Math.max(0, t.end - Date.now()) + 30));
+    if (!tickHandle) tickHandle = setInterval(tick, 500);
+  }
+  function tick() {
+    let fired = false;
+    for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); fired = true; }
+    if (fired) { save(); showAlarm(); renderDock(); rerenderSoft(); updateWake(); }
+    refreshLive();
+    if (!S.timers.length && tickHandle) { clearInterval(tickHandle); tickHandle = null; }
+  }
+  function refreshLive() {
+    for (const t of S.timers) {
+      $$(`[data-live="${t.id}"] span`).forEach((el) => (el.textContent = clock(remaining(t))));
+      const pill = $(`#dock [data-timer-open="${t.id}"] .tt`); if (pill) pill.textContent = t.state === "done" ? "Fertig" : clock(remaining(t));
+    }
+  }
+  function renderDock() {
+    const dock = $("#dock");
+    const list = S.timers.filter((t) => t.state !== "gone");
+    if (!list.length && !inCooking) { dock.hidden = true; document.documentElement.style.setProperty("--dock-h", "0px"); return; }
+    dock.hidden = false;
+    list.sort((a, b) => (a.state === "done" ? -1 : b.state === "done" ? 1 : remaining(a) - remaining(b)));
+    dock.innerHTML = list.map((t) => `<button class="tpill ${t.state === "done" ? "done" : t.state === "pause" ? "paused" : ""}" data-timer-open="${t.id}"><span class="tt">${t.state === "done" ? "Fertig" : clock(remaining(t))}</span><span class="tl2">${esc(t.title)}<br>${esc(t.label || t.sub)}</span></button>`).join("") +
+      `<button class="tpill add" data-act="new-timer">${CLOCK.replace("<svg", '<svg class="ico"')} Timer</button>`;
+    document.documentElement.style.setProperty("--dock-h", "62px");
+  }
+  function timerSheet(id) {
+    const t = S.timers.find((x) => x.id === id);
+    if (!t) return;
+    openSheet(`<h2>${esc(t.title)}</h2><p class="muted" style="margin:4px 0 0">${esc(t.sub || t.label)}</p>
+      <div style="font:600 3rem/1.1 var(--font-mono);text-align:center;margin:18px 0" data-live="${t.id}"><span>${t.state === "done" ? "00:00" : clock(remaining(t))}</span></div>
+      <div class="presets"><button class="btn" data-tadd="-60">−1</button><button class="btn" data-tadd="60">+1</button><button class="btn" data-tadd="300">+5</button><button class="btn" data-tadd="600">+10</button></div>
+      <div class="row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${t.state === "run" ? '<button class="btn big" data-tact="pause">Pause</button>' : t.state === "pause" ? '<button class="btn big primary" data-tact="resume">Weiter</button>' : '<button class="btn big primary" data-tadd="60">+1 Min.</button>'}<button class="btn big pump" data-tact="stop">Stopp</button></div>`, { timer: id });
+  }
+  function adjustTimer(id, sec) {
+    const t = S.timers.find((x) => x.id === id); if (!t) return;
+    if (t.state === "pause") t.rem = Math.max(1, t.rem + sec);
+    else if (t.state === "done") { t.state = "run"; t.end = Date.now() + Math.max(1, sec) * 1000; }
+    else t.end = Math.max(Date.now() + 1000, t.end + sec * 1000);
+    save(); scheduleTimers(); renderDock(); refreshLive(); dismissAlarmIfNone();
+  }
+  function timerAct(id, act) {
+    const t = S.timers.find((x) => x.id === id); if (!t) return;
+    if (act === "pause" && t.state === "run") { t.rem = remaining(t); t.state = "pause"; }
+    else if (act === "resume" && t.state === "pause") { t.end = Date.now() + t.rem * 1000; t.state = "run"; }
+    else if (act === "stop") S.timers = S.timers.filter((x) => x.id !== id);
+    save(); scheduleTimers(); renderDock(); rerenderSoft(); updateWake(); dismissAlarmIfNone();
+  }
+  function newTimerSheet() {
+    openSheet(`<h2>Eigener Timer</h2><div class="presets">${[1, 3, 5, 8, 10, 12, 15, 20, 25, 30, 45, 60].map((m) => `<button class="btn" data-quick="${m}">${m}</button>`).join("")}</div>
+      <div class="row"><input class="field" style="flex:1" type="number" inputmode="numeric" min="1" max="600" placeholder="Minuten" data-qmin><input class="field" style="flex:2" type="text" placeholder="Wofür? z. B. Nudeln" data-qlabel></div>
+      <button class="btn primary big" style="margin-top:12px" data-act="quick-go">Starten</button><p class="small muted" style="margin:8px 0 0">Zahl antippen startet sofort (Minuten).</p>`);
+  }
+
+  /* ---------- Alarm ---------- */
+  let audio = null, ringHandle = null, ringStarted = 0;
+  function unlockAudio() {
+    if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; } }
+    if (audio && audio.state === "suspended") audio.resume();
+  }
+  function beep(times = 3) {
+    if (!audio || !S.settings.sound) return;
+    const t0 = audio.currentTime;
+    for (let i = 0; i < times; i++) {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = "square"; o.frequency.value = i % 2 ? 988 : 880;
+      g.gain.setValueAtTime(0.0001, t0 + i * 0.22); g.gain.exponentialRampToValueAtTime(0.35, t0 + i * 0.22 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.22 + 0.17);
+      o.connect(g).connect(audio.destination); o.start(t0 + i * 0.22); o.stop(t0 + i * 0.22 + 0.2);
+    }
+  }
+  function showAlarm() {
+    const due = S.timers.filter((t) => t.state === "done");
+    const box = $("#alarm");
+    if (!due.length) { box.hidden = true; stopRing(); return; }
+    const t = due[0];
+    const ago = Math.round((Date.now() - (t.firedAt || t.end)) / 60000);
+    const late = Math.round((t.firedAt - t.end) / 60000);
+    box.innerHTML = `<div class="ring">⏰</div><div class="eyebrow" style="color:#fff;opacity:.85">${esc(t.title)}${t.label && t.sub ? " · " + esc(t.label) : ""}</div><h2>Zeit ist um</h2><p>${esc(t.sub || t.label)}</p>
+      ${t.extra ? `<p style="font-weight:700">Jetzt prüfen – bei Bedarf noch bis zu ${Math.round(t.extra / 60)} Min.</p>` : ""}
+      ${late > 1 ? `<p class="small">Abgelaufen um ${hm(t.end)} (vor ${Math.max(late, ago)} Min.)</p>` : ""}
+      ${due.length > 1 ? `<p class="small">Noch ${due.length - 1} weitere(r) Timer fertig</p>` : ""}
+      <div class="acts">${t.extra ? `<button class="btn" data-alarm="extra">+${Math.round(t.extra / 60)} Min.</button>` : `<button class="btn" data-alarm="1">+1 Min.</button>`}${t.extra && Math.round(t.extra / 60) !== 1 ? `<button class="btn" data-alarm="1">+1 Min.</button>` : `<button class="btn" data-alarm="5">+5 Min.</button>`}<button class="btn stop" data-alarm="off">Aus</button></div>`;
+    box.dataset.id = t.id;
+    box.hidden = false;
+    startRing();
+    if (document.visibilityState !== "visible") notify(t);
+  }
+  function startRing() {
+    if (ringHandle) return;
+    ringStarted = Date.now();
+    const ring = () => {
+      if (Date.now() - ringStarted > 180000) { stopRing(); return; } // nach 3 Min. still, Anzeige bleibt
+      beep(3);
+      if (S.settings.vibrate && navigator.vibrate) navigator.vibrate([400, 150, 400]);
+    };
+    ring(); ringHandle = setInterval(ring, 1600);
+  }
+  function stopRing() { if (ringHandle) { clearInterval(ringHandle); ringHandle = null; } if (navigator.vibrate) navigator.vibrate(0); }
+  function dismissAlarmIfNone() { if (!S.timers.some((t) => t.state === "done")) { $("#alarm").hidden = true; stopRing(); } else showAlarm(); }
+  async function notify(t) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const opts = { body: t.sub || t.label || "", tag: "timer-" + t.id, renotify: true, requireInteraction: true, vibrate: [500, 200, 500, 200, 800], icon: "icons/icon-192.png", badge: "icons/badge-96.png" };
+    try { const reg = navigator.serviceWorker && (await navigator.serviceWorker.getRegistration()); if (reg) reg.showNotification(`⏰ ${t.title}: Zeit ist um`, opts); else new Notification(`⏰ ${t.title}: Zeit ist um`, opts); } catch (e) { /* egal */ }
+  }
+  function askNotify() { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {}); }
+
+  /* ---------- Bildschirm an lassen ---------- */
+  let wakeLock = null;
+  async function updateWake() {
+    const B = S.block[weekId];
+    const want = inCooking || S.timers.some((t) => t.state === "run" || t.state === "done") || (B && B.start && Date.now() - B.start < 4 * 3600000 && location.hash.startsWith("#/vorkochen"));
+    if (want && !wakeLock && "wakeLock" in navigator && document.visibilityState === "visible") {
+      try {
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => { wakeLock = null; });
+        const m = $(".cook-meta"); if (m && !m.querySelector(".wake")) m.insertAdjacentHTML("beforeend", '<span class="wake">Bildschirm bleibt an</span>');
+      } catch (e) { wakeLock = null; }
+    } else if (!want && wakeLock) { try { await wakeLock.release(); } catch (e) { /* schon weg */ } wakeLock = null; }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    tick(); updateWake();
+    if (Date.now() - lastLoad > 30 * 60000 && !embedded) loadIndex(true).then(() => { if (!inCooking) rerenderSoft(); }).catch(() => {});
+  });
+
+  /* ---------- Schublade, Toast ---------- */
+  function openSheet(html, data = {}) {
+    const s = $("#sheet");
+    s.innerHTML = `<div class="panel"><div class="grab"></div>${html}</div>`;
+    s.dataset.timer = data.timer || "";
+    s.hidden = false;
+  }
+  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; };
+  let toastT = null;
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2200); }
+  function rerenderSoft() { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); }
+
+  /* ---------- Klicks ---------- */
+  document.addEventListener("click", async (e) => {
+    unlockAudio();
+    const el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-scale],[data-theme],[data-alarm],[data-tadd],[data-tact],[data-quick]");
+    if (!el) { if (e.target.id === "sheet") closeSheet(); return; }
+    const d = el.dataset, view = $("#view");
+    if (d.start) { e.preventDefault(); startFromChip(JSON.parse(d.start)); return; }
+    if (d.timerOpen) { e.preventDefault(); timerSheet(d.timerOpen); return; }
+    if (d.ing != null) {
+      const ref = view.dataset.ref || cookRef;
+      const on = toggle("ing", inCooking ? cookRef : ref, d.ing);
+      $$(`[data-ing="${d.ing}"]`).forEach((x) => x.classList.toggle("on", on));
+      if (on && navigator.vibrate && S.settings.vibrate) navigator.vibrate(10);
+      return;
+    }
+    if (d.prep != null) { el.classList.toggle("on", toggle("prep", view.dataset.ref, d.prep)); return; }
+    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); return; }
+    if (d.cl) { const [i, j] = d.cl.split(":"); toggle("check", `${weekId}:${i}`, j); rerenderSoft(); return; }
+    if (d.tl != null) { const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on"); return; }
+    if (d.go != null) { const ref = view.dataset.ref; S.cook[ref] = { ...(S.cook[ref] || { start: Date.now() }), step: +d.go }; cookRef = null; save(); location.hash = `#/k/${ref}`; return; }
+    if (d.jump != null) { cookStep = +d.jump; showList = false; S.cook[cookRef].step = cookStep; save(); drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); return; }
+    if (d.expand) { if (!view.querySelector(`.today [data-expand="${d.expand}"]`)) { expanded[d.expand] = !expanded[d.expand]; rerenderSoft(); } return; }
+    if (d.week) { weekId = d.week; rerenderSoft(); return; }
+    if (d.portion) {
+      const ref = view.dataset.ref, r = await getRecipe(ref);
+      S.portions[ref] = Math.max(1, Math.min(12, portions(ref, r) + +d.portion)); save(); rerenderSoft(); return;
+    }
+    if (d.tag) { filter.tag = d.tag; $$("[data-tag]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tag === d.tag)); drawList(view); return; }
+    if (d.scale) { S.settings.scale = +d.scale; save(); applySettings(); renderSettings(view); return; }
+    if (d.theme) { S.settings.theme = d.theme; save(); applySettings(); renderSettings(view); return; }
+    if (d.alarm) {
+      const id = $("#alarm").dataset.id, t = S.timers.find((x) => x.id === id);
+      if (t) {
+        if (d.alarm === "off") S.timers = S.timers.filter((x) => x.id !== id);
+        else { const sec = d.alarm === "extra" ? t.extra : +d.alarm * 60; t.state = "run"; t.end = Date.now() + sec * 1000; t.extra = 0; }
+        save(); scheduleTimers();
+      }
+      stopRing(); dismissAlarmIfNone(); renderDock(); rerenderSoft(); updateWake();
+      return;
+    }
+    if (d.tadd) { adjustTimer($("#sheet").dataset.timer, +d.tadd); return; }
+    if (d.tact) { timerAct($("#sheet").dataset.timer, d.tact); closeSheet(); return; }
+    if (d.quick) { askNotify(); addTimer({ min: +d.quick * 60, title: "Timer", label: `${d.quick} Min.`, sub: $("[data-qlabel]") ? $("[data-qlabel]").value : "" }); closeSheet(); toast(`Timer ${d.quick} Min. läuft`); return; }
+    switch (d.act) {
+      case "cook-next": cookGo(1, true); break;
+      case "cook-prev": cookGo(-1, false); break;
+      case "cook-list": showList = !showList; drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); break;
+      case "cook-restart": delete S.steps[cookRef]; delete S.ing[cookRef]; S.cook[cookRef] = { start: Date.now(), step: 0 }; cookStep = 0; save(); drawCook(view, await getRecipe(cookRef), cookRef); break;
+      case "reset-recipe": { const ref = view.dataset.ref; ["steps", "ing", "prep", "cook"].forEach((k) => delete S[k][ref]); if (cookRef === ref) cookRef = null; save(); rerenderSoft(); toast("Zurückgesetzt"); break; }
+      case "block-start": S.block[weekId] = { start: Date.now(), done: {}, beep: false }; save(); updateWake(); rerenderSoft(); break;
+      case "block-reset": blockTimers(false); delete S.block[weekId]; save(); rerenderSoft(); break;
+      case "new-timer": newTimerSheet(); break;
+      case "quick-go": { const m = parseFloat(($("[data-qmin]") || {}).value); if (m > 0) { askNotify(); addTimer({ min: m * 60, title: ($("[data-qlabel]").value || "Timer").trim(), label: `${fmt(m)} Min.` }); closeSheet(); } break; }
+      case "notify": if ("Notification" in window) await Notification.requestPermission(); renderSettings(view); break;
+      case "test-alarm": addTimer({ min: 3, title: "Test", sub: "So klingt der Alarm", label: "Test" }); toast("Alarm in 3 Sekunden"); break;
+      case "install": if (installEvt) { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; rerenderSoft(); } break;
+      case "notice": noticeOpen = !noticeOpen; el.classList.toggle("clamp", !noticeOpen); break;
+      case "nohint": S.settings.installHint = false; save(); rerenderSoft(); break;
+      case "reload": Object.keys(memo).forEach((k) => delete memo[k]); try { await loadIndex(true); toast("Wochenplan aktualisiert"); } catch (er) { toast("Gerade kein Netz"); } rerenderSoft(); break;
+      case "wipe": if (confirmWipe()) { const keep = S.settings; S = defaults(); S.settings = keep; save(); stopRing(); $("#alarm").hidden = true; rerenderSoft(); toast("Alles zurückgesetzt"); } break;
+    }
+  });
+  let wipeArmed = 0;
+  function confirmWipe() { if (Date.now() - wipeArmed < 4000) return true; wipeArmed = Date.now(); toast("Nochmal tippen zum Löschen"); return false; }
+
+  document.addEventListener("change", (e) => {
+    const el = e.target;
+    if (el.dataset.eat) { S.eat[el.dataset.eat] = el.value; save(); getRecipe(el.dataset.eat).then((r) => ($("#plan-out").innerHTML = planText(r, el.value))); }
+    if (el.dataset.eatdef) { S.settings.eat[el.dataset.eatdef] = el.value; save(); }
+    if (el.dataset.set) { S.settings[el.dataset.set] = el.checked; save(); }
+    if (el.dataset.act === "block-beep") { S.block[weekId].beep = el.checked; save(); unlockAudio(); askNotify(); blockTimers(el.checked); }
+  });
+  document.addEventListener("input", (e) => { if (e.target.dataset.search != null) { filter.q = e.target.value; drawList($("#view")); } });
+
+  /* ---------- Einstellungen anwenden, Installation ---------- */
+  function applySettings() {
+    const st = S.settings, dark = st.theme === "dark" || (st.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.style.setProperty("--scale", st.scale);
+    const meta = $('meta[name="theme-color"]'); if (meta) meta.content = dark ? "#0E1715" : "#0D6657";
+  }
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applySettings);
+  const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  let installEvt = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; if (!location.hash || location.hash === "#/") rerenderSoft(); });
+  window.addEventListener("appinstalled", () => { installEvt = null; toast("Installiert – du findest den Kochbuddy jetzt bei deinen Apps"); });
+
+  /* ---------- Start ---------- */
+  applySettings();
+  if ("serviceWorker" in navigator && !embedded && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
+  save();
+  route().then(() => { if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
+  // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
+  setInterval(() => { if (location.hash.startsWith("#/vorkochen") && S.block[weekId] && $("#sheet").hidden) rerenderSoft(); }, 30000);
+})();

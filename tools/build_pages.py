@@ -222,13 +222,17 @@ def main():
 <h2>Alle Rezepte ({len(manifest)})</h2>
 <ul class="list">{items(manifest)}</ul>
 <h2>Weitere</h2>
-<ul class="list"><li><a href="Gurkensalat.html"><b>Gurkensalat mit Joghurt</b></a></li><li><a href="bolognese.html"><b>Bolognese (Test)</b></a></li></ul>
+<ul class="list"><li><a href="app/"><b>Koch-App</b><small>Kochmodus mit Timern und Abhaken – auf dem Handy als App installierbar</small></a></li><li><a href="Gurkensalat.html"><b>Gurkensalat mit Joghurt</b></a></li><li><a href="bolognese.html"><b>Bolognese (Test)</b></a></li></ul>
 </main>
 </body>
 </html>
 """
     (ROOT / "index.html").write_text(index, encoding="utf-8")
     print(f"{len(used)} Rezeptseiten geschrieben, {len(manifest)} im Verzeichnis")
+    try:
+        app_data(plan, used, manifest)
+    except Exception as ex:  # die Koch-App darf den Wochenplan nie blockieren
+        print(f"WARNUNG: Koch-App-Daten übersprungen ({ex})")
     einkauf_pages(plan)
     print(f"{bring.write_aliases()} kurze Import-Adressen unter b/")
     rc = bring._report(UNKNOWN)
@@ -284,6 +288,89 @@ def einkauf_pages(plan):
 
 def _q(it):
     return bring._flat(it.get("q")) or ""
+
+
+# --- Koch-App (app/) -------------------------------------------------------------------------
+# Die App unter app/ liest nur diese JSON-Dateien. Öffentlich: nur Rezepte, Tagesplan, Vorkoch-Block
+# und Abend-Checkliste – keine Einkaufs-, Angebots- oder Preisdaten, Vornamen per --hide ersetzt.
+APP_DATA = ROOT / "app" / "daten"
+APP_WEEKS_KEPT = 8
+
+
+def _anon_deep(x):
+    if isinstance(x, str):
+        return anonym(x)
+    if isinstance(x, list):
+        return [_anon_deep(v) for v in x]
+    if isinstance(x, dict):
+        return {k: _anon_deep(v) for k, v in x.items()}
+    return x
+
+
+def _pick(d, keys):
+    return {k: d[k] for k in keys if d.get(k) not in (None, "", [])}
+
+
+def app_recipe(rid, r, weeks=None):
+    slug = slugify(r["title"])
+    short = bring.short_url(r["title"])
+    rec = {
+        "id": rid, "slug": slug, "title": r["title"], "tags": r.get("tags", []),
+        "time": r.get("time", {}), "base": r.get("base", 3), "servingsNote": r.get("servingsNote", ""),
+        "ingredients": [_pick(i, ("a", "a2", "u", "n", "b")) for i in r.get("ingredients", [])],
+        "prep": r.get("prep", []),
+        "steps": [_pick(s, ("t", "dev", "set")) for s in r.get("steps", [])],
+        "kid": r.get("anton", ""), "store": r.get("store", ""),
+        "page": SITE + "rezepte/" + slug + ".html", "bring": bring.deeplink(short, r.get("base", 3)),
+    }
+    if weeks:
+        rec["weeks"] = weeks
+    return _anon_deep(rec)
+
+
+def app_data(plan, used, manifest):
+    w = plan["week"]
+    (APP_DATA / "wochen").mkdir(parents=True, exist_ok=True)
+    (APP_DATA / "rezepte").mkdir(parents=True, exist_ok=True)
+    by_slug = {m["slug"]: m for m in manifest}
+    recipes = {}
+    for rid in used:
+        r = plan["recipes"][rid]
+        m = by_slug.get(slugify(r["title"]), {})
+        recipes[rid] = app_recipe(rid, r, {"first": m.get("first"), "last": m.get("last")})
+    days = [dict(_pick(d, ("id", "short", "name", "date", "iso", "main", "reminders")),
+                 meals=[_pick(m, ("slot", "kind", "recipe", "mode", "note", "badge")) for m in d.get("meals", [])])
+            for d in plan.get("days", [])]
+    prep = _pick(plan.get("prep", {}), ("title", "short", "when", "intro", "timeline", "recipes", "recipeNote", "storage"))
+    week = _anon_deep({
+        "v": 1,
+        "week": _pick(w, ("kw", "year", "label", "start")),
+        "notice": plan.get("notice", ""),
+        "days": days, "prep": prep,
+        "checklist": plan.get("checklist", {}),
+        "extras": plan.get("extras", []), "extrasIntro": plan.get("extrasIntro", ""),
+        "recipes": recipes,
+    })
+    fname = f"kw{int(w['kw']):02d}-{w['year']}.json"
+    dump = lambda o: json.dumps(o, ensure_ascii=False, separators=(",", ":"))
+    text = dump(week)
+    hits = sorted(set(HIDE) & set(re.findall(r"\w+", text)))
+    if hits:
+        print(f"WARNUNG: Koch-App-Daten enthalten {', '.join(hits)} – bitte Plan-Texte neutral formulieren")
+    (APP_DATA / "wochen" / fname).write_text(text, encoding="utf-8")
+    for rec in recipes.values():
+        (APP_DATA / "rezepte" / f"{rec['slug']}.json").write_text(dump(rec), encoding="utf-8")
+    idx_path = APP_DATA / "wochen.json"
+    idx = json.loads(idx_path.read_text(encoding="utf-8")) if idx_path.exists() else {"weeks": []}
+    weeks = [x for x in idx.get("weeks", []) if x.get("file") != fname]
+    weeks.append({"kw": w["kw"], "year": w["year"], "label": w["label"], "start": w["start"], "file": fname})
+    weeks = sorted(weeks, key=lambda x: x["start"], reverse=True)[:APP_WEEKS_KEPT]
+    idx_path.write_text(json.dumps({"weeks": weeks}, ensure_ascii=False, indent=1), encoding="utf-8")
+    # gleich vormerken, damit der Wochen-Commit die App-Daten sicher mitnimmt
+    if (ROOT / ".git").exists():
+        import subprocess
+        subprocess.run(["git", "add", "app/daten"], cwd=ROOT, capture_output=True)
+    print(f"Koch-App: Woche {fname} und {len(recipes)} Rezepte unter app/daten/ (für den Commit vorgemerkt)")
 
 
 if __name__ == "__main__":

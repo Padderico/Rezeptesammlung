@@ -1,0 +1,24 @@
+{
+  "id": "./",
+  "name": "Kochbuddy",
+  "short_name": "Kochbuddy",
+  "description": "Wochenplan, Rezepte und Kochmodus mit Timern – Schritt für Schritt, Zutaten abhaken.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F2F5F0",
+  "theme_color": "#0D6657",
+  "categories": ["food", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Heute kochen", "short_name": "Heute", "url": "./#/", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Vorkochen am Sonntag", "short_name": "Vorkochen", "url": "./#/vorkochen", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Abend-Checkliste", "short_name": "Checkliste", "url": "./#/checkliste", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
