@@ -12,6 +12,8 @@
   const CHECK = '<span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
   const CLOCK = '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>';
   const CLOSE = '<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const ICON_CART = '<svg class="ico" viewBox="0 0 24 24"><path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>';
+  const ICON_WAIT = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
   const LIST = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>';
 
   /* ---------- Daten ---------- */
@@ -62,7 +64,7 @@
   /* ---------- Zustand (nur auf diesem Gerät) ---------- */
   const LS = "kochbuddy.v1";
   const defaults = () => ({
-    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {}, dealcheck: {}, swaps: {},
+    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {}, dealcheck: {}, swaps: {}, bringAck: {}, bringOpened: {},
     settings: { sound: true, vibrate: true, scale: 1, theme: "auto", eat: { Mittag: "12:00", Abend: "18:00" }, installHint: true },
   });
   let S = defaults();
@@ -216,6 +218,7 @@
     }
     updateWake();
     renderDock();
+    if (!embedded) updateNavDot();
   }
   window.addEventListener("hashchange", () => { trackNav(); route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
 
@@ -261,6 +264,7 @@
   async function renderWeek(view) {
     if (!weekId) { view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><p class="empty">Noch kein Wochenplan da.</p>`; return; }
     const w = withSwaps(await week());
+    const ups = embedded ? [] : await bringUpdates();
     const t = today();
     const todayDay = w.days.find((d) => d.iso === t);
     const isPrepDay = addDays(w.week.start, -1) === t;
@@ -269,6 +273,7 @@
       html += `<div class="seg" role="group" aria-label="Woche wählen">${weeks.slice().reverse().map((x) =>
         `<button data-week="${x.id}" aria-pressed="${x.id === weekId}">KW ${x.kw}</button>`).join("")}</div>`;
     }
+    html += actionBanners(ups);
     if (installEvt && S.settings.installHint && !standalone()) {
       html += `<div class="banner"><p>Als App auf dem Handy installieren?</p><button class="btn small" data-act="install">Installieren</button><button class="icon-btn" style="width:40px;height:40px;background:transparent;border:0;color:inherit" data-act="nohint" aria-label="Ausblenden">${CLOSE}</button></div>`;
     }
@@ -298,6 +303,7 @@
       html += `</div>`;
     }
     html += `<p class="small muted" id="stand" style="text-align:center;margin:22px 0 0">${standLine(w)}</p>`;
+    html += `<p class="small" style="text-align:center;margin:8px 0 0"><a href="#" data-act="help">So funktioniert der Kochbuddy</a></p>`;
     view.innerHTML = html;
     renderedDay = today();
   }
@@ -360,7 +366,7 @@
     h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div></div>`;
     h += `<div class="r-cols"><div class="sticky">`;
     h += `<a class="btn primary big" href="#/k/${ref}">${nDone && nDone < r.steps.length ? `Weiterkochen · Schritt ${nDone + 1}` : nDone ? "Nochmal kochen" : "Kochmodus starten"}</a>`;
-    h += `<div class="card plan"><div class="line"><span><b>Essen um</b></span><input type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div></div>`;
+    h += `<div class="card plan"><div class="line"><span><b>Essen um</b></span><input type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div><p class="small muted" style="margin:0">Uhrzeit eintragen, dann rechnet die App aus, wann du anfangen musst.</p></div>`;
     h += `<div class="card"><div class="spread"><h3>Zutaten</h3><div class="stepper"><button data-portion="-1" aria-label="Weniger">−</button><output>${p} Port.</output><button data-portion="1" aria-label="Mehr">+</button></div></div>`;
     if (p !== (r.base || 3)) h += `<p class="small muted">Umgerechnet von ${r.base} Portionen. Garzeiten und die Füllmenge im Mixtopf (max. 2 l) im Blick behalten.</p>`;
     else if (r.servingsNote) h += `<p class="small muted">${esc(r.servingsNote)}</p>`;
@@ -438,6 +444,7 @@
     const st = r.steps[i], ph = phaseOf(st.t);
     const timers = stepTimers(st);
     const hits = ingsForStep(r, st.t);
+    h += cookHint();
     h += `<div class="cook-cols"><div class="cook-step">`;
     h += `<div class="num">SCHRITT ${i + 1}${steps[i] ? " · ERLEDIGT" : ""}</div>${ph.phase ? `<span class="phase" style="margin-top:8px">${esc(ph.phase)}</span>` : ""}`;
     h += `<p class="stxt">${esc(ph.text)}</p>${readout(st)}`;
@@ -540,6 +547,98 @@
     if (!evs.length) h += `<p class="empty">Keine Checkliste in diesem Plan.</p>`;
     view.innerHTML = h;
   }
+
+  /* ---------- Hinweise: Was ist noch zu tun? (oben in der Woche, orange) ---------- */
+  async function bringUpdates() {
+    const ids = [...new Set([weeks[0] && weeks[0].id, weekId].filter(Boolean))];
+    const out = [];
+    for (const id of ids) {
+      const path = `daten/bring/${id}.json`;
+      let d = null;
+      try { d = await getJSON(path); } catch (e) { memo[path] = { updates: [] }; }
+      ((d && d.updates) || []).forEach((u) => out.push({ ...u, week: id, key: `${id}:${u.id}` }));
+    }
+    const fresh = Date.now() - 5 * 86400000;
+    S.bringAck = S.bringAck || {};
+    return out.filter((u) => !S.bringAck[u.key] && (!u.at || new Date(u.at).getTime() > fresh));
+  }
+  let shownUpdates = [];
+  function whenText(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    const dd = toIso(d) === today() ? "heute" : toIso(d) === addDays(today(), -1) ? "gestern" : `am ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.`;
+    return `${dd} um ${hm(d)} Uhr`;
+  }
+  function actionBanners(ups) {
+    shownUpdates = ups;
+    let h = "";
+    for (const u of ups) {
+      const adds = u.add || [], rem = u.remove || [];
+      const opened = S.bringOpened && S.bringOpened[u.key];
+      h += `<section class="act">
+        <div class="act-h"><span class="act-ico">${ICON_CART}</span><div><b>Bring-Liste aktualisieren</b><div class="small">Der Wochenplan wurde ${esc(whenText(u.at))} geändert.</div></div></div>
+        ${(u.changes || []).length ? `<ul class="act-list">${u.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
+        ${adds.length ? `<p class="small" style="margin:8px 0 2px"><b>Neu für Bring:</b> ${adds.map((x) => `${esc(x.n)}${x.q ? ` <span class="muted">(${esc(x.q)}${x.neu === false ? ", Menge geändert" : ""})</span>` : ""}`).join(", ")}</p>` : `<p class="small" style="margin:8px 0 2px">Es kommt nichts Neues dazu.</p>`}
+        ${rem.length ? `<p class="small" style="margin:4px 0 0"><b>Wird nicht mehr gebraucht:</b> ${rem.map((x) => esc(x.n)).join(", ")}</p>` : ""}
+        <div class="act-btns">
+          ${u.bring ? `<a class="btn primary" href="${esc(u.bring)}" target="_blank" rel="noopener" data-bringopen="${esc(u.key)}">In Bring übernehmen</a><button class="btn" data-bringmail="${esc(u.key)}">Per Mail ans Handy</button>` : ""}
+          <button class="btn ${opened || !u.bring ? "primary" : "ghost"}" data-bringdone="${esc(u.key)}">${opened ? "Erledigt – ist in Bring" : "Erledigt"}</button>
+        </div>
+        <p class="small muted" style="margin:10px 0 0">${u.bring ? "„In Bring übernehmen“ öffnet Bring mit genau diesen Zutaten, dort wählst du aus und bestätigst. Ist auf diesem Gerät kein Bring installiert, schick dir den Link per Mail aufs Handy. Der Link steht auch in der Mail von heute Abend." : "Hier musst du in Bring nichts tun. Einfach auf „Erledigt“ tippen."}</p>
+      </section>`;
+    }
+    const open = swapsFor(weekId).filter((s) => s.status === "offen");
+    if (open.length) {
+      const late = new Date().getHours() >= 23;
+      h += `<section class="act info"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><b>${open.length === 1 ? "1 Tausch" : open.length + " Tausche"} – wird ${late ? "morgen Abend" : "heute Abend"} übernommen</b>
+        <div class="small">Gegen 21 Uhr passt der Buddy Plan, PDF und Einkaufsliste an und schickt eine kurze Mail. Danach steht hier, was neu in Bring muss. Bis dahin kannst du den Tausch beim Gericht rückgängig machen.</div></div></div>
+        ${open.map((s) => `<div class="small" style="margin-top:4px">· ${esc(s.dayName)} ${esc(s.slot)}: ${esc(shortTitle(s.toTitle))} statt ${esc(shortTitle(s.fromTitle))}</div>`).join("")}</section>`;
+    }
+    return h;
+  }
+  async function updateNavDot() {
+    let n = 0;
+    try { n = (await bringUpdates()).length; } catch (e) { n = 0; }
+    const a = $('#nav a[data-nav="woche"]'); if (a) a.classList.toggle("dot", n > 0);
+  }
+  function bringMailSheet(key) {
+    const u = shownUpdates.find((x) => x.key === key);
+    if (!u) return;
+    openSheet(`<h2>Bring-Link per Mail</h2>
+      <p class="small" style="margin:6px 0 10px">Schick dir den Link auf das Handy, auf dem Bring installiert ist. Dort in der Mail antippen – Bring öffnet sich mit den neuen Zutaten.</p>
+      <label class="small" for="mailto"><b>An diese Adresse</b></label>
+      <input class="field" id="mailto" type="email" inputmode="email" autocomplete="email" placeholder="name@beispiel.de" value="${esc(S.settings.mailTo || "")}" data-mailto>
+      <p class="small muted" style="margin:6px 0 12px">Die Adresse bleibt nur auf diesem Gerät gespeichert.</p>
+      <button class="btn primary big" data-act="bringmail-go">Mail-App öffnen</button>
+      ${navigator.share ? `<button class="btn big" style="margin-top:8px" data-act="bringshare">Anders schicken, z. B. per WhatsApp</button>` : ""}
+      <button class="btn ghost" style="margin-top:8px" data-act="bringcopy">Nur den Link kopieren</button>`, { bring: key });
+  }
+  function bringText(u) {
+    const lines = ["Hallo,", "", "nach der Änderung im Wochenplan kommen diese Zutaten dazu:", ...(u.add || []).map((x) => `- ${x.n}${x.q ? ` (${x.q})` : ""}`)];
+    if ((u.remove || []).length) lines.push("", "Wird nicht mehr gebraucht: " + u.remove.map((x) => x.n).join(", "));
+    lines.push("", "In Bring übernehmen (antippen):", u.bring, "", "Dein Kochbuddy");
+    return lines.join("\n");
+  }
+
+  /* ---------- Einführung beim ersten Start und Hilfe ---------- */
+  const TOUR = [
+    { ico: "👋", t: "Willkommen beim Kochbuddy", x: "Hier siehst du jeden Tag, was gekocht wird – mit Rezept, Kochmodus und Timern. Plan, Rezepte und Angebote aktualisieren sich von selbst." },
+    { ico: "📅", t: "Oben steht immer heute", x: "Die Karte „Heute“ zeigt beide Mahlzeiten und was heute zu tun ist. Erledigtes abhaken. Ein Tipp auf ein Gericht öffnet das Rezept." },
+    { ico: "⏱️", t: "Kochen mit Timer", x: "„Kochen“ führt dich Schritt für Schritt durchs Rezept. Eine Zeitangabe antippen startet den Timer, der Bildschirm bleibt dabei an. Zutaten abhaken, sobald sie im Topf sind." },
+    { ico: "🔄", t: "Gericht tauschen", x: "Lust auf etwas anderes? Unter „Ersatzgerichte“ das Gericht am Griff ⠿ auf einen Tag ziehen oder „Tauschen“ antippen. Abends passt der Buddy Plan und Einkaufsliste an." },
+    { ico: "🛒", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Unter „Angebote“ stehen die besten Angebote der Woche samt Einkaufszettel zum Abhaken." },
+  ];
+  let tourStep = 0;
+  function showTour(step = 0) {
+    tourStep = step;
+    const s = TOUR[step], last = step === TOUR.length - 1;
+    openSheet(`<div class="tour"><div class="tour-ico" aria-hidden="true">${s.ico}</div><h2>${esc(s.t)}</h2><p>${esc(s.x)}</p>
+      <div class="tour-dots">${TOUR.map((_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div>
+      <div class="tour-btns">${step > 0 ? `<button class="btn" data-act="tour-back">Zurück</button>` : `<button class="btn ghost" data-act="tour-end">Überspringen</button>`}
+      <button class="btn primary" data-act="${last ? "tour-end" : "tour-next"}">${last ? "Los geht's" : "Weiter"}</button></div></div>`, { tour: "1" });
+  }
+  function endTour() { S.settings.toured = 1; save(); closeSheet(); }
+  const cookHint = () => (S.settings.hintCook ? "" : `<div class="tip guide"><b>So geht's:</b> Schritt lesen. Steht eine Zeit dabei, startet ein Tipp darauf den Timer. Zutaten abhaken, sobald sie im Topf sind. Dann „Erledigt · weiter“ – oder nach links wischen. Der Bildschirm bleibt an.<div style="margin-top:8px"><button class="btn small" data-act="hint-cook">Verstanden</button></div></div>`);
 
   /* ---------- Tauschen: Ersatzgerichte per Ziehen auf einen Tag ----------
      Getauscht wird sofort in der App; gespeichert wird in tausch/<woche>.json im Rezept-Repo (nur Tage und Gerichtsnamen).
@@ -1007,6 +1106,8 @@
     s.innerHTML = `<div class="panel"><div class="grab"></div>${html}</div>`;
     s.dataset.timer = data.timer || "";
     s.dataset.swap = data.swap || "";
+    s.dataset.tour = data.tour || "";
+    s.dataset.bring = data.bring || "";
     s.hidden = false;
   }
   const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; };
@@ -1019,9 +1120,9 @@
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
-    if (!el) { if (e.target.id === "sheet") closeSheet(); return; }
+    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
     if (d.start) { e.preventDefault(); startFromChip(JSON.parse(d.start)); return; }
     if (d.timerOpen) { e.preventDefault(); timerSheet(d.timerOpen); return; }
@@ -1055,6 +1156,9 @@
       stopRing(); dismissAlarmIfNone(); renderDock(); rerenderSoft(); updateWake();
       return;
     }
+    if (d.bringopen) { S.bringOpened = S.bringOpened || {}; S.bringOpened[d.bringopen] = 1; save(); setTimeout(rerenderSoft, 1200); return; }
+    if (d.bringmail) { bringMailSheet(d.bringmail); return; }
+    if (d.bringdone) { S.bringAck = S.bringAck || {}; S.bringAck[d.bringdone] = 1; save(); rerenderSoft(); updateNavDot(); toast("Prima – die Bring-Liste ist auf dem neuen Stand"); return; }
     if (d.swapopen) { swapSheet(d.swapopen); return; }
     if (d.swapto) { const id = $("#sheet").dataset.swap; closeSheet(); const [iso, slot] = d.swapto.split("|"); performSwap(id, iso, slot); return; }
     if (d.unswap) { unswap(d.unswap); return; }
@@ -1066,6 +1170,20 @@
     switch (d.act) {
       case "back": e.preventDefault(); goBack(d.fallback || "#/"); break;
       case "gh-setup": e.preventDefault(); tokenSheet(); break;
+      case "help": e.preventDefault(); showTour(0); break;
+      case "tour-next": showTour(Math.min(TOUR.length - 1, tourStep + 1)); break;
+      case "tour-back": showTour(Math.max(0, tourStep - 1)); break;
+      case "tour-end": endTour(); break;
+      case "hint-cook": S.settings.hintCook = 1; save(); drawCook(view, await getRecipe(cookRef), cookRef); break;
+      case "bringmail-go": {
+        const u = shownUpdates.find((x) => x.key === $("#sheet").dataset.bring), addr = (($("[data-mailto]") || {}).value || "").trim();
+        if (!u) break;
+        if (addr) { S.settings.mailTo = addr; save(); }
+        location.href = `mailto:${encodeURIComponent(addr).replace(/%40/g, "@")}?subject=${encodeURIComponent("Bring: neue Zutaten für den Wochenplan")}&body=${encodeURIComponent(bringText(u))}`;
+        closeSheet(); toast("Mail-App geöffnet – Mail abschicken, dann auf dem Handy den Link antippen"); break;
+      }
+      case "bringshare": { const u = shownUpdates.find((x) => x.key === $("#sheet").dataset.bring); if (u && navigator.share) navigator.share({ title: "Bring: neue Zutaten", text: bringText(u) }).catch(() => {}); break; }
+      case "bringcopy": { const u = shownUpdates.find((x) => x.key === $("#sheet").dataset.bring); if (u) { try { await navigator.clipboard.writeText(u.bring); toast("Link kopiert"); } catch (er) { toast("Kopieren ging nicht – bitte „Mail-App öffnen“ nutzen"); } } break; }
       case "gh-save": saveToken(); break;
       case "gh-qr": e.preventDefault(); qrSheet(); break;
       case "gh-remove": setGhToken(""); closeSheet(); rerenderSoft(); toast("Schlüssel entfernt – Tauschen ist hier aus"); break;
@@ -1178,7 +1296,8 @@
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
   syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
-  route().then(() => { if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
+  route().then(() => {
+    if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
   setInterval(() => { if (location.hash.startsWith("#/vorkochen") && S.block[weekId] && $("#sheet").hidden) rerenderSoft(); }, 30000);
 })();
