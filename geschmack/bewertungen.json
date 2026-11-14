@@ -49,7 +49,118 @@
     "Eisen"
    ],
    "src": "rezept"
+  },
+  "i:backfisch-mit-kartoffelspalten": {
+   "v": "like",
+   "at": "2026-11-14T18:54:08.378Z",
+   "t": "Backfisch mit Kartoffelspalten",
+   "tags": [
+    "Fisch",
+    "Heißluftfritteuse",
+    "Kinderliebling"
+   ],
+   "src": "idee"
+  },
+  "i:haehnchen-reis-topf-mit-paprika-und-erbsen": {
+   "v": "like",
+   "at": "2026-11-14T18:54:11.712Z",
+   "t": "Hähnchen-Reis-Topf mit Paprika und Erbsen",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Spanisch"
+   ],
+   "src": "idee"
+  },
+  "i:gruenkern-bratlinge-mit-kartoffelsalat": {
+   "v": "like",
+   "at": "2026-11-14T18:54:13.868Z",
+   "t": "Grünkern-Bratlinge mit Kartoffelsalat",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Badisch"
+   ],
+   "src": "idee"
+  },
+  "i:schweinebraten-mit-knoedeln-und-sosse": {
+   "v": "like",
+   "at": "2026-11-14T18:54:19.428Z",
+   "t": "Schweinebraten mit Knödeln und Soße",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Bayerisch"
+   ],
+   "src": "idee"
+  },
+  "i:erbseneintopf-mit-wuerstchen": {
+   "v": "nope",
+   "at": "2026-11-14T18:54:22.752Z",
+   "t": "Erbseneintopf mit Würstchen",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:spaetzle-hack-pfanne-mit-lauch-und-kaese": {
+   "v": "like",
+   "at": "2026-11-14T18:54:25.540Z",
+   "t": "Spätzle-Hack-Pfanne mit Lauch und Käse",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "src": "idee"
+  },
+  "i:reisauflauf-mit-gemuese-und-kaese": {
+   "v": "nope",
+   "at": "2026-11-14T18:54:28.880Z",
+   "t": "Reisauflauf mit Gemüse und Käse",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Reis",
+    "Auflauf"
+   ],
+   "src": "idee"
+  },
+  "i:nudeln-mit-brokkoli-pesto": {
+   "v": "nope",
+   "at": "2026-11-14T18:54:31.582Z",
+   "t": "Nudeln mit Brokkoli-Pesto",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix"
+   ],
+   "src": "idee"
+  },
+  "i:tortellini-mit-schinken-sahne-sosse-und-erbsen": {
+   "v": "like",
+   "at": "2026-11-14T18:54:33.961Z",
+   "t": "Tortellini mit Schinken-Sahne-Soße und Erbsen",
+   "tags": [
+    "Fleisch",
+    "Pasta"
+   ],
+   "src": "idee"
+  },
+  "i:spinat-pfannkuchen-mit-frischkaese": {
+   "v": "like",
+   "at": "2026-11-14T18:54:38.772Z",
+   "t": "Spinat-Pfannkuchen mit Frischkäse",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Eisen"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-14T18:54:08.170Z"
+ "updated": "2026-11-14T18:54:47.495Z"
 }
