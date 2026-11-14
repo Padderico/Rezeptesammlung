@@ -542,9 +542,10 @@
   }
 
   /* ---------- Tauschen: Ersatzgerichte per Ziehen auf einen Tag ----------
-     Getauscht wird sofort in der App; gespeichert wird in tausch/<woche>.json im privaten Datenrepo.
+     Getauscht wird sofort in der App; gespeichert wird in tausch/<woche>.json im Rezept-Repo (nur Tage und Gerichtsnamen).
+     Lesen geht ohne Schlüssel über GitHub Pages, Schreiben braucht einen Schlüssel mit Schreibrecht auf das Repo.
      Die stündliche Antwort-Aufgabe übernimmt offene Tausche abends gegen 21 Uhr in Plan, Bring-Liste und PDF. */
-  const GH_REPO = "Padderico/Einkaufsbuddy-Daten";
+  const GH_REPO = "Padderico/Rezeptesammlung";
   const GH_KEY = "kochbuddy.gh";
   const ghToken = () => { try { return JSON.parse(localStorage.getItem(GH_KEY) || "{}").token || ""; } catch (e) { return ""; } };
   const setGhToken = (t) => { try { if (t) localStorage.setItem(GH_KEY, JSON.stringify({ token: t, at: Date.now() })); else localStorage.removeItem(GH_KEY); } catch (e) { /* gesperrt */ } };
@@ -562,7 +563,7 @@
     } catch (e) { throw Object.assign(new Error("Gerade kein Netz"), { code: "offline" }); }
     if (method === "GET" && res.status === 404) return null;
     if (res.status === 401) throw Object.assign(new Error("Schlüssel ungültig oder abgelaufen"), { code: "auth" });
-    if (res.status === 403 || res.status === 404) throw Object.assign(new Error("Schlüssel darf das Datenrepo nicht beschreiben"), { code: "auth" });
+    if (res.status === 403 || res.status === 404) throw Object.assign(new Error("Schlüssel darf die Rezeptesammlung nicht beschreiben"), { code: "auth" });
     if (!res.ok) throw Object.assign(new Error("GitHub antwortet " + res.status), { code: res.status });
     return res.status === 204 ? null : res.json();
   }
@@ -580,8 +581,18 @@
   }
   const swapsFor = (wid) => { const st = swapState(wid); return applyOps(st.list || [], st.ops || []); };
   async function pullSwaps(wid) {
-    const r = await gh("GET", swapPath(wid));
-    const list = r ? JSON.parse(b64d(r.content)).swaps || [] : [];
+    let list;
+    if (ghToken()) {
+      const r = await gh("GET", swapPath(wid));
+      list = r ? JSON.parse(b64d(r.content)).swaps || [] : [];
+    } else {
+      // ohne Schlüssel: dieselbe Datei über GitHub Pages lesen (wenige Minuten Verzögerung)
+      let res;
+      try { res = await fetch(`../tausch/${wid}.json`, { cache: "no-cache" }); } catch (e) { throw Object.assign(new Error("Gerade kein Netz"), { code: "offline" }); }
+      if (res.status === 404) list = [];
+      else if (!res.ok) throw Object.assign(new Error("Tausch-Datei nicht lesbar"), { code: res.status });
+      else list = (await res.json()).swaps || [];
+    }
     const st = swapState(wid), before = JSON.stringify(st.list);
     st.list = list; st.at = Date.now(); save();
     return before !== JSON.stringify(list);
@@ -605,7 +616,7 @@
   }
   let syncing = null;
   function syncSwaps(quiet) {
-    if (!ghToken() || embedded) return Promise.resolve(false);
+    if (embedded) return Promise.resolve(false);
     if (syncing) return syncing;
     syncing = (async () => {
       let changed = false;
@@ -613,7 +624,7 @@
         if (!weekId) await loadIndex();
         const wid = weekId;
         if (!wid) return false;
-        if (await pushSwaps(wid)) changed = true;
+        if (ghToken() && (await pushSwaps(wid))) changed = true;
         if (await pullSwaps(wid)) changed = true;
       } catch (e) {
         if (e.code === "auth" && !quiet) { toast(`Tausch nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
@@ -676,11 +687,11 @@
   function tokenSheet(problem) {
     openSheet(`<h2>Tauschen einrichten</h2>
       ${problem ? `<p class="notice" style="margin:8px 0">${esc(problem)}</p>` : ""}
-      <p class="small" style="margin:6px 0">Damit der Buddy deinen Tausch abends übernimmt, legt die App ihn in eurem privaten Datenrepo ab. Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel.</p>
+      <p class="small" style="margin:6px 0">Damit der Buddy deinen Tausch abends übernimmt, legt die App ihn in der Rezeptesammlung auf GitHub ab. Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel.</p>
       <ol class="small" style="padding-left:20px;margin:8px 0">
         <li>Auf github.com einloggen und „Fine-grained token“ erstellen (Knopf unten).</li>
         <li>Name „Kochbuddy“, Ablaufdatum so spät wie möglich.</li>
-        <li>Repository access: <b>Only select repositories</b> → <b>Einkaufsbuddy-Daten</b>.</li>
+        <li>Repository access: <b>Only select repositories</b> → <b>Rezeptesammlung</b>.</li>
         <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
         <li>„Generate token“, Schlüssel kopieren und hier einfügen.</li>
       </ol>
@@ -696,7 +707,7 @@
     setGhToken(t);
     try {
       const repo = await gh("GET", "");
-      if (!repo) throw Object.assign(new Error("Datenrepo nicht gefunden – beim Schlüssel „Einkaufsbuddy-Daten“ auswählen"), { code: "auth" });
+      if (!repo) throw Object.assign(new Error("Repo nicht gefunden – beim Schlüssel „Rezeptesammlung“ auswählen"), { code: "auth" });
     } catch (e) { setGhToken(old); toast(e.code === "offline" ? "Gerade kein Netz – bitte später nochmal" : e.message); return; }
     closeSheet(); toast("Tauschen ist auf diesem Gerät eingerichtet");
     if (pendingSwap) { const s = pendingSwap; pendingSwap = null; await performSwap(s.to, s.iso, s.slot); }
@@ -1141,7 +1152,7 @@
       let result = "same";
       const v = online(await codeVersion()); // geht direkt ans Netz – schlägt fehl, wenn das Handy offline ist
       try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
-      if (v && ghToken() && (await syncSwaps(true))) result = "changed";
+      if (v && (await syncSwaps(true))) result = "changed";
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
@@ -1166,7 +1177,7 @@
   setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, 10 * 60000);
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
-  if (ghToken()) syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
+  syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
   route().then(() => { if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
   setInterval(() => { if (location.hash.startsWith("#/vorkochen") && S.block[weekId] && $("#sheet").hidden) rerenderSoft(); }, 30000);
