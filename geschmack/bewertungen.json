@@ -1,0 +1,4 @@
+{
+ "info": "Bewertungen aus dem Kochbuddy (Tab Entdecken). v: super = unbedingt bald einplanen, like = mag ich, nope = lieber nicht. Schlüssel: i:<id> = Idee aus app/daten/ideen.json, a:<slug> = Rezept aus rezepte/.",
+ "items": {}
+}

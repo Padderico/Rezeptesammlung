@@ -1,0 +1,1729 @@
+{
+ "v": 1,
+ "info": "Gerichtsideen für den Tab „Entdecken“ der Koch-App. ideas: alle Ideen (neue hinten anhängen, id eindeutig, nie löschen; Felder id, t = Titel, d = ein Satz, tags, min = Minuten ca., art = Bild aus: tomate, kuerbis, kartoffel, nudel, reis, fisch, huhn, rind, wurst, gemuese, blatt, kaese, suppe, auflauf, brot, suess, pilz, bohne). days: Stapel pro Tag {\"JJJJ-MM-TT\": [\"i:<id>\", …]} – die stündliche Antwort-Aufgabe legt den Stapel für morgen an, sobald heute geswiped wurde.",
+ "days": {},
+ "ideas": [
+  {
+   "id": "kuerbisrisotto-mit-parmesan",
+   "t": "Kürbisrisotto mit Parmesan",
+   "d": "Hokkaido mit Schale, der Thermomix übernimmt das Rühren – cremig ohne Stehen am Herd.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "kuerbis"
+  },
+  {
+   "id": "kaesespaetzle-mit-roestzwiebeln",
+   "t": "Käsespätzle mit Röstzwiebeln",
+   "d": "Schwäbischer Klassiker mit Bergkäse, dazu ein knackiger grüner Salat.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "kaese"
+  },
+  {
+   "id": "spinatknoedel-mit-brauner-butter",
+   "t": "Spinatknödel mit brauner Butter",
+   "d": "Südtiroler Art aus altbackenem Brot, mit Parmesan bestreut.",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Österreichisch",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "blatt"
+  },
+  {
+   "id": "gemueselasagne-mit-zucchini-und-karotten",
+   "t": "Gemüselasagne mit Zucchini und Karotten",
+   "d": "Viel Gemüse in Tomatensoße, oben goldbraun überbacken.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch",
+    "Auflauf"
+   ],
+   "min": 70,
+   "art": "auflauf"
+  },
+  {
+   "id": "mildes-linsen-dal-mit-reis",
+   "t": "Mildes Linsen-Dal mit Reis",
+   "d": "Rote Linsen, Kokosmilch und Karotte – wärmt, ganz ohne Schärfe.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Indisch",
+    "One-Pot",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "bohne"
+  },
+  {
+   "id": "ofenkartoffeln-mit-fruehlingsquark",
+   "t": "Ofenkartoffeln mit Frühlingsquark",
+   "d": "Große Kartoffeln aus dem Ofen, dazu frischer Quark und Gurkensalat.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel",
+    "Deutsch"
+   ],
+   "min": 60,
+   "art": "kartoffel"
+  },
+  {
+   "id": "herzhafte-gemuesepfannkuchen-mit-kaese",
+   "t": "Herzhafte Gemüsepfannkuchen mit Käse",
+   "d": "Geraspelte Zucchini und Karotte im Teig, in Streifen auch fürs Kind.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Kinderliebling"
+   ],
+   "min": 30,
+   "art": "gemuese"
+  },
+  {
+   "id": "tomatenrisotto-mit-mozzarella",
+   "t": "Tomatenrisotto mit Mozzarella",
+   "d": "Mit Passata und Basilikum, am Ende schmilzt der Mozzarella hinein.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "tomate"
+  },
+  {
+   "id": "erbsensuppe-mit-croutons",
+   "t": "Erbsensuppe mit Croûtons",
+   "d": "Sämig und leuchtend grün, dazu knusprige Brotwürfel.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "min": 30,
+   "art": "suppe"
+  },
+  {
+   "id": "blumenkohl-kartoffel-auflauf",
+   "t": "Blumenkohl-Kartoffel-Auflauf",
+   "d": "Unter einer milden Käsesoße goldbraun gebacken.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Auflauf",
+    "Kartoffel"
+   ],
+   "min": 50,
+   "art": "auflauf"
+  },
+  {
+   "id": "pasta-mit-tomaten-ricotta-sosse",
+   "t": "Pasta mit Tomaten-Ricotta-Soße",
+   "d": "Cremig, mild und in 20 Minuten auf dem Tisch.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Italienisch"
+   ],
+   "min": 20,
+   "art": "nudel"
+  },
+  {
+   "id": "zucchini-kartoffel-puffer-mit-joghurt-dip",
+   "t": "Zucchini-Kartoffel-Puffer mit Joghurt-Dip",
+   "d": "Außen knusprig, innen saftig – gut vom Blech statt aus der Pfanne.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel"
+   ],
+   "min": 35,
+   "art": "gemuese"
+  },
+  {
+   "id": "gemuese-couscous-mit-feta-und-gurke",
+   "t": "Gemüse-Couscous mit Feta und Gurke",
+   "d": "Lauwarm und frisch, lässt sich gut vorbereiten.",
+   "tags": [
+    "Vegetarisch",
+    "Orientalisch",
+    "Meal-Prep"
+   ],
+   "min": 25,
+   "art": "reis"
+  },
+  {
+   "id": "cremige-polenta-mit-ofengemuese",
+   "t": "Cremige Polenta mit Ofengemüse",
+   "d": "Paprika, Zucchini und Karotten vom Blech auf weicher Polenta.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch"
+   ],
+   "min": 45,
+   "art": "gemuese"
+  },
+  {
+   "id": "ratatouille-mit-reis",
+   "t": "Ratatouille mit Reis",
+   "d": "Französischer Gemüsetopf, lange und mild geschmort.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Französisch"
+   ],
+   "min": 50,
+   "art": "tomate"
+  },
+  {
+   "id": "mac-and-cheese-mit-blumenkohl",
+   "t": "Mac and Cheese mit Blumenkohl",
+   "d": "Ofen-Makkaroni mit Cheddar, der Blumenkohl versteckt sich in der Soße.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Ofen",
+    "Kinderliebling"
+   ],
+   "min": 40,
+   "art": "kaese"
+  },
+  {
+   "id": "gnocchi-mit-kuerbis-salbei-butter",
+   "t": "Gnocchi mit Kürbis-Salbei-Butter",
+   "d": "Gebratene Gnocchi, Kürbiswürfel und ein Hauch Salbei.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "kuerbis"
+  },
+  {
+   "id": "spinat-ricotta-lasagne",
+   "t": "Spinat-Ricotta-Lasagne",
+   "d": "Blattspinat und Ricotta zwischen den Platten, mild und saftig.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch",
+    "Eisen"
+   ],
+   "min": 60,
+   "art": "blatt"
+  },
+  {
+   "id": "gemuesecurry-mit-suesskartoffel-und-kokos",
+   "t": "Gemüsecurry mit Süßkartoffel und Kokos",
+   "d": "Cremig-mild mit Erbsen, dazu Reis.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Asiatisch",
+    "One-Pot"
+   ],
+   "min": 35,
+   "art": "gemuese"
+  },
+  {
+   "id": "brokkoli-kartoffel-cremesuppe",
+   "t": "Brokkoli-Kartoffel-Cremesuppe",
+   "d": "Samtig püriert, Brokkoli schonend gegart.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "min": 30,
+   "art": "suppe"
+  },
+  {
+   "id": "blechpizza-mit-gemuese-und-mozzarella",
+   "t": "Blechpizza mit Gemüse und Mozzarella",
+   "d": "Jeder belegt seine Ecke selbst.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch",
+    "Kinderliebling"
+   ],
+   "min": 45,
+   "art": "tomate"
+  },
+  {
+   "id": "spinat-pfannkuchen-mit-frischkaese",
+   "t": "Spinat-Pfannkuchen mit Frischkäse",
+   "d": "Grüne Pfannkuchen, mit Frischkäse bestrichen und aufgerollt.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "blatt"
+  },
+  {
+   "id": "bulgur-gemuese-pfanne-mit-joghurt",
+   "t": "Bulgur-Gemüse-Pfanne mit Joghurt",
+   "d": "Bunte Pfanne mit Paprika und Zucchini, mild gewürzt.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Orientalisch"
+   ],
+   "min": 25,
+   "art": "reis"
+  },
+  {
+   "id": "gemuese-maultaschen-in-bruehe",
+   "t": "Gemüse-Maultaschen in Brühe",
+   "d": "Schwäbisch und schnell: Maultaschen in kräftiger Gemüsebrühe.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Schwäbisch"
+   ],
+   "min": 20,
+   "art": "suppe"
+  },
+  {
+   "id": "semmelknoedel-mit-champignon-rahmsosse",
+   "t": "Semmelknödel mit Champignon-Rahmsoße",
+   "d": "Knödel aus dem Varoma, dazu eine cremige Pilzsoße.",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "pilz"
+  },
+  {
+   "id": "champignon-risotto",
+   "t": "Champignon-Risotto",
+   "d": "Würzig-cremig mit Parmesan und Petersilie.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "pilz"
+  },
+  {
+   "id": "gemuesestrudel-mit-fruehlingsquark-dip",
+   "t": "Gemüsestrudel mit Frühlingsquark-Dip",
+   "d": "Blätterteig, gefüllt mit Lauch, Karotte und Käse.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Österreichisch"
+   ],
+   "min": 50,
+   "art": "auflauf"
+  },
+  {
+   "id": "kartoffelgulasch-mit-paprika",
+   "t": "Kartoffelgulasch mit Paprika",
+   "d": "Herzhaft, mild und in einem Topf gekocht.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "kartoffel"
+  },
+  {
+   "id": "nudelauflauf-mit-tomaten-und-mozzarella",
+   "t": "Nudelauflauf mit Tomaten und Mozzarella",
+   "d": "Röhrennudeln in Tomatensoße, oben schön zerlaufen.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Pasta",
+    "Auflauf"
+   ],
+   "min": 40,
+   "art": "nudel"
+  },
+  {
+   "id": "suesskartoffel-spalten-mit-kraeuterdip",
+   "t": "Süßkartoffel-Spalten mit Kräuterdip",
+   "d": "Aus der Heißluftfritteuse, dazu Erbsen und Dip.",
+   "tags": [
+    "Vegetarisch",
+    "Heißluftfritteuse"
+   ],
+   "min": 35,
+   "art": "kartoffel"
+  },
+  {
+   "id": "gruenkern-bratlinge-mit-kartoffelsalat",
+   "t": "Grünkern-Bratlinge mit Kartoffelsalat",
+   "d": "Badische Spezialität, nussig und saftig.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Badisch"
+   ],
+   "min": 45,
+   "art": "bohne"
+  },
+  {
+   "id": "hirse-gemuese-pfanne-mit-feta",
+   "t": "Hirse-Gemüse-Pfanne mit Feta",
+   "d": "Locker, bunt und gut für den Eisen-Tag.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "reis"
+  },
+  {
+   "id": "tortellini-in-erbsen-sahne-sosse",
+   "t": "Tortellini in Erbsen-Sahne-Soße",
+   "d": "Fertig-Tortellini, cremige Soße – schneller geht's kaum.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "One-Pot"
+   ],
+   "min": 20,
+   "art": "nudel"
+  },
+  {
+   "id": "ofen-roesti-mit-apfelmus",
+   "t": "Ofen-Rösti mit Apfelmus",
+   "d": "Knusprig gebacken, süß-salzig zusammen.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel",
+    "Kinderliebling"
+   ],
+   "min": 40,
+   "art": "kartoffel"
+  },
+  {
+   "id": "milchreis-mit-zimt-und-kirschen",
+   "t": "Milchreis mit Zimt und Kirschen",
+   "d": "Im Thermomix ohne Anbrennen, warm oder kalt.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Süß"
+   ],
+   "min": 40,
+   "art": "suess"
+  },
+  {
+   "id": "kaiserschmarrn-mit-apfelmus",
+   "t": "Kaiserschmarrn mit Apfelmus",
+   "d": "Fluffig zerrupft und mit Puderzucker bestäubt.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Österreichisch",
+    "Süß"
+   ],
+   "min": 30,
+   "art": "suess"
+  },
+  {
+   "id": "dampfnudeln-mit-vanillesosse",
+   "t": "Dampfnudeln mit Vanillesoße",
+   "d": "Mit knuspriger Kruste unten, ein badisch-pfälzischer Klassiker.",
+   "tags": [
+    "Vegetarisch",
+    "Süß",
+    "Badisch"
+   ],
+   "min": 90,
+   "art": "suess"
+  },
+  {
+   "id": "kaese-lauch-suppe",
+   "t": "Käse-Lauch-Suppe",
+   "d": "Sämig mit Schmelzkäse, dazu frisches Brot.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "min": 30,
+   "art": "suppe"
+  },
+  {
+   "id": "gefuellte-paprika-mit-reis-und-feta",
+   "t": "Gefüllte Paprika mit Reis und Feta",
+   "d": "In Tomatensoße geschmort, mild gewürzt.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen"
+   ],
+   "min": 50,
+   "art": "tomate"
+  },
+  {
+   "id": "ofen-feta-pasta-mit-kirschtomaten",
+   "t": "Ofen-Feta-Pasta mit Kirschtomaten",
+   "d": "Feta und Tomaten im Ofen schmelzen lassen, mit Nudeln vermengen.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Pasta",
+    "One-Pot"
+   ],
+   "min": 30,
+   "art": "kaese"
+  },
+  {
+   "id": "risotto-mit-erbsen-und-zitrone",
+   "t": "Risotto mit Erbsen und Zitrone",
+   "d": "Frisch, grün und cremig.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 30,
+   "art": "blatt"
+  },
+  {
+   "id": "karotten-orangen-suppe",
+   "t": "Karotten-Orangen-Suppe",
+   "d": "Fruchtig-mild, leuchtend orange.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "min": 30,
+   "art": "gemuese"
+  },
+  {
+   "id": "ueberbackene-gnocchi-in-tomatensosse",
+   "t": "Überbackene Gnocchi in Tomatensoße",
+   "d": "Mit Mozzarella im Ofen gratiniert.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "tomate"
+  },
+  {
+   "id": "pellkartoffeln-mit-fruehlingsquark-und-leinoel",
+   "t": "Pellkartoffeln mit Frühlingsquark und Leinöl",
+   "d": "Schlicht, frisch und schnell aus dem Varoma.",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Kartoffel",
+    "Deutsch"
+   ],
+   "min": 30,
+   "art": "kartoffel"
+  },
+  {
+   "id": "gemuese-reis-pfanne-mit-mais-und-erbsen",
+   "t": "Gemüse-Reis-Pfanne mit Mais und Erbsen",
+   "d": "Bunt, mild und kindertauglich.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Reis"
+   ],
+   "min": 25,
+   "art": "reis"
+  },
+  {
+   "id": "toskanische-tomaten-brot-suppe",
+   "t": "Toskanische Tomaten-Brot-Suppe",
+   "d": "Dick und herzhaft aus altem Brot und Tomaten.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Italienisch"
+   ],
+   "min": 30,
+   "art": "tomate"
+  },
+  {
+   "id": "kohlrabi-in-rahmsosse-mit-kartoffeln",
+   "t": "Kohlrabi in Rahmsoße mit Kartoffeln",
+   "d": "Omas Klassiker, zart und mild.",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 35,
+   "art": "gemuese"
+  },
+  {
+   "id": "bolognese-mit-roten-linsen",
+   "t": "Bolognese mit roten Linsen",
+   "d": "Vegetarisch, sämig und mit viel Eisen.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "nudel"
+  },
+  {
+   "id": "bohnen-mais-topf-mit-reis",
+   "t": "Bohnen-Mais-Topf mit Reis",
+   "d": "Wie Chili, aber ohne Fleisch und ohne Schärfe.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Mexikanisch"
+   ],
+   "min": 40,
+   "art": "bohne"
+  },
+  {
+   "id": "gemuese-tajine-mit-aprikosen-und-couscous",
+   "t": "Gemüse-Tajine mit Aprikosen und Couscous",
+   "d": "Orientalisch-mild mit Kürbis und Karotte.",
+   "tags": [
+    "Vegetarisch",
+    "Orientalisch",
+    "One-Pot"
+   ],
+   "min": 45,
+   "art": "kuerbis"
+  },
+  {
+   "id": "spargelrisotto-mit-parmesan",
+   "t": "Spargelrisotto mit Parmesan",
+   "d": "Im Frühling mit weißem und grünem Spargel.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch",
+    "Frühling"
+   ],
+   "min": 35,
+   "art": "blatt"
+  },
+  {
+   "id": "nudelsalat-mit-tomaten-mozzarella-und-pesto",
+   "t": "Nudelsalat mit Tomaten, Mozzarella und Pesto",
+   "d": "Sommerlich, gut für unterwegs.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Sommer",
+    "Meal-Prep"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "reisauflauf-mit-gemuese-und-kaese",
+   "t": "Reisauflauf mit Gemüse und Käse",
+   "d": "Reste-freundlich, im Ofen überbacken.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Reis",
+    "Auflauf"
+   ],
+   "min": 50,
+   "art": "reis"
+  },
+  {
+   "id": "flaedlesuppe",
+   "t": "Flädlesuppe",
+   "d": "Pfannkuchenstreifen in klarer Brühe – schwäbisch und kinderleicht.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "suppe"
+  },
+  {
+   "id": "herzhafte-gemuesewaffeln",
+   "t": "Herzhafte Gemüsewaffeln",
+   "d": "Mit Karotte und Käse, dazu ein Dip.",
+   "tags": [
+    "Vegetarisch",
+    "Kinderliebling"
+   ],
+   "min": 30,
+   "art": "kaese"
+  },
+  {
+   "id": "nudeln-mit-brokkoli-pesto",
+   "t": "Nudeln mit Brokkoli-Pesto",
+   "d": "Gedämpfter Brokkoli, Parmesan und etwas Öl – fein püriert.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix"
+   ],
+   "min": 25,
+   "art": "blatt"
+  },
+  {
+   "id": "brezelknoedel-mit-rahmpilzen",
+   "t": "Brezelknödel mit Rahmpilzen",
+   "d": "Aus Laugenbrezeln, dazu cremige Champignons.",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "brot"
+  },
+  {
+   "id": "ofenkuerbis-mit-feta-und-couscous",
+   "t": "Ofenkürbis mit Feta und Couscous",
+   "d": "Kürbisspalten aus dem Ofen auf lockerem Couscous.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Orientalisch"
+   ],
+   "min": 45,
+   "art": "kuerbis"
+  },
+  {
+   "id": "gemuese-bratreis-mit-erbsen",
+   "t": "Gemüse-Bratreis mit Erbsen",
+   "d": "Gebratener Reis mit Gemüse, mild gewürzt.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Asiatisch",
+    "Reis"
+   ],
+   "min": 25,
+   "art": "reis"
+  },
+  {
+   "id": "rote-bete-risotto",
+   "t": "Rote-Bete-Risotto",
+   "d": "Knallig pink und erstaunlich mild.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "reis"
+  },
+  {
+   "id": "kuerbis-lasagne",
+   "t": "Kürbis-Lasagne",
+   "d": "Kürbis und Spinat statt Hackfleisch, mit cremiger Soße.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Herbst"
+   ],
+   "min": 60,
+   "art": "kuerbis"
+  },
+  {
+   "id": "pizzaschnecken-mit-gemuese",
+   "t": "Pizzaschnecken mit Gemüse",
+   "d": "Aus Hefeteig, gut für die Brotdose.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kinderliebling",
+    "Zum Mitnehmen"
+   ],
+   "min": 40,
+   "art": "brot"
+  },
+  {
+   "id": "gefuellte-zucchini-mit-couscous-und-feta",
+   "t": "Gefüllte Zucchini mit Couscous und Feta",
+   "d": "Im Ofen gegart, dazu Joghurt-Dip.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen"
+   ],
+   "min": 45,
+   "art": "gemuese"
+  },
+  {
+   "id": "kartoffel-wedges-mit-kraeuterquark",
+   "t": "Kartoffel-Wedges mit Kräuterquark",
+   "d": "Knusprig aus der Heißluftfritteuse.",
+   "tags": [
+    "Vegetarisch",
+    "Heißluftfritteuse",
+    "Kartoffel"
+   ],
+   "min": 35,
+   "art": "kartoffel"
+  },
+  {
+   "id": "gemuese-tortellini-suppe",
+   "t": "Gemüse-Tortellini-Suppe",
+   "d": "Klare Brühe, Gemüsewürfel und kleine Tortellini.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe"
+   ],
+   "min": 20,
+   "art": "suppe"
+  },
+  {
+   "id": "rahmspinat-mit-salzkartoffeln",
+   "t": "Rahmspinat mit Salzkartoffeln",
+   "d": "Cremig und mild, Kartoffeln aus dem Varoma.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Varoma",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "blatt"
+  },
+  {
+   "id": "kartoffelpizza-vom-blech",
+   "t": "Kartoffelpizza vom Blech",
+   "d": "Dünne Kartoffelscheiben, Rosmarin und Käse auf Pizzateig.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel"
+   ],
+   "min": 40,
+   "art": "kartoffel"
+  },
+  {
+   "id": "lauch-kartoffel-gratin",
+   "t": "Lauch-Kartoffel-Gratin",
+   "d": "Mit Bergkäse überbacken, dazu Feldsalat.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel"
+   ],
+   "min": 55,
+   "art": "auflauf"
+  },
+  {
+   "id": "gemuese-paella-mit-erbsen-und-paprika",
+   "t": "Gemüse-Paella mit Erbsen und Paprika",
+   "d": "Safrangelb und mild, in einer großen Pfanne.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Spanisch",
+    "One-Pot"
+   ],
+   "min": 40,
+   "art": "reis"
+  },
+  {
+   "id": "ofen-ratatouille-mit-feta",
+   "t": "Ofen-Ratatouille mit Feta",
+   "d": "Gemüse in Scheiben geschichtet und im Ofen geschmort.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Französisch"
+   ],
+   "min": 55,
+   "art": "tomate"
+  },
+  {
+   "id": "fischgratin-mit-spinat-und-kartoffeln",
+   "t": "Fischgratin mit Spinat und Kartoffeln",
+   "d": "Seelachs unter einer Käsehaube, darunter Spinat und Kartoffeln.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Auflauf",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "fisch"
+  },
+  {
+   "id": "lachs-vom-blech-mit-kartoffeln-und-karotten",
+   "t": "Lachs vom Blech mit Kartoffeln und Karotten",
+   "d": "Alles auf einem Blech, mit Zitronen-Dill-Dip.",
+   "tags": [
+    "Fisch",
+    "Blech",
+    "Ofen"
+   ],
+   "min": 40,
+   "art": "fisch"
+  },
+  {
+   "id": "fischfrikadellen-mit-kartoffelsalat",
+   "t": "Fischfrikadellen mit Kartoffelsalat",
+   "d": "Aus Seelachs, saftig und ohne Gräten.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "fisch"
+  },
+  {
+   "id": "seelachs-in-senf-dill-sosse-mit-salzkartoffeln",
+   "t": "Seelachs in Senf-Dill-Soße mit Salzkartoffeln",
+   "d": "Mild-cremig, Fisch und Kartoffeln aus dem Varoma.",
+   "tags": [
+    "Fisch",
+    "Varoma",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "lachs-lasagne-mit-spinat",
+   "t": "Lachs-Lasagne mit Spinat",
+   "d": "Zarter Lachs und Blattspinat in Béchamel.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Italienisch"
+   ],
+   "min": 60,
+   "art": "fisch"
+  },
+  {
+   "id": "mildes-fischcurry-mit-kokos-und-reis",
+   "t": "Mildes Fischcurry mit Kokos und Reis",
+   "d": "Weißer Fisch in Kokossoße mit Erbsen.",
+   "tags": [
+    "Fisch",
+    "Asiatisch",
+    "One-Pot",
+    "Thermomix"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "pasta-mit-thunfisch-tomatensosse",
+   "t": "Pasta mit Thunfisch-Tomatensoße",
+   "d": "Schnell, herzhaft und mit wenigen Zutaten.",
+   "tags": [
+    "Fisch",
+    "Pasta",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "backfisch-mit-kartoffelspalten",
+   "t": "Backfisch mit Kartoffelspalten",
+   "d": "Knusprig aus der Heißluftfritteuse, dazu Remoulade-Dip mit Joghurt.",
+   "tags": [
+    "Fisch",
+    "Heißluftfritteuse",
+    "Kinderliebling"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "teriyaki-lachs-mit-reis-und-gemuese",
+   "t": "Teriyaki-Lachs mit Reis und Gemüse",
+   "d": "Mild und salzarm gewürzt, aus dem Varoma.",
+   "tags": [
+    "Fisch",
+    "Asiatisch",
+    "Varoma"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "cremige-fischsuppe-mit-kartoffeln",
+   "t": "Cremige Fischsuppe mit Kartoffeln",
+   "d": "Mit Lauch, Karotte und zartem Fisch.",
+   "tags": [
+    "Fisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "min": 35,
+   "art": "suppe"
+  },
+  {
+   "id": "schwarzwaelder-forellenfilet-mit-zitronenbutter",
+   "t": "Schwarzwälder Forellenfilet mit Zitronenbutter",
+   "d": "Regionale Forelle ohne Gräten, dazu Petersilienkartoffeln.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Regional"
+   ],
+   "min": 30,
+   "art": "fisch"
+  },
+  {
+   "id": "kabeljau-in-tomatensosse-mit-reis",
+   "t": "Kabeljau in Tomatensoße mit Reis",
+   "d": "Im Topf geschmort, mediterran und mild.",
+   "tags": [
+    "Fisch",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "fischpfanne-mit-paprika-und-zucchini",
+   "t": "Fischpfanne mit Paprika und Zucchini",
+   "d": "Mit lockerem Couscous dazu.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Orientalisch"
+   ],
+   "min": 30,
+   "art": "fisch"
+  },
+  {
+   "id": "knusprige-fischbroetchen-mit-ofenpommes",
+   "t": "Knusprige Fischbrötchen mit Ofenpommes",
+   "d": "Selbst belegt mit Salat und Joghurt-Dip – ein Freitagsliebling.",
+   "tags": [
+    "Fisch",
+    "Heißluftfritteuse",
+    "Kinderliebling"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "lachsrisotto-mit-erbsen",
+   "t": "Lachsrisotto mit Erbsen",
+   "d": "Cremig, mit Zitrone abgerundet.",
+   "tags": [
+    "Fisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "seelachs-gemuese-paeckchen-aus-dem-ofen",
+   "t": "Seelachs-Gemüse-Päckchen aus dem Ofen",
+   "d": "In Backpapier gegart, saftig und ganz ohne Abwasch.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Leicht"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "fischstaebchen-auflauf-mit-kartoffelpueree",
+   "t": "Fischstäbchen-Auflauf mit Kartoffelpüree",
+   "d": "Püree, Spinat und Fischstäbchen geschichtet und überbacken.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Kinderliebling",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "auflauf"
+  },
+  {
+   "id": "kartoffelsuppe-mit-wiener-wuerstchen",
+   "t": "Kartoffelsuppe mit Wiener Würstchen",
+   "d": "Deftig-cremig, die Würstchen in Scheiben.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 35,
+   "art": "wurst"
+  },
+  {
+   "id": "linsen-mit-spaetzle-und-saitenwuerstle",
+   "t": "Linsen mit Spätzle und Saitenwürstle",
+   "d": "Das schwäbische Sonntagsessen, mild abgeschmeckt.",
+   "tags": [
+    "Fleisch",
+    "Schwäbisch",
+    "One-Pot",
+    "Eisen"
+   ],
+   "min": 50,
+   "art": "bohne"
+  },
+  {
+   "id": "schupfnudeln-mit-sauerkraut-und-speck",
+   "t": "Schupfnudeln mit Sauerkraut und Speck",
+   "d": "Aus der Pfanne, herzhaft und schnell.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "kartoffel"
+  },
+  {
+   "id": "haehnchen-geschnetzeltes-zuercher-art-mit-roesti",
+   "t": "Hähnchen-Geschnetzeltes Zürcher Art mit Rösti",
+   "d": "Rahmsoße mit Champignons, Rösti knusprig dazu.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schweizerisch"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "ofenhaehnchen-mit-kartoffeln-und-karotten",
+   "t": "Ofenhähnchen mit Kartoffeln und Karotten",
+   "d": "Hähnchenkeulen und Gemüse auf einem Blech.",
+   "tags": [
+    "Fleisch",
+    "Blech",
+    "Ofen"
+   ],
+   "min": 60,
+   "art": "huhn"
+  },
+  {
+   "id": "haehnchen-reis-topf-mit-paprika-und-erbsen",
+   "t": "Hähnchen-Reis-Topf mit Paprika und Erbsen",
+   "d": "Wie eine milde Paella, alles in einem Topf.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Spanisch"
+   ],
+   "min": 40,
+   "art": "huhn"
+  },
+  {
+   "id": "hackbraten-mit-kartoffelpueree-und-bohnen",
+   "t": "Hackbraten mit Kartoffelpüree und Bohnen",
+   "d": "Saftig, mit Soße – auch kalt am nächsten Tag gut.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Deutsch",
+    "Vorkochen"
+   ],
+   "min": 75,
+   "art": "rind"
+  },
+  {
+   "id": "mildes-chili-con-carne-mit-reis",
+   "t": "Mildes Chili con Carne mit Reis",
+   "d": "Mit Bohnen und Mais, ohne Schärfe – Chili gibt's am Tisch.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Mexikanisch",
+    "Eisen"
+   ],
+   "min": 50,
+   "art": "rind"
+  },
+  {
+   "id": "lasagne-bolognese",
+   "t": "Lasagne Bolognese",
+   "d": "Der Klassiker mit Béchamel, gut zum Vorkochen.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Italienisch",
+    "Eisen",
+    "Vorkochen"
+   ],
+   "min": 80,
+   "art": "auflauf"
+  },
+  {
+   "id": "gefuellte-paprika-mit-hackfleisch-und-reis",
+   "t": "Gefüllte Paprika mit Hackfleisch und Reis",
+   "d": "In Tomatensoße geschmort, wie bei Oma.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Deutsch",
+    "Eisen"
+   ],
+   "min": 60,
+   "art": "tomate"
+  },
+  {
+   "id": "krautwickel-mit-kartoffelpueree",
+   "t": "Krautwickel mit Kartoffelpüree",
+   "d": "Weißkohlblätter mit Hackfüllung in Soße geschmort.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Deutsch"
+   ],
+   "min": 80,
+   "art": "blatt"
+  },
+  {
+   "id": "sauerbraten-mit-knoedeln-und-rotkohl",
+   "t": "Sauerbraten mit Knödeln und Rotkohl",
+   "d": "Mild-säuerlich und butterzart, braucht Vorlauf.",
+   "tags": [
+    "Fleisch",
+    "Deutsch",
+    "Vorkochen",
+    "Eisen"
+   ],
+   "min": 180,
+   "art": "rind"
+  },
+  {
+   "id": "schweinebraten-mit-knoedeln-und-sosse",
+   "t": "Schweinebraten mit Knödeln und Soße",
+   "d": "Mit knuspriger Kruste, ein Sonntagsessen.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Bayerisch"
+   ],
+   "min": 150,
+   "art": "rind"
+  },
+  {
+   "id": "geschmaelzte-maultaschen-mit-kartoffelsalat",
+   "t": "Geschmälzte Maultaschen mit Kartoffelsalat",
+   "d": "In der Pfanne mit Zwiebeln angebraten.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "nudel"
+  },
+  {
+   "id": "maultaschensuppe-mit-gemuese",
+   "t": "Maultaschensuppe mit Gemüse",
+   "d": "Schnell, wärmend und schwäbisch.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Schwäbisch"
+   ],
+   "min": 25,
+   "art": "suppe"
+  },
+  {
+   "id": "rinderrouladen-mit-rotkohl-und-knoedeln",
+   "t": "Rinderrouladen mit Rotkohl und Knödeln",
+   "d": "Geschmort, bis sie zerfallen – gut zum Vorkochen.",
+   "tags": [
+    "Fleisch",
+    "Deutsch",
+    "Vorkochen",
+    "Eisen"
+   ],
+   "min": 150,
+   "art": "rind"
+  },
+  {
+   "id": "haehnchen-nuggets-mit-kartoffelspalten",
+   "t": "Hähnchen-Nuggets mit Kartoffelspalten",
+   "d": "Selbst paniert, aus der Heißluftfritteuse.",
+   "tags": [
+    "Fleisch",
+    "Heißluftfritteuse",
+    "Kinderliebling"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "kasseler-mit-sauerkraut-und-kartoffelpueree",
+   "t": "Kasseler mit Sauerkraut und Kartoffelpüree",
+   "d": "Alles aus Mixtopf und Varoma.",
+   "tags": [
+    "Fleisch",
+    "Varoma",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "wurst"
+  },
+  {
+   "id": "bratwurst-mit-schwaebischem-kartoffelsalat",
+   "t": "Bratwurst mit schwäbischem Kartoffelsalat",
+   "d": "Kartoffelsalat mit Brühe angemacht, ohne Mayo.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 40,
+   "art": "wurst"
+  },
+  {
+   "id": "putengeschnetzeltes-in-milder-currysahne",
+   "t": "Putengeschnetzeltes in milder Currysahne",
+   "d": "Mit Apfel und Reis, fruchtig-mild.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Reis"
+   ],
+   "min": 30,
+   "art": "huhn"
+  },
+  {
+   "id": "gyros-pfanne-mit-reis-und-tzatziki",
+   "t": "Gyros-Pfanne mit Reis und Tzatziki",
+   "d": "Mild gewürzt, Tzatziki aus Joghurt und Gurke.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Griechisch"
+   ],
+   "min": 30,
+   "art": "wurst"
+  },
+  {
+   "id": "teriyaki-haehnchen-mit-reis-und-brokkoli",
+   "t": "Teriyaki-Hähnchen mit Reis und Brokkoli",
+   "d": "Brokkoli schonend im Varoma, Soße salzarm.",
+   "tags": [
+    "Fleisch",
+    "Asiatisch",
+    "Varoma"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "kaese-lauch-suppe-mit-hackfleisch",
+   "t": "Käse-Lauch-Suppe mit Hackfleisch",
+   "d": "Partysuppe, die auch dem Kind schmeckt.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "min": 35,
+   "art": "suppe"
+  },
+  {
+   "id": "koenigsberger-klopse-mit-kartoffeln",
+   "t": "Königsberger Klopse mit Kartoffeln",
+   "d": "Zarte Klopse in heller Soße, Rote Bete dazu.",
+   "tags": [
+    "Fleisch",
+    "Thermomix",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "rind"
+  },
+  {
+   "id": "milde-gulaschsuppe-mit-brot",
+   "t": "Milde Gulaschsuppe mit Brot",
+   "d": "Kräftig, aber ohne Schärfe, gut vorzukochen.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Ungarisch",
+    "Vorkochen"
+   ],
+   "min": 90,
+   "art": "suppe"
+  },
+  {
+   "id": "haehnchen-tomaten-pasta-mit-spinat",
+   "t": "Hähnchen-Tomaten-Pasta mit Spinat",
+   "d": "Alles in einem Topf, fertig in 30 Minuten.",
+   "tags": [
+    "Fleisch",
+    "Pasta",
+    "One-Pot"
+   ],
+   "min": 30,
+   "art": "nudel"
+  },
+  {
+   "id": "cevapcici-mit-djuvec-reis",
+   "t": "Ćevapčići mit Djuvec-Reis",
+   "d": "Mild gewürzt, mit Paprikareis und Joghurtdip.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Balkan"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "schnitzel-mit-kartoffelsalat",
+   "t": "Schnitzel mit Kartoffelsalat",
+   "d": "Dünn geklopft und knusprig, ein Familienliebling.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Deutsch",
+    "Kinderliebling"
+   ],
+   "min": 45,
+   "art": "rind"
+  },
+  {
+   "id": "huehnerfrikassee-mit-reis",
+   "t": "Hühnerfrikassee mit Reis",
+   "d": "Helle Soße mit Erbsen, Karotten und Spargel.",
+   "tags": [
+    "Fleisch",
+    "Thermomix",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "huhn"
+  },
+  {
+   "id": "huehnersuppe-mit-nudeln-und-gemuese",
+   "t": "Hühnersuppe mit Nudeln und Gemüse",
+   "d": "Die wärmende Suppe, wenn jemand schniefelt.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Vorkochen"
+   ],
+   "min": 60,
+   "art": "suppe"
+  },
+  {
+   "id": "shepherd-s-pie",
+   "t": "Shepherd's Pie",
+   "d": "Hackfleisch-Gemüse unter einer Haube aus Kartoffelpüree.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Britisch",
+    "Auflauf"
+   ],
+   "min": 60,
+   "art": "auflauf"
+  },
+  {
+   "id": "moussaka",
+   "t": "Moussaka",
+   "d": "Aubergine, Hackfleisch und Béchamel, griechisch geschichtet.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Griechisch"
+   ],
+   "min": 80,
+   "art": "auflauf"
+  },
+  {
+   "id": "hackfleisch-reis-pfanne-mit-zucchini",
+   "t": "Hackfleisch-Reis-Pfanne mit Zucchini",
+   "d": "Schnell, bunt und alles in einer Pfanne.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "One-Pot",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "reis"
+  },
+  {
+   "id": "tortellini-mit-schinken-sahne-sosse-und-erbsen",
+   "t": "Tortellini mit Schinken-Sahne-Soße und Erbsen",
+   "d": "Kinderliebling in 20 Minuten.",
+   "tags": [
+    "Fleisch",
+    "Pasta"
+   ],
+   "min": 20,
+   "art": "nudel"
+  },
+  {
+   "id": "flammkuchen-elsaesser-art-mit-speck",
+   "t": "Flammkuchen Elsässer Art mit Speck",
+   "d": "Hauchdünn mit Zwiebeln und Speck.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Elsässisch"
+   ],
+   "min": 30,
+   "art": "brot"
+  },
+  {
+   "id": "schaeufele-mit-kartoffelsalat",
+   "t": "Schäufele mit Kartoffelsalat",
+   "d": "Badisches Festessen, lange im Ofen gegart.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Badisch"
+   ],
+   "min": 150,
+   "art": "rind"
+  },
+  {
+   "id": "rindfleischsuppe-mit-flaedle",
+   "t": "Rindfleischsuppe mit Flädle",
+   "d": "Kräftige Brühe, zartes Fleisch und Pfannkuchenstreifen.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Schwäbisch",
+    "Vorkochen"
+   ],
+   "min": 120,
+   "art": "suppe"
+  },
+  {
+   "id": "gebratene-nudeln-mit-haehnchen-und-gemuese",
+   "t": "Gebratene Nudeln mit Hähnchen und Gemüse",
+   "d": "Asiatisch, mild und salzarm.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 30,
+   "art": "nudel"
+  },
+  {
+   "id": "mildes-haehnchen-korma-mit-reis",
+   "t": "Mildes Hähnchen-Korma mit Reis",
+   "d": "Joghurt-Mandel-Soße, cremig und ohne Schärfe.",
+   "tags": [
+    "Fleisch",
+    "Indisch",
+    "One-Pot"
+   ],
+   "min": 40,
+   "art": "huhn"
+  },
+  {
+   "id": "kartoffel-hack-auflauf-mit-kaese",
+   "t": "Kartoffel-Hack-Auflauf mit Käse",
+   "d": "Kartoffelscheiben, Hack und Soße geschichtet.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Auflauf"
+   ],
+   "min": 60,
+   "art": "auflauf"
+  },
+  {
+   "id": "schinkennudeln-mit-erbsen",
+   "t": "Schinkennudeln mit Erbsen",
+   "d": "Aus der Pfanne, ganz ohne Ei.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Kinderliebling"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "paprika-rahm-haehnchen-mit-spaetzle",
+   "t": "Paprika-Rahm-Hähnchen mit Spätzle",
+   "d": "Mild-cremig mit roter Paprika.",
+   "tags": [
+    "Fleisch",
+    "Pfanne"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "rinderragu-mit-cremiger-polenta",
+   "t": "Rinderragù mit cremiger Polenta",
+   "d": "Lange geschmort, perfekt für den Vorkoch-Sonntag.",
+   "tags": [
+    "Fleisch",
+    "Italienisch",
+    "Vorkochen"
+   ],
+   "min": 150,
+   "art": "rind"
+  },
+  {
+   "id": "tafelspitz-mit-schnittlauchsosse",
+   "t": "Tafelspitz mit Schnittlauchsoße",
+   "d": "Zart gekocht, dazu Bouillonkartoffeln.",
+   "tags": [
+    "Fleisch",
+    "Österreichisch",
+    "Vorkochen"
+   ],
+   "min": 180,
+   "art": "rind"
+  },
+  {
+   "id": "hacksteak-im-broetchen-mit-ofenkartoffeln",
+   "t": "Hacksteak im Brötchen mit Ofenkartoffeln",
+   "d": "Saftige Hacksteaks vom Metzger, jeder belegt sein Brötchen selbst.",
+   "tags": [
+    "Fleisch",
+    "Heißluftfritteuse",
+    "Amerikanisch"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "wurstgulasch-mit-nudeln",
+   "t": "Wurstgulasch mit Nudeln",
+   "d": "Fleischwurst in Paprika-Tomatensoße, schnell gekocht.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Deutsch"
+   ],
+   "min": 30,
+   "art": "wurst"
+  },
+  {
+   "id": "erbseneintopf-mit-wuerstchen",
+   "t": "Erbseneintopf mit Würstchen",
+   "d": "Deftiger Eintopf, am zweiten Tag noch besser.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 45,
+   "art": "suppe"
+  },
+  {
+   "id": "gruener-bohneneintopf-mit-rindfleisch",
+   "t": "Grüner Bohneneintopf mit Rindfleisch",
+   "d": "Mit Kartoffeln und Bohnenkraut.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Deutsch"
+   ],
+   "min": 60,
+   "art": "bohne"
+  },
+  {
+   "id": "haehnchen-brokkoli-reis-auflauf",
+   "t": "Hähnchen-Brokkoli-Reis-Auflauf",
+   "d": "Cremig überbacken, Brokkoli im Auflauf statt geröstet.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Auflauf"
+   ],
+   "min": 50,
+   "art": "huhn"
+  },
+  {
+   "id": "spaetzle-hack-pfanne-mit-lauch-und-kaese",
+   "t": "Spätzle-Hack-Pfanne mit Lauch und Käse",
+   "d": "Alles zusammen in der Pfanne überbacken.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "kaese"
+  },
+  {
+   "id": "zwiebelrostbraten-mit-spaetzle",
+   "t": "Zwiebelrostbraten mit Spätzle",
+   "d": "Schwäbisch, mit Röstzwiebeln und Soße.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "haehnchenbrust-mit-kartoffel-gemuese-stampf",
+   "t": "Hähnchenbrust mit Kartoffel-Gemüse-Stampf",
+   "d": "Saftig aus dem Varoma, dazu buntes Püree.",
+   "tags": [
+    "Fleisch",
+    "Varoma",
+    "Thermomix"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "hackfleisch-gemuese-suppe-mit-sternchennudeln",
+   "t": "Hackfleisch-Gemüse-Suppe mit Sternchennudeln",
+   "d": "Kräftig und kindgerecht, schnell gekocht.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "suppe"
+  }
+ ]
+}

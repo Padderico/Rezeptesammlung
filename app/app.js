@@ -15,6 +15,25 @@
   const ICON_CART = '<svg class="ico" viewBox="0 0 24 24"><path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>';
   const ICON_WAIT = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
   const LIST = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>';
+  const BACK = '<svg class="ico" viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>';
+  const NEXT = '<svg class="ico" viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>';
+  const PLAY = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+  const GRIP = '<svg class="ico" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></g></svg>';
+  const ICON_KID = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5.5"/><path d="M10 8.5h.01M14 8.5h.01M10.2 11.2q1.8 1.4 3.6 0M12 3.5q1.5 0 1.5-1.5M6.5 21q.5-5 5.5-5.5 5 .5 5.5 5.5"/></svg>';
+  const MONTHS = ["Jan", "Feb", "März", "Apr", "Mai", "Juni", "Juli", "Aug", "Sep", "Okt", "Nov", "Dez"];
+  /* Fortschrittsring (Timer, Checkliste): Füllstand kommt aus der CSS-Variable --p (0 … 1) am Elternelement */
+  const ring = (cls = "") => `<svg class="ring ${cls}" viewBox="0 0 48 48" aria-hidden="true"><circle class="trk" cx="24" cy="24" r="20"/><circle class="val" cx="24" cy="24" r="20" pathLength="100"/></svg>`;
+  /* Kleine Bilder für Einführung, Laden, Fertig und Alarm – gezeichnet, keine Emojis */
+  const ART = {
+    pot: '<svg class="art" viewBox="0 0 96 96" aria-hidden="true"><path class="steam s1" d="M38 30q-5-6 0-12t0-12"/><path class="steam s2" d="M48 30q-5-6 0-12t0-12"/><path class="steam s3" d="M58 30q-5-6 0-12t0-12"/><g class="lid"><path d="M24 44q24-14 48 0z" class="fill-a"/><circle cx="48" cy="34" r="3.5" class="fill-a"/></g><path d="M22 48h52v18a14 14 0 0 1-14 14H36a14 14 0 0 1-14-14z" class="fill-a"/><path d="M14 54h8M74 54h8" class="st-a"/><circle cx="48" cy="63" r="8" class="fill-b"/><path d="M48 58v5l3 2" class="st-c"/></svg>',
+    cal: '<svg class="art" viewBox="0 0 96 96" aria-hidden="true"><rect x="18" y="22" width="60" height="56" rx="12" class="fill-a"/><path d="M18 40h60" class="st-c"/><path d="M34 14v14M62 14v14" class="st-a"/><circle cx="58" cy="58" r="9" class="fill-b"/></svg>',
+    timer: '<svg class="art" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="54" r="28" class="fill-a"/><path d="M48 54L48 36" class="st-c"/><path d="M48 54l12 7" class="st-c"/><path d="M40 16h16M48 16v10" class="st-a"/><path d="M48 26a28 28 0 0 1 28 28H48z" class="fill-b op"/></svg>',
+    swap: '<svg class="art" viewBox="0 0 96 96" aria-hidden="true"><rect x="14" y="20" width="44" height="28" rx="9" class="fill-a"/><rect x="38" y="52" width="44" height="28" rx="9" class="fill-b"/><path d="M68 22q12 4 12 18M74 36l6 6 5-7M28 76q-12-4-12-18M22 62l-6-6-5 7" class="st-a"/></svg>',
+    cart: '<svg class="art" viewBox="0 0 96 96" aria-hidden="true"><path d="M12 20h10l8 38h40l8-28H28" class="st-a"/><path d="M30 34h44l-6 20H34z" class="fill-a"/><circle cx="36" cy="72" r="6" class="fill-b"/><circle cx="66" cy="72" r="6" class="fill-b"/></svg>',
+    plate: '<svg class="art" viewBox="0 0 120 96" aria-hidden="true"><path class="steam s1" d="M48 34q-5-6 0-12t0-12"/><path class="steam s2" d="M60 34q-5-6 0-12t0-12"/><path class="steam s3" d="M72 34q-5-6 0-12t0-12"/><ellipse cx="60" cy="66" rx="50" ry="14" class="fill-c"/><path d="M26 62a34 22 0 0 1 68 0z" class="fill-a"/><circle cx="60" cy="38" r="5" class="fill-a"/><path d="M8 80h104" class="st-a"/></svg>',
+    bell: '<svg class="art" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="54" r="30" class="fill-w"/><path d="M48 54V34M48 54l13 8" class="st-o"/><path d="M38 14h20M48 14v10M18 26l10-8M78 26l-10-8" class="st-w"/></svg>',
+  };
+  const tone = (tags) => { const t = tags || []; return t.includes("Fleisch") ? "meat" : t.includes("Fisch") ? "fish" : t.includes("Vegetarisch") ? "veg" : ""; };
 
   /* ---------- Daten ---------- */
   const EMB = document.getElementById("embedded-data");
@@ -182,8 +201,11 @@
   const checkRow = (on, inner, attrs) => `<li class="check${on ? " on" : ""}" ${attrs}>${CHECK}<span class="txt">${inner}</span></li>`;
   function timerChip(t, ctx) {
     const run = S.timers.find((x) => x.ctx === ctx && x.state !== "gone");
-    if (run) return `<button class="timer-chip running" data-timer-open="${run.id}" data-live="${run.id}">${CLOCK}<span>${clock(remaining(run))}</span></button>`;
-    return `<button class="timer-chip" data-start='${esc(JSON.stringify(t))}'>${CLOCK}<span>${esc(durText(t))}${t.label ? " · " + esc(t.label) : ""}</span></button>`;
+    if (run) {
+      const st = run.state === "pause" ? "pausiert" : run.state === "done" ? "fertig" : "läuft";
+      return `<button class="timer-chip running${run.state === "pause" ? " paused" : ""}" data-timer-open="${run.id}" data-live="${run.id}" style="--p:${frac(run).toFixed(4)}">${ring()}<span>${clock(remaining(run))}</span><b>${esc(t.label || "Timer")} ${st}</b></button>`;
+    }
+    return `<button class="timer-chip" data-start='${esc(JSON.stringify(t))}'>${CLOCK}<em class="tc">${esc(durText(t))}</em>${t.label ? `<b>${esc(t.label)}</b>` : ""}<i>Timer starten</i></button>`;
   }
   const shortTitle = (title) => title.split(/\s(?:mit|aus|in|vom|&)\s/)[0];
   const excerpt = (s, n = 70) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, "") + " …" : s);
@@ -200,8 +222,8 @@
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
       navTo("#/", "replace"); return;
     }
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", rezepte: "rezepte" }[parts[0] || ""] ?? "";
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "entdecken", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", entdecken: "entdecken", rezepte: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -212,6 +234,7 @@
       else if (parts[0] === "checkliste") await renderChecklist(view);
       else if (parts[0] === "angebote") await renderDeals(view);
       else if (parts[0] === "rezepte") await renderAll(view);
+      else if (parts[0] === "entdecken") await renderDiscover(view);
       else await renderWeek(view);
     } catch (e) {
       view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><div class="card"><h2>Gerade nicht ladbar</h2><p class="muted">Ohne Internet zeigt die App die zuletzt geöffneten Daten. Diese hier waren noch nicht gespeichert.</p><p class="small muted">${esc(e.message)}</p><button class="btn primary" data-act="reload">Nochmal versuchen</button></div>`;
@@ -224,7 +247,7 @@
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
      Tabs stapeln sich nicht: Woche -> Vorkochen -> Checkliste, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/vorkochen", "#/checkliste", "#/angebote", "#/rezepte"];
+  const TABS = ["#/", "#/vorkochen", "#/checkliste", "#/angebote", "#/entdecken", "#/rezepte"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -268,44 +291,60 @@
     const t = today();
     const todayDay = w.days.find((d) => d.iso === t);
     const isPrepDay = addDays(w.week.start, -1) === t;
-    let html = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · Speiseplan</div><h1>${esc(shortLabel(w))}</h1></div></header>`;
+    let html = `<header class="top wk-top"><div><div class="eyebrow"><span class="kw">KW ${w.week.kw}</span>Euer Speiseplan</div><h1>${esc(shortLabel(w))}</h1></div>`;
     if (weeks.length > 1) {
-      html += `<div class="seg" role="group" aria-label="Woche wählen">${weeks.slice().reverse().map((x) =>
+      html += `<div class="seg wk-seg" role="group" aria-label="Woche wählen">${weeks.slice().reverse().map((x) =>
         `<button data-week="${x.id}" aria-pressed="${x.id === weekId}">KW ${x.kw}</button>`).join("")}</div>`;
     }
-    html += actionBanners(ups);
+    html += `</header>`;
+    html += weekStrip(w, t);
+    html += actionBanners(ups, "todo");
     if (installEvt && S.settings.installHint && !standalone()) {
       html += `<div class="banner"><p>Als App auf dem Handy installieren?</p><button class="btn small" data-act="install">Installieren</button><button class="icon-btn" style="width:40px;height:40px;background:transparent;border:0;color:inherit" data-act="nohint" aria-label="Ausblenden">${CLOSE}</button></div>`;
     }
-    if (embedded) html += `<div class="banner" style="background:var(--readout);color:var(--readout-ink)"><p style="font-weight:400">Vorschau im Claude-Fenster. Als installierte App auf dem Handy laufen Alarmton, Benachrichtigung und „Bildschirm bleibt an“ zuverlässig.</p></div>`;
-    if (w.notice) html += `<div class="notice${noticeOpen ? "" : " clamp"}" data-act="notice"><span>${esc(w.notice)}</span></div>`;
+    if (embedded) html += `<div class="banner dark"><p style="font-weight:400">Vorschau im Claude-Fenster. Als installierte App auf dem Handy laufen Alarmton, Benachrichtigung und „Bildschirm bleibt an“ zuverlässig.</p></div>`;
+    html += `<div class="wk-grid"><div class="wk-now">`;
     if (isPrepDay && w.prep && w.prep.timeline) {
-      html += `<a class="card today" style="display:block;text-decoration:none;color:inherit" href="#/vorkochen"><div class="eyebrow">Heute · Sonntag</div><h2>${esc(w.prep.title || "Vorkoch-Block")}</h2><p class="muted">${esc(w.prep.when || "")}</p><span class="btn primary" style="margin-top:6px">Vorkochen starten</span></a>`;
+      html += `<a class="card today prepcard" href="#/vorkochen"><span class="kick"><i></i>Heute ist Vorkoch-Sonntag</span><h2>${esc(w.prep.title || "Vorkoch-Block")}</h2><p>${esc(w.prep.when || "")}</p><span class="btn light">${PLAY}Vorkochen starten</span></a>`;
     }
     const ordered = todayDay ? [todayDay, ...w.days.filter((d) => d !== todayDay && d.iso > t), ...w.days.filter((d) => d !== todayDay && d.iso < t)] : w.days;
     if (todayDay) html += dayCard(w, todayDay, true);
     const ev = currentEvening(w);
     if (ev && t >= addDays(w.week.start, -1) && t <= addDays(w.week.start, 5)) {
-      const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length;
-      html += `<a class="card" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit" href="#/checkliste"><div style="flex:1"><div class="eyebrow">Heute Abend ${esc(ev.e.for || "")}</div><b>${done}/${ev.e.items.length} vorbereitet</b>${ev.e.tag ? ` <span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</div><span class="muted">›</span></a>`;
+      const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length, n = ev.e.items.length;
+      html += `<a class="card evening${done >= n ? " full" : ""}" href="#/checkliste" style="--p:${n ? (done / n).toFixed(3) : 0}"><span class="ev-ring">${ring()}<b>${done}/${n}</b></span><span class="ev-t"><small>Heute Abend vorbereiten</small><b>${esc(ev.e.for ? ev.e.for.charAt(0).toUpperCase() + ev.e.for.slice(1) : "Für morgen")}</b>${ev.e.tag ? `<span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</span><span class="chev">${NEXT}</span></a>`;
     }
+    html += actionBanners(ups, "info");
+    html += await discoverTeaser();
+    if (w.notice) html += `<div class="notice${noticeOpen ? "" : " clamp"}" data-act="notice"><b class="nt">Hinweis zum Plan</b><span>${esc(w.notice)}</span><i class="more">${noticeOpen ? "weniger" : "ganz lesen"}</i></div>`;
+    html += `</div><div class="wk-rest">`;
     const rest = ordered.filter((d) => d !== todayDay);
-    if (rest.length) html += `<div class="section-title">${todayDay ? "Weitere Tage" : "Die Woche"}</div>` + rest.map((d) => dayCard(w, d, !!expanded[d.id], d.iso < t)).join("");
+    if (rest.length) html += `<h2 class="section-title">${todayDay ? "Weitere Tage" : "Die Woche"}</h2>` + rest.map((d) => dayCard(w, d, !!expanded[d.id], d.iso < t)).join("");
     if (w.extras && w.extras.length) {
       const canDrop = !embedded && w.days.some((d) => d.meals.some((m) => slotOpen(d.iso, m.slot)));
-      html += `<div class="section-title">Ersatzgerichte</div><div class="card">${w.extrasIntro ? `<p class="muted small" style="margin-top:0">${esc(w.extrasIntro)}</p>` : ""}`;
-      if (canDrop) html += `<p class="small" style="margin:0 0 10px"><b>Tauschen:</b> Griff <span aria-hidden="true">⠿</span> festhalten und auf einen Tag ziehen – oder „Tauschen“ antippen.</p>`;
-      html += `<ul class="r-list" style="margin:0">${w.extras.map((id) => {
+      html += `<h2 class="section-title">Ersatzgerichte</h2><section class="card extras">${w.extrasIntro ? `<p class="muted small" style="margin-top:0">${esc(w.extrasIntro)}</p>` : ""}`;
+      if (canDrop) html += `<p class="how"><span class="grip-demo">${GRIP}</span><span><b>Tauschen:</b> Griff festhalten und auf einen Tag ziehen – oder „Tauschen“ antippen.</span></p>`;
+      html += `<ul class="r-list x-list">${w.extras.map((id) => {
         const r = w.recipes[id];
-        return r ? `<li class="xitem">${canDrop ? `<span class="grip" data-grip="${id}" role="button" aria-label="${esc(r.title)} auf einen Tag ziehen">⠿</span>` : ""}<a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a>${canDrop ? `<button class="btn small" data-swapopen="${id}">Tauschen</button>` : ""}</li>` : "";
+        return r ? `<li class="xitem${tone(r.tags) ? " t-" + tone(r.tags) : ""}">${canDrop ? `<span class="grip" data-grip="${id}" role="button" aria-label="${esc(r.title)} auf einen Tag ziehen">${GRIP}</span>` : ""}<a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a>${canDrop ? `<button class="btn small" data-swapopen="${id}">Tauschen</button>` : ""}</li>` : "";
       }).join("")}</ul>`;
-      if (canDrop) html += `<p class="small muted" style="margin:12px 0 0">${ghToken() ? `Tauschen ist eingerichtet · <a href="#" data-act="gh-qr">Weiteres Gerät verbinden</a>` : `<a href="#" data-act="gh-setup">Tauschen auf diesem Gerät einrichten</a>`}</p>`;
-      html += `</div>`;
+      if (canDrop) html += `<p class="small muted" style="margin:14px 0 0">${ghToken() ? `Tauschen ist auf diesem Gerät eingerichtet. <a href="#" data-act="gh-qr">Weiteres Gerät verbinden</a>` : `<a href="#" data-act="gh-setup">Tauschen auf diesem Gerät einrichten</a>`}</p>`;
+      html += `</section>`;
     }
-    html += `<p class="small muted" id="stand" style="text-align:center;margin:22px 0 0">${standLine(w)}</p>`;
-    html += `<p class="small" style="text-align:center;margin:8px 0 0"><a href="#" data-act="help">So funktioniert der Kochbuddy</a></p>`;
+    html += `</div></div>`;
+    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a></p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
     view.innerHTML = html;
     renderedDay = today();
+  }
+  /* Wochenleiste: alle Tage auf einen Blick, Tipp springt zum Tag. Punkte = Fleisch/Fisch/Vegetarisch je Mahlzeit. */
+  function weekStrip(w, t) {
+    const leg = new Set();
+    const days = w.days.map((d) => {
+      const dots = d.meals.map((m) => { const r = w.recipes[m.recipe], c = r ? tone(r.tags) : ""; if (c) leg.add(c); return `<i class="${c}${m._swap ? " sw" : ""}"></i>`; }).join("");
+      return `<button class="wd${d.iso === t ? " now" : ""}${d.iso < t ? " past" : ""}" data-jumpday="${d.id}" aria-label="${esc(d.name)} ${esc(d.date)}"><small>${esc(d.name.slice(0, 2))}</small><b>${Number(d.iso.slice(8, 10))}</b><span class="dots">${dots}</span></button>`;
+    }).join("");
+    const names = { meat: "Fleisch", fish: "Fisch", veg: "Vegetarisch" };
+    return `<nav class="wstrip" aria-label="Tage der Woche">${days}</nav><p class="legend">${["meat", "fish", "veg"].filter((c) => leg.has(c)).map((c) => `<span><i class="${c}"></i>${names[c]}</span>`).join("")}<span class="lg-tip">Tag antippen springt hin</span></p>`;
   }
   function standLine(w) {
     if (embedded) return "Vorschau-Stand";
@@ -317,28 +356,31 @@
   function dayCard(w, d, open, past) {
     const isToday = d.iso === today();
     const rem = bag("rem", `${weekId}:${d.id}`);
-    let h = `<section class="card${isToday ? " today" : ""}${open ? "" : " compact"}" ${past && !open ? 'style="opacity:.62"' : ""}>`;
-    h += `<div class="day-h" data-expand="${d.id}"><h2>${esc(d.name)}${isToday ? ' <span class="chip">Heute</span>' : ""}</h2><span class="date">${esc(d.date)}${isToday ? "" : open ? " ▴" : " ▾"}</span></div>`;
+    const [, mo, dd] = d.iso.split("-").map(Number);
+    let h = `<section class="card day${isToday ? " today hero" : ""}${open ? " open" : " compact"}${past && !open ? " past" : ""}" id="day-${d.id}">`;
+    if (isToday) h += `<div class="day-h" data-expand="${d.id}"><div class="hd"><span class="kick"><i></i>Heute</span><h2>${esc(d.name)}</h2></div><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span></div>`;
+    else h += `<div class="day-h" data-expand="${d.id}"><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span><h2>${esc(d.name)}</h2><span class="chev" aria-hidden="true">${NEXT}</span></div>`;
     if (open && d.reminders && d.reminders.length) {
-      h += `<ul class="checks small" style="margin:6px 0 4px">${d.reminders.map((x, i) => checkRow(rem[i], esc(x), `data-rem="${d.id}:${i}"`)).join("")}</ul>`;
+      h += `<ul class="checks rems">${d.reminders.map((x, i) => checkRow(rem[i], esc(x), `data-rem="${d.id}:${i}"`)).join("")}</ul>`;
     }
+    h += `<div class="meals">`;
     for (const m of d.meals) {
       const r = w.recipes[m.recipe];
       if (!r) continue;
       const ref = `w:${weekId}:${m.recipe}`;
-      const prog = progress(ref, r);
-      h += `<div class="meal"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? " · Hauptmahlzeit" : ""}</span>
-        <a href="#/r/${ref}" style="color:inherit;text-decoration:none"><b>${esc(r.title)}</b></a>
-        <span class="chips">${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost" style="min-height:30px" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min. · aktiv ${r.time.active}</span>`}${prog ? `<span class="chip">${prog}</span>` : ""}</span>`;
+      const prog = progress(ref, r), c = tone(r.tags);
+      h += `<div class="meal${c ? " t-" + c : ""}"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? "<em>Hauptmahlzeit</em>" : ""}</span>
+        <div class="mb"><a class="mt" href="#/r/${ref}"><b>${esc(r.title)}</b></a>
+        <span class="chips">${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost undo" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min., davon ${r.time.active} aktiv</span>`}${prog ? `<span class="chip ok">${prog}</span>` : ""}</span>`;
       if (open) {
         if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
         const nts = m.mode === "aufwaermen" ? noteTimers(m.note) : [];
         h += `<div class="go">${nts.map((x, i) => timerChip({ min: x.min, max: x.max, text: x.text, label: x.label, title: shortTitle(r.title), sub: "Aufwärmen", ctx: `${ref}:n${i}` }, `${ref}:n${i}`)).join("")}
-          <a class="btn small${m.mode === "aufwaermen" ? "" : " primary"}" href="#/${m.mode === "aufwaermen" ? "r" : "k"}/${ref}">${m.mode === "aufwaermen" ? "Rezept" : prog ? "Weiterkochen" : "Kochen"}</a></div>`;
+          <a class="btn${m.mode === "aufwaermen" ? " small" : " primary"}" href="#/${m.mode === "aufwaermen" ? "r" : "k"}/${ref}">${m.mode === "aufwaermen" ? "Rezept ansehen" : `${PLAY}${prog ? "Weiterkochen" : "Kochen"}`}</a></div>`;
       }
-      h += `</div>`;
+      h += `</div></div>`;
     }
-    return h + `</section>`;
+    return h + `</div></section>`;
   }
   function progress(ref, r) {
     const n = Object.keys(S.steps[ref] || {}).length;
@@ -361,12 +403,14 @@
     const fromWeek = ref.startsWith("w:");
     const slot = fromWeek ? mealSlot(ref) : null;
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
-    let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">‹ Zurück</a>`;
-    h += `<div class="r-head"><h1>${esc(r.title)}</h1><div class="chips">${tagChips(r.tags, 6)}</div></div>`;
-    h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div></div>`;
+    let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>`;
+    const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
+    h += `<div class="r-head${c ? " t-" + c : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1></div>`;
+    h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
+      <div class="tbar" aria-hidden="true"><i style="width:${share}%"></i></div>${r.time.active < r.time.total ? `<p class="tlegend"><i></i>Aktiv am Herd: ${r.time.active} Min. – die übrige Zeit gart es von allein.</p>` : ""}</div>`;
     h += `<div class="r-cols"><div class="sticky">`;
-    h += `<a class="btn primary big" href="#/k/${ref}">${nDone && nDone < r.steps.length ? `Weiterkochen · Schritt ${nDone + 1}` : nDone ? "Nochmal kochen" : "Kochmodus starten"}</a>`;
-    h += `<div class="card plan"><div class="line"><span><b>Essen um</b></span><input type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div><p class="small muted" style="margin:0">Uhrzeit eintragen, dann rechnet die App aus, wann du anfangen musst.</p></div>`;
+    h += `<a class="btn primary big start" href="#/k/${ref}">${PLAY}${nDone && nDone < r.steps.length ? `Weiterkochen · Schritt ${nDone + 1}` : nDone ? "Nochmal kochen" : "Kochmodus starten"}</a>`;
+    h += `<div class="card plan"><div class="line"><label for="eat-at"><b>Essen um</b></label><input id="eat-at" type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div><p class="small muted" style="margin:0">Uhrzeit eintragen, dann rechnet die App aus, wann du anfangen musst.</p></div>`;
     h += `<div class="card"><div class="spread"><h3>Zutaten</h3><div class="stepper"><button data-portion="-1" aria-label="Weniger">−</button><output>${p} Port.</output><button data-portion="1" aria-label="Mehr">+</button></div></div>`;
     if (p !== (r.base || 3)) h += `<p class="small muted">Umgerechnet von ${r.base} Portionen. Garzeiten und die Füllmenge im Mixtopf (max. 2 l) im Blick behalten.</p>`;
     else if (r.servingsNote) h += `<p class="small muted">${esc(r.servingsNote)}</p>`;
@@ -375,9 +419,9 @@
     if (r.prep && r.prep.length) h += `<div class="card"><h3>Vorbereiten</h3><ul class="checks">${r.prep.map((x, n) => checkRow(pre[n], esc(x), `data-prep="${n}"`)).join("")}</ul></div>`;
     h += `<div class="card"><h3>Zubereitung</h3><ol class="steps-list">${r.steps.map((st, n) => {
       const ph = phaseOf(st.t);
-      return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${esc(ph.text)}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">⏱ ${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
+      return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${esc(ph.text)}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">${CLOCK}${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
     }).join("")}</ol></div>`;
-    if (r.kid) h += `<div class="tip"><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div>`;
+    if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
     if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
     h += `<div class="links">${r.bring ? `<a class="btn small" href="${esc(r.bring)}">In Bring übernehmen</a>` : ""}${r.page ? `<a class="btn small ghost" href="${esc(r.page)}">Rezeptseite</a>` : ""}${nDone || Object.keys(ing).length || Object.keys(pre).length ? `<button class="btn small ghost" data-act="reset-recipe">Häkchen zurücksetzen</button>` : ""}</div>`;
     h += `</div></div>`;
@@ -399,7 +443,7 @@
       let start = d.getTime() - total, tomorrow = false;
       if (d.getTime() < now - 2 * 3600000) { start += 86400000; tomorrow = true; }
       if (start > now) return `<span>${tomorrow ? "Morgen spätestens" : "Spätestens"} anfangen um</span><span class="big-time">${hm(start)}</span>`;
-      return `<span>Schon knapp: jetzt starten, fertig ca.</span><span class="big-time">${hm(now + total)}</span>`;
+      return `<span>Schon knapp: jetzt starten, fertig ca.</span><span class="big-time late">${hm(now + total)}</span>`;
     }
     return `<span>Jetzt starten, fertig ca.</span><span class="big-time">${hm(now + total)}</span>`;
   }
@@ -425,8 +469,9 @@
     const n = r.steps.length, i = Math.min(cookStep, n);
     const doneCount = Object.keys(steps).length;
     const c = S.cook[ref] || {};
-    let h = `<div class="cook-top"><a class="icon-btn" href="#/r/${esc(ref)}" data-act="back" data-fallback="#/r/${esc(ref)}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Fertig"} · ${doneCount}/${n} erledigt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte">${LIST}</button></div>`;
-    h += `<div class="progress"><i style="width:${(doneCount / n) * 100}%"></i></div>`;
+    const dir = animDir; animDir = 0;
+    let h = `<div class="cook-top"><a class="icon-btn" href="#/r/${esc(ref)}" data-act="back" data-fallback="#/r/${esc(ref)}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Alles erledigt"} · ${doneCount} von ${n} abgehakt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte und Zutaten">${LIST}</button></div>`;
+    h += `<div class="progress" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${doneCount}">${r.steps.map((_, x) => `<i class="${steps[x] ? "d" : ""}${x === i ? " c" : ""}"></i>`).join("")}</div>`;
     if (showList) {
       h += `<div class="card"><h3>Alle Schritte</h3><ol class="steps-list">${r.steps.map((st, x) => `<li class="${steps[x] ? "done" : ""}" data-jump="${x}"><span class="stxt">${esc(phaseOf(st.t).text)}</span>${st.set ? `<div class="small muted">${esc(DEV_SHORT[st.dev] || "")} · ${esc(st.set)}</div>` : ""}</li>`).join("")}</ol></div>`;
       h += `<div class="card"><h3>Alle Zutaten</h3><ul class="checks ing">${r.ingredients.map((x, m) => checkRow(ing[m], `<span class="q">${esc(amount(x, k))}</span><span>${esc(x.n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
@@ -434,8 +479,8 @@
       return;
     }
     if (i >= n) {
-      h += `<div class="done-hero"><div class="big">🍽</div><h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
-      if (r.kid) h += `<div class="tip"><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div>`;
+      h += `<div class="done-hero">${ART.plate}<h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
+      if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
       if (r.store) h += `<div class="card"><h3>Aufbewahren</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
       h += `<div class="links"><a class="btn primary" href="#/" data-act="home">Zur Woche</a><button class="btn ghost" data-act="cook-restart">Von vorn</button></div>`;
       view.innerHTML = h + cookFoot(i, n);
@@ -445,8 +490,8 @@
     const timers = stepTimers(st);
     const hits = ingsForStep(r, st.t);
     h += cookHint();
-    h += `<div class="cook-cols"><div class="cook-step">`;
-    h += `<div class="num">SCHRITT ${i + 1}${steps[i] ? " · ERLEDIGT" : ""}</div>${ph.phase ? `<span class="phase" style="margin-top:8px">${esc(ph.phase)}</span>` : ""}`;
+    h += `<div class="cook-cols"><div class="cook-step${dir ? (dir > 0 ? " in-fwd" : " in-back") : ""}">`;
+    h += `<div class="num"><b>${i + 1}</b><span>von ${n}</span>${steps[i] ? '<em class="chip ok">erledigt</em>' : ""}${ph.phase ? `<span class="phase">${esc(ph.phase)}</span>` : ""}</div>`;
     h += `<p class="stxt">${esc(ph.text)}</p>${readout(st)}`;
     if (timers.length) h += `<div class="cook-timers">${timers.map((t, x) => timerChip({ min: t.min, max: t.max, text: t.text, label: t.label, title: shortTitle(r.title), sub: `Schritt ${i + 1}: ${excerpt(t.main ? ph.text : t.label + " – " + ph.text)}`, ctx: `${ref}:${i}:${x}` }, `${ref}:${i}:${x}`)).join("")}</div>`;
     h += `</div><div>`;
@@ -454,19 +499,22 @@
       h += `<div class="card cook-ings"><h3>In diesem Schritt</h3><p class="small muted" style="margin:2px 0 4px">Abhaken, was schon drin ist.</p><ul class="checks ing">${hits.map((m) => checkRow(ing[m], `<span class="q">${esc(amount(r.ingredients[m], k))}</span><span>${esc(r.ingredients[m].n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
     }
     const left = r.ingredients.length - Object.keys(ing).length;
-    h += `<button class="btn ghost small" data-act="cook-list" style="margin-top:4px">Alle Zutaten & Schritte${left > 0 ? ` · ${left} Zutaten offen` : ""}</button>`;
+    h += `<button class="btn ghost small all" data-act="cook-list">${LIST}Alle Zutaten & Schritte${left > 0 ? ` · ${left} Zutaten noch nicht abgehakt` : ""}</button>`;
     h += `<div class="cook-meta"><span>${c.start ? `Gestartet ${hm(c.start)} · geplant fertig ${hm(c.start + r.time.total * 60000)}` : ""}</span>${wakeLock ? '<span class="wake">Bildschirm bleibt an</span>' : ""}</div>`;
     h += `</div></div>`;
     view.innerHTML = h + cookFoot(i, n);
   }
   const cookFoot = (i, n, list) => `<div class="cook-foot"><div class="in">${list
-    ? `<button class="btn big" data-act="cook-list" style="grid-column:1/-1">Zurück zum Schritt</button>`
-    : i >= n ? `<button class="btn big" data-act="cook-prev" style="grid-column:1/-1">‹ Letzter Schritt</button>`
-    : `<button class="btn big" data-act="cook-prev" ${i === 0 ? "disabled" : ""}>‹ Zurück</button><button class="btn big primary" data-act="cook-next">${i === n - 1 ? "Erledigt · fertig" : "Erledigt · weiter ›"}</button>`}</div></div>`;
+    ? `<button class="btn big" data-act="cook-list" style="grid-column:1/-1">${BACK}Zurück zum Schritt</button>`
+    : i >= n ? `<button class="btn big" data-act="cook-prev" style="grid-column:1/-1">${BACK}Letzter Schritt</button>`
+    : `<button class="btn big" data-act="cook-prev" ${i === 0 ? "disabled" : ""}>${BACK}Zurück</button><button class="btn big primary" data-act="cook-next">${i === n - 1 ? "Erledigt, fertig" : `Erledigt, weiter${NEXT}`}</button>`}</div></div>`;
+  let animDir = 0;
   async function cookGo(delta, markDone) {
     const r = await getRecipe(cookRef);
     if (markDone) { bag("steps", cookRef)[cookStep] = 1; }
+    const before = cookStep;
     cookStep = Math.max(0, Math.min(r.steps.length, cookStep + delta));
+    animDir = cookStep === before ? 0 : delta;
     S.cook[cookRef] = { ...(S.cook[cookRef] || { start: Date.now() }), step: cookStep, touched: Date.now() };
     save();
     drawCook($("#view"), r, cookRef);
@@ -497,13 +545,13 @@
     if (!p.timeline) { view.innerHTML = h + `<p class="empty">Diese Woche gibt es keinen Vorkoch-Block.</p>`; return; }
     if (p.when) h += `<p class="muted" style="margin:0 0 6px;font-weight:700">${esc(p.when)}</p>`;
     if (p.intro) h += `<p>${esc(p.intro)}</p>`;
-    h += `<div class="card">`;
-    if (!B.start) h += `<button class="btn primary big" data-act="block-start">Jetzt mit dem Vorkochen starten</button><p class="small muted" style="margin:8px 0 0">Die Zeitleiste bekommt dann echte Uhrzeiten, der aktuelle Schritt wird markiert.</p>`;
+    if (!B.start) h += `<div class="card prep-go"><button class="btn primary big" data-act="block-start">${PLAY}Jetzt mit dem Vorkochen starten</button><p class="small muted" style="margin:10px 0 0">Die Zeitleiste bekommt dann echte Uhrzeiten, der aktuelle Schritt wird markiert. Erledigtes antippen zum Abhaken.</p></div>`;
     else {
-      h += `<div class="spread"><div><div class="eyebrow">Gestartet ${hm(B.start)}</div><b>${nextI >= 0 ? `Als Nächstes um ${hm(B.start + off(p.timeline[nextI].t))} (in ${Math.max(0, Math.ceil((B.start + off(p.timeline[nextI].t) - Date.now()) / 60000))} Min.)` : "Letzter Schritt erreicht"}</b></div><button class="btn small ghost" data-act="block-reset">Neu starten</button></div>`;
-      h += `<div class="set-row"><span>Bei jedem Zeitpunkt erinnern</span><label class="switch"><input type="checkbox" data-act="block-beep" ${B.beep ? "checked" : ""}><span></span></label></div>`;
+      const nx = nextI >= 0 ? B.start + off(p.timeline[nextI].t) : 0;
+      h += `<div class="card today live"><div class="spread"><div><span class="kick"><i></i>Gestartet um ${hm(B.start)}</span><b class="nexttime">${nextI >= 0 ? `Als Nächstes um ${hm(nx)}` : "Letzter Schritt erreicht"}</b>${nextI >= 0 ? `<p>in ${Math.max(0, Math.ceil((nx - Date.now()) / 60000))} Min.: ${esc(excerpt(p.timeline[nextI].text, 80))}</p>` : ""}</div><button class="btn small light" data-act="block-reset">Neu starten</button></div>`;
+      h += `<div class="set-row"><span>Bei jedem Zeitpunkt mit Ton erinnern</span><label class="switch"><input type="checkbox" data-act="block-beep" ${B.beep ? "checked" : ""}><span></span></label></div></div>`;
     }
-    h += `<ul class="tl" style="margin-top:8px">${p.timeline.map((x, i) => `<li class="${i === cur ? "now" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : esc(x.t)}</span><span class="tx">${esc(x.text)}</span></li>`).join("")}</ul></div>`;
+    h += `<ul class="tl">${p.timeline.map((x, i) => `<li class="${i === cur ? "now" : ""}${i < cur ? " past" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : `${esc(x.t)}${i === 0 ? "<small>Start</small>" : ""}`}</span><span class="node">${CHECK}</span><span class="tx">${esc(x.text)}</span></li>`).join("")}</ul>`;
     if (p.recipes && p.recipes.length) {
       h += `<div class="section-title">Rezepte im Vorkoch-Block</div><ul class="r-list">${p.recipes.map((id) => {
         const r = w.recipes[id]; return r ? `<li><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="small muted">${esc(p.recipeNote || "")}</span></a></li>` : "";
@@ -541,8 +589,9 @@
     h += evs.map(({ e, i }) => {
       const b = bag("check", `${weekId}:${i}`);
       const n = Object.keys(b).length;
-      return `<section class="card${cur && cur.i === i ? " today" : ""}"><div class="spread"><div><h2>${esc(e.day)}${cur && cur.i === i ? ' <span class="chip">Heute</span>' : ""}</h2><div class="muted small" style="font-weight:700">${esc(e.for || "")} · ${n}/${e.items.length}</div></div>${e.tag ? `<span class="chip pump">${esc(e.tag)}</span>` : ""}</div>
-        <ul class="checks" style="margin-top:6px">${e.items.map((x, j) => checkRow(b[j], esc(x), `data-cl="${i}:${j}"`)).join("")}</ul>${e.note ? `<p class="small muted" style="margin:6px 0 0">${esc(e.note)}</p>` : ""}</section>`;
+      const isCur = cur && cur.i === i, all = e.items.length;
+      return `<section class="card cl${isCur ? " today" : ""}${n >= all ? " full" : ""}" style="--p:${all ? (n / all).toFixed(3) : 0}"><div class="cl-h"><div>${isCur ? '<span class="kick"><i></i>Heute Abend</span>' : ""}<h2>${esc(e.day)}</h2><div class="cl-for">${esc(e.for || "")}</div></div><span class="ev-ring">${ring()}<b>${n}/${all}</b></span></div>
+        ${e.tag ? `<span class="chip pump cl-tag">${esc(e.tag)}</span>` : ""}<ul class="checks">${e.items.map((x, j) => checkRow(b[j], esc(x), `data-cl="${i}:${j}"`)).join("")}</ul>${e.note ? `<p class="small cl-note">${esc(e.note)}</p>` : ""}</section>`;
     }).join("");
     if (!evs.length) h += `<p class="empty">Keine Checkliste in diesem Plan.</p>`;
     view.innerHTML = h;
@@ -569,14 +618,14 @@
     const dd = toIso(d) === today() ? "heute" : toIso(d) === addDays(today(), -1) ? "gestern" : `am ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.`;
     return `${dd} um ${hm(d)} Uhr`;
   }
-  function actionBanners(ups) {
+  function actionBanners(ups, part) {
     shownUpdates = ups;
     let h = "";
-    for (const u of ups) {
+    if (part !== "info") for (const u of ups) {
       const adds = u.add || [], rem = u.remove || [];
       const opened = S.bringOpened && S.bringOpened[u.key];
       h += `<section class="act">
-        <div class="act-h"><span class="act-ico">${ICON_CART}</span><div><b>Bring-Liste aktualisieren</b><div class="small">Der Wochenplan wurde ${esc(whenText(u.at))} geändert.</div></div></div>
+        <div class="act-h"><span class="act-ico">${ICON_CART}</span><div><span class="act-k">Bitte erledigen</span><b>Bring-Liste aktualisieren</b><div class="small">Der Wochenplan wurde ${esc(whenText(u.at))} geändert.</div></div></div>
         ${(u.changes || []).length ? `<ul class="act-list">${u.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}
         ${adds.length ? `<p class="small" style="margin:8px 0 2px"><b>Neu für Bring:</b> ${adds.map((x) => `${esc(x.n)}${x.q ? ` <span class="muted">(${esc(x.q)}${x.neu === false ? ", Menge geändert" : ""})</span>` : ""}`).join(", ")}</p>` : `<p class="small" style="margin:8px 0 2px">Es kommt nichts Neues dazu.</p>`}
         ${rem.length ? `<p class="small" style="margin:4px 0 0"><b>Wird nicht mehr gebraucht:</b> ${rem.map((x) => esc(x.n)).join(", ")}</p>` : ""}
@@ -587,12 +636,12 @@
         <p class="small muted" style="margin:10px 0 0">${u.bring ? "„In Bring übernehmen“ öffnet Bring mit genau diesen Zutaten, dort wählst du aus und bestätigst. Ist auf diesem Gerät kein Bring installiert, schick dir den Link per Mail aufs Handy. Der Link steht auch in der Mail von heute Abend." : "Hier musst du in Bring nichts tun. Einfach auf „Erledigt“ tippen."}</p>
       </section>`;
     }
-    const open = swapsFor(weekId).filter((s) => s.status === "offen");
+    const open = part === "todo" ? [] : swapsFor(weekId).filter((s) => s.status === "offen");
     if (open.length) {
       const late = new Date().getHours() >= 23;
-      h += `<section class="act info"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><b>${open.length === 1 ? "1 Tausch" : open.length + " Tausche"} – wird ${late ? "morgen Abend" : "heute Abend"} übernommen</b>
-        <div class="small">Gegen 21 Uhr passt der Buddy Plan, PDF und Einkaufsliste an und schickt eine kurze Mail. Danach steht hier, was neu in Bring muss. Bis dahin kannst du den Tausch beim Gericht rückgängig machen.</div></div></div>
-        ${open.map((s) => `<div class="small" style="margin-top:4px">· ${esc(s.dayName)} ${esc(s.slot)}: ${esc(shortTitle(s.toTitle))} statt ${esc(shortTitle(s.fromTitle))}</div>`).join("")}</section>`;
+      h += `<section class="act info"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">Nichts zu tun – nur zur Info</span><b>${open.length === 1 ? "1 Tausch" : open.length + " Tausche"} – wird ${late ? "morgen Abend" : "heute Abend"} übernommen</b>
+        <div class="small">Gegen 21 Uhr passt der Buddy Plan, PDF und Einkaufsliste an und schickt eine kurze Mail. Bis dahin lässt sich der Tausch beim Gericht rückgängig machen.</div></div></div>
+        <ul class="act-list">${open.map((s) => `<li><b>${esc(s.dayName)} ${esc(s.slot)}:</b> ${esc(shortTitle(s.toTitle))} statt ${esc(shortTitle(s.fromTitle))}</li>`).join("")}</ul></section>`;
     }
     return h;
   }
@@ -622,17 +671,17 @@
 
   /* ---------- Einführung beim ersten Start und Hilfe ---------- */
   const TOUR = [
-    { ico: "👋", t: "Willkommen beim Kochbuddy", x: "Hier siehst du jeden Tag, was gekocht wird – mit Rezept, Kochmodus und Timern. Plan, Rezepte und Angebote aktualisieren sich von selbst." },
-    { ico: "📅", t: "Oben steht immer heute", x: "Die Karte „Heute“ zeigt beide Mahlzeiten und was heute zu tun ist. Erledigtes abhaken. Ein Tipp auf ein Gericht öffnet das Rezept." },
-    { ico: "⏱️", t: "Kochen mit Timer", x: "„Kochen“ führt dich Schritt für Schritt durchs Rezept. Eine Zeitangabe antippen startet den Timer, der Bildschirm bleibt dabei an. Zutaten abhaken, sobald sie im Topf sind." },
-    { ico: "🔄", t: "Gericht tauschen", x: "Lust auf etwas anderes? Unter „Ersatzgerichte“ das Gericht am Griff ⠿ auf einen Tag ziehen oder „Tauschen“ antippen. Abends passt der Buddy Plan und Einkaufsliste an." },
-    { ico: "🛒", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Unter „Angebote“ stehen die besten Angebote der Woche samt Einkaufszettel zum Abhaken." },
+    { ico: "pot", t: "Willkommen beim Kochbuddy", x: "Hier siehst du jeden Tag, was gekocht wird – mit Rezept, Kochmodus und Timern. Plan, Rezepte und Angebote aktualisieren sich von selbst." },
+    { ico: "cal", t: "Oben steht immer heute", x: "Die Karte „Heute“ zeigt beide Mahlzeiten und was heute zu tun ist. Erledigtes abhaken. Ein Tipp auf ein Gericht öffnet das Rezept." },
+    { ico: "timer", t: "Kochen mit Timer", x: "„Kochen“ führt dich Schritt für Schritt durchs Rezept. Eine Zeitangabe antippen startet den Timer, der Bildschirm bleibt dabei an. Zutaten abhaken, sobald sie im Topf sind." },
+    { ico: "swap", t: "Gericht tauschen", x: "Lust auf etwas anderes? Unter „Ersatzgerichte“ das Gericht am Griff (sechs Punkte) auf einen Tag ziehen oder „Tauschen“ antippen. Abends passt der Buddy Plan und Einkaufsliste an." },
+    { ico: "cart", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Unter „Angebote“ stehen die besten Angebote der Woche samt Einkaufszettel zum Abhaken." },
   ];
   let tourStep = 0;
   function showTour(step = 0) {
     tourStep = step;
     const s = TOUR[step], last = step === TOUR.length - 1;
-    openSheet(`<div class="tour"><div class="tour-ico" aria-hidden="true">${s.ico}</div><h2>${esc(s.t)}</h2><p>${esc(s.x)}</p>
+    openSheet(`<div class="tour"><div class="tour-ico">${ART[s.ico] || ""}</div><h2>${esc(s.t)}</h2><p>${esc(s.x)}</p>
       <div class="tour-dots">${TOUR.map((_, i) => `<i class="${i === step ? "on" : ""}"></i>`).join("")}</div>
       <div class="tour-btns">${step > 0 ? `<button class="btn" data-act="tour-back">Zurück</button>` : `<button class="btn ghost" data-act="tour-end">Überspringen</button>`}
       <button class="btn primary" data-act="${last ? "tour-end" : "tour-next"}">${last ? "Los geht's" : "Weiter"}</button></div></div>`, { tour: "1" });
@@ -784,9 +833,9 @@
     openSheet(`<h2>${esc(r.title)}</h2><p class="small muted" style="margin:4px 0 8px">Wohin damit? Das bisherige Gericht wandert zu den Ersatzgerichten. Der Buddy übernimmt den Tausch heute gegen 21 Uhr in Plan, Bring-Liste und PDF und verschickt eine kurze Info-Mail.</p>${dropTargets(w, true)}`, { swap: toId });
   }
   function tokenSheet(problem) {
-    openSheet(`<h2>Tauschen einrichten</h2>
+    openSheet(`<h2>Speichern für den Buddy einrichten</h2>
       ${problem ? `<p class="notice" style="margin:8px 0">${esc(problem)}</p>` : ""}
-      <p class="small" style="margin:6px 0">Damit der Buddy deinen Tausch abends übernimmt, legt die App ihn in der Rezeptesammlung auf GitHub ab. Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel.</p>
+      <p class="small" style="margin:6px 0">Damit der Buddy Tausche abends übernimmt und deine Bewertungen aus „Entdecken“ kennt, legt die App sie in der Rezeptesammlung auf GitHub ab (ohne Namen). Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel.</p>
       <ol class="small" style="padding-left:20px;margin:8px 0">
         <li>Auf github.com einloggen und „Fine-grained token“ erstellen (Knopf unten).</li>
         <li>Name „Kochbuddy“, Ablaufdatum so spät wie möglich.</li>
@@ -797,7 +846,7 @@
       <a class="btn small" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub öffnen</a>
       <input class="field" style="margin-top:12px" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" data-ghtoken>
       <button class="btn primary big" style="margin-top:10px" data-act="gh-save">Prüfen und speichern</button>
-      <p class="small muted" style="margin:10px 0 0">Schon auf einem anderen Gerät eingerichtet? Dort bei den Ersatzgerichten „Weiteres Gerät verbinden“ antippen und den QR-Code mit diesem Gerät scannen.</p>`);
+      <p class="small muted" style="margin:10px 0 0">Schon auf einem anderen Gerät eingerichtet? Dort in der Woche unter den Ersatzgerichten „Weiteres Gerät verbinden“ antippen und den QR-Code mit diesem Gerät scannen.</p>`);
   }
   async function saveToken() {
     const inp = $("[data-ghtoken]"), t = ((inp && inp.value) || "").trim();
@@ -808,7 +857,8 @@
       const repo = await gh("GET", "");
       if (!repo) throw Object.assign(new Error("Repo nicht gefunden – beim Schlüssel „Rezeptesammlung“ auswählen"), { code: "auth" });
     } catch (e) { setGhToken(old); toast(e.code === "offline" ? "Gerade kein Netz – bitte später nochmal" : e.message); return; }
-    closeSheet(); toast("Tauschen ist auf diesem Gerät eingerichtet");
+    closeSheet(); toast("Speichern ist auf diesem Gerät eingerichtet");
+    syncTaste(true).then(() => { if (location.hash.startsWith("#/entdecken")) rerenderSoft(); });
     if (pendingSwap) { const s = pendingSwap; pendingSwap = null; await performSwap(s.to, s.iso, s.slot); }
     else { await syncSwaps(true); rerenderSoft(); }
   }
@@ -885,7 +935,7 @@
     try { cache = JSON.parse(localStorage.getItem(DEALS_KEY) || "null"); } catch (e) { cache = null; }
     const fresh = cache && cache.url === url && cache.built === (w0.built || "");
     if (fresh) drawDeals(view, w0, cache.data, url);
-    else view.innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<p class="loading">Lese die Angebote aus dem Wochen-PDF …</p>`;
+    else view.innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<div class="loading">${ART.pot}<span>Lese die Angebote aus dem Wochen-PDF …</span></div>`;
     if (fresh && Date.now() - (cache.at || 0) < 10 * 60000) return;
     try {
       const mod = await import("./deals.mjs");
@@ -934,6 +984,285 @@
     for (const n of pages) { const c = document.createElement("canvas"); c.style.cssText = "display:block;margin:12px 0;border-radius:8px;background:#fff"; box.appendChild(c); await mod.renderPage(url, n, c, Math.min(box.clientWidth || 380, 900)); }
   }
 
+  /* ---------- Entdecken: Gerichte bewerten wie bei Tinder ----------
+     Jeden Tag 20 Gerichte: rechts = lecker, links = lieber nicht, hoch = unbedingt bald (Stern).
+     Die Stapel stellt der Buddy (Antwort-Aufgabe) in daten/ideen.json unter days zusammen – immer für den nächsten Tag,
+     sobald heute geswiped wurde. Fehlt einer, mischt die App selbst aus dem Ideen-Pool und der Rezeptesammlung.
+     Bewertungen gehen (ohne Namen) nach geschmack/bewertungen.json im Rezept-Repo; die Aufgaben lesen sie für künftige Pläne. */
+  const TASTE_PATH = "/contents/geschmack/bewertungen.json";
+  const TASTE_INFO = "Bewertungen aus dem Kochbuddy (Tab Entdecken). v: super = unbedingt bald einplanen, like = mag ich, nope = lieber nicht. Schlüssel: i:<id> = Idee aus app/daten/ideen.json, a:<slug> = Rezept aus rezepte/.";
+  const SKIP_SLUGS = new Set(["frischkaese-gemuese-wraps", "kuerbissuppe-aus-dem-gefrierschrank", "spinat-kaese-frittata-aus-der-heissluftfritteuse"]);
+  const HEART = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z" fill="currentColor"/></svg>';
+  const STAR = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z" fill="currentColor"/></svg>';
+  const XMARK = '<svg class="ico" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+  const UNDO = '<svg class="ico" viewBox="0 0 24 24"><path d="M8.5 6.5L4.5 10.5l4 4"/><path d="M4.5 10.5h9a5.5 5.5 0 0 1 0 11H11"/></svg>';
+  const VERDICT = { like: "Lecker", super: "Unbedingt bald", nope: "Nein danke" };
+  /* Bilder je Hauptzutat: Farbverlauf + gezeichnete Zutat (f = Fläche, s = Linie in Kartenfarbe, d = Punkt) */
+  const PAL = {
+    tomate: ["#C73A26", "#EC6A40"], kuerbis: ["#D9640F", "#F3973A"], kartoffel: ["#B5843A", "#DDB462"], nudel: ["#D29D1E", "#EEC758"], reis: ["#7E9567", "#AAC08F"],
+    fisch: ["#2A6894", "#4C95C6"], huhn: ["#B86A22", "#DE9545"], rind: ["#862C28", "#B5473F"], wurst: ["#9C4234", "#C76650"], gemuese: ["#C8661E", "#EC9B48"],
+    blatt: ["#2D7539", "#4F9F59"], kaese: ["#D6A928", "#F0D06A"], suppe: ["#A84F2B", "#D2794A"], auflauf: ["#92542A", "#C27C45"], brot: ["#9B6B36", "#C99758"],
+    suess: ["#B84A6D", "#E07D9C"], pilz: ["#6E5E4E", "#9C8A74"], bohne: ["#5F7333", "#8CA552"],
+  };
+  const FOOD = {
+    tomate: '<circle class="f" cx="60" cy="68" r="34"/><path class="s" d="M60 36l-9-8M60 36l9-8M60 36V24M60 36l-13 3M60 36l13 3"/><path class="s" d="M42 62q3-11 14-15"/>',
+    kuerbis: '<ellipse class="f" cx="60" cy="70" rx="42" ry="31"/><path class="s" d="M60 40v60M43 43q-11 27 0 54M77 43q11 27 0 54"/><path class="s" d="M60 40q0-11 9-15"/>',
+    kartoffel: '<path class="f" d="M28 66c0-21 19-33 37-31 17 2 28 15 26 31-2 19-19 29-37 27-17-2-26-13-26-27z"/><circle class="d" cx="50" cy="56" r="3.2"/><circle class="d" cx="72" cy="68" r="3.2"/><circle class="d" cx="56" cy="80" r="2.6"/>',
+    nudel: '<path class="f" d="M20 42l34 18-34 18q-9-18 0-36zM100 42L66 60l34 18q9-18 0-36z"/><rect class="f" x="50" y="50" width="20" height="20" rx="7"/><path class="s" d="M28 49l7 4M28 71l7-4M92 49l-7 4M92 71l-7-4M55 60h10"/>',
+    reis: '<path class="f" d="M30 58q30-34 60 0z"/><path class="f" d="M18 60h84a42 33 0 0 1-84 0z"/><path class="s" d="M18 60h84M46 49l4-2M60 43l4 2M72 51l4-1M54 54l3 2"/>',
+    fisch: '<path class="f" d="M18 60q26-30 60-15l22-15v60L78 75q-34 15-60-15z"/><circle class="d" cx="38" cy="56" r="3.8"/><path class="s" d="M52 47q7 13 0 26M64 52v16"/>',
+    huhn: '<ellipse class="f" cx="70" cy="48" rx="26" ry="21" transform="rotate(-35 70 48)"/><path class="fat" d="M54 62L36 82"/><circle class="f" cx="29" cy="85" r="8"/><circle class="f" cx="37" cy="94" r="8"/><path class="s" d="M62 40q8-6 16 0"/>',
+    rind: '<path class="f" d="M24 54c4-17 26-26 47-21 20 5 30 20 24 37-7 17-28 23-47 19-15-3-28-17-24-35z"/><path class="s" d="M36 50q22-11 44 2"/><circle class="s" cx="72" cy="68" r="7"/>',
+    wurst: '<path class="fat2" d="M26 70q34 26 68-10"/><path class="s" d="M40 72l4 5M58 78l2 6M76 70l4 5"/>',
+    gemuese: '<path class="f" d="M88 32c-5-5-12-5-17 0L28 84c-3 5 0 7 5 5l49-37c7-6 9-14 6-20z"/><path class="s" d="M86 33l11-15M88 35l17-4M81 31l2-17M60 52l6 6M47 64l6 6"/>',
+    blatt: '<path class="f" d="M24 94C24 52 50 26 98 24c0 47-26 70-74 70z"/><path class="s" d="M26 92L86 34M46 74h16M60 60V44M72 48h12"/>',
+    kaese: '<path class="f" d="M18 64l68-32 16 32z"/><rect class="f" x="18" y="64" width="84" height="28" rx="4"/><path class="s" d="M18 64h84"/><circle class="d" cx="38" cy="78" r="5"/><circle class="d" cx="66" cy="82" r="4"/><circle class="d" cx="86" cy="74" r="3"/><circle class="d" cx="72" cy="54" r="3.5"/>',
+    suppe: '<path class="steam2" d="M46 42q-6-8 0-16t0-16M60 42q-6-8 0-16t0-16M74 42q-6-8 0-16t0-16"/><path class="f" d="M16 56h88a44 35 0 0 1-88 0z"/><path class="s" d="M24 63h72"/>',
+    auflauf: '<rect class="f" x="20" y="46" width="80" height="42" rx="11"/><path class="fat3" d="M12 60h10M98 60h10"/><path class="s" d="M28 58q8-7 16 0t16 0 16 0 16 0"/><circle class="d" cx="40" cy="73" r="3.4"/><circle class="d" cx="60" cy="78" r="3.4"/><circle class="d" cx="80" cy="71" r="3.4"/>',
+    brot: '<path class="f" d="M20 74c0-21 17-36 40-36s40 15 40 36v14H20z"/><path class="s" d="M40 55l9 13M57 51l9 13M74 55l9 13"/>',
+    suess: '<ellipse class="fs" cx="60" cy="86" rx="40" ry="10"/><ellipse class="fs" cx="60" cy="74" rx="38" ry="10"/><ellipse class="fs" cx="60" cy="62" rx="36" ry="10"/><circle class="d" cx="60" cy="47" r="7"/><path class="s2" d="M60 40q2-8 9-10"/>',
+    pilz: '<path class="f" d="M18 62a42 32 0 0 1 84 0z"/><path class="f" d="M47 62h26l-4 32H51z"/><path class="s" d="M22 62h76M40 50q6-8 14-10"/>',
+    bohne: '<ellipse class="f" cx="42" cy="54" rx="17" ry="11.5" transform="rotate(-20 42 54)"/><ellipse class="f" cx="76" cy="50" rx="17" ry="11.5" transform="rotate(25 76 50)"/><ellipse class="f" cx="60" cy="80" rx="17" ry="11.5" transform="rotate(-6 60 80)"/><path class="s" d="M36 52q6 5 13 2M70 47q6 6 13 6M53 80q7 3 14 0"/>',
+  };
+  const artFor = (title) => {
+    const t = title.toLowerCase();
+    const K = [["fisch", /lachs|fisch|seelachs|kabeljau|thunfisch|forelle/], ["huhn", /hähnchen|huhn|hühn|pute|chicken/], ["rind", /gulasch|rind|hack|frikadell|bolognese|braten|schnitzel/],
+      ["kuerbis", /kürbis/], ["tomate", /tomate/], ["suppe", /suppe|eintopf/], ["suess", /pfannkuchen|grieß|milchreis|schmarrn/], ["auflauf", /auflauf|gratin|lasagne/],
+      ["nudel", /nudel|pasta|fusilli|gnocchi|spätzle/], ["kartoffel", /kartoffel|puffer/], ["brot", /flammkuchen|vesper|brot/], ["blatt", /brokkoli|spinat|salat/], ["kaese", /käse|raclette/]];
+    for (const [k, re] of K) if (re.test(t)) return k;
+    return "gemuese";
+  };
+  const taste = () => { S.taste = S.taste || { r: {}, ops: [], hist: [] }; S.taste.r = S.taste.r || {}; S.taste.ops = S.taste.ops || []; S.taste.hist = S.taste.hist || []; return S.taste; };
+  async function tastePool() {
+    const [idea, recs, plan] = await Promise.all([
+      getJSON("daten/ideen.json").catch(() => ({ ideas: [], days: {} })),
+      getJSON("../rezepte/rezepte.json").catch(() => (embedded && embedded.files["../rezepte/rezepte.json"]) || []),
+      fetch("../geschmack/eingeplant.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
+    ]);
+    const ideas = (idea.ideas || []).filter((x) => x && x.id && x.t).map((x) => ({ id: "i:" + x.id, t: x.t, d: x.d || "", tags: x.tags || [], min: x.min, art: FOOD[x.art] ? x.art : artFor(x.t), src: "idee" }));
+    const recipes = (recs || []).filter((r) => !SKIP_SLUGS.has(r.slug) && !(r.tags || []).includes("Vorrat")).map((r) => ({ id: "a:" + r.slug, t: r.title, d: r.last ? `Gab es bei euch zuletzt in ${r.last}. Wieder einplanen?` : "", tags: r.tags || [], min: r.total, art: artFor(r.title), src: "rezept", slug: r.slug }));
+    const all = [...ideas, ...recipes];
+    return { ideas, recipes, all, byId: new Map(all.map((x) => [x.id, x])), days: idea.days || {}, planned: (plan && plan.items) || {} };
+  }
+  function seeded(str) { let h = 2166136261 >>> 0; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; }; }
+  const shuffled = (arr, rnd) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  /* Der Stapel für heute: 1. vom Buddy für heute, 2. ein älterer, noch nicht fertiger Buddy-Stapel, 3. selbst gemischt */
+  function mainDeck(pool) {
+    const T = taste(), day = today(), ok = (ids) => (ids || []).map((id) => (String(id).includes(":") ? String(id) : "i:" + id)).filter((id) => pool.byId.has(id));
+    if (pool.days[day] && ok(pool.days[day]).length) return { ids: ok(pool.days[day]), by: "buddy", key: day };
+    const older = Object.keys(pool.days).filter((k) => k < day).sort().reverse();
+    for (const k of older) { const ids = ok(pool.days[k]); if (ids.length && ids.some((id) => !T.r[id])) return { ids, by: "buddy", key: k }; }
+    if (T.deck && T.deck.day === day && !T.deck.extra) return { ids: ok(T.deck.ids), by: "app", key: day, reask: T.deck.reask || [] };
+    const rnd = seeded("kochbuddy-" + day);
+    const fresh = (x) => !T.r[x.id] || T.r[x.id].day === day; // heute Bewertetes bleibt drin, damit alle Geräte denselben Stapel haben
+    const fi = shuffled(pool.ideas.filter(fresh), rnd), fr = shuffled(pool.recipes.filter(fresh), rnd);
+    const nI = Math.min(fi.length, 20 - Math.min(4, fr.length)), nR = Math.min(fr.length, 20 - nI);
+    let ids = shuffled([...fi.slice(0, nI), ...fr.slice(0, nR)], rnd).map((x) => x.id), reask = [];
+    if (ids.length < 20) { // alles bewertet: lange zurückliegende „Lecker“/„Unbedingt“ nochmal fragen
+      const old = pool.all.filter((x) => T.r[x.id] && T.r[x.id].v !== "nope" && Date.now() - new Date(T.r[x.id].at).getTime() > 21 * 86400000).sort((a, b) => (T.r[a.id].at < T.r[b.id].at ? -1 : 1)).slice(0, 20 - ids.length).map((x) => x.id);
+      ids = ids.concat(old); reask = old;
+    }
+    T.deck = { day, ids, reask }; save();
+    return { ids, by: "app", key: day, reask };
+  }
+  function extraDeck(pool, n = 10) {
+    const T = taste(), day = today();
+    const rnd = seeded("kochbuddy-extra-" + day + "-" + Object.keys(T.r).length);
+    const ids = shuffled(pool.all.filter((x) => !T.r[x.id]), rnd).slice(0, n).map((x) => x.id);
+    T.extra = { day, ids }; save();
+    return ids;
+  }
+  const isDone = (id, deck) => { const r = taste().r[id]; return !!r && (!(deck.reask || []).includes(id) || r.day === today()); };
+  function rate(item, v) {
+    const T = taste(), at = new Date().toISOString(), prev = T.r[item.id] ? { ...T.r[item.id] } : null;
+    T.r[item.id] = { v, at, day: today() };
+    T.ops.push({ op: "set", id: item.id, v, at, t: item.t, tags: item.tags, src: item.src });
+    T.hist.push({ id: item.id, prev, t: item.t, tags: item.tags, src: item.src }); T.hist = T.hist.slice(-40);
+    S.settings.swiped = 1; save(); scheduleTastePush();
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(v === "super" ? [12, 40, 12] : 12);
+  }
+  function undoRate() {
+    const T = taste(), h = T.hist.pop();
+    if (!h) return null;
+    if (h.prev) { T.r[h.id] = h.prev; T.ops.push({ op: "set", id: h.id, v: h.prev.v, at: h.prev.at, t: h.t, tags: h.tags, src: h.src }); }
+    else { delete T.r[h.id]; T.ops.push({ op: "del", id: h.id }); }
+    save(); scheduleTastePush(); return h.id;
+  }
+  let tasteTimer = null, tasteSyncing = null;
+  const scheduleTastePush = (ms = 8000) => { clearTimeout(tasteTimer); tasteTimer = setTimeout(() => syncTaste(true).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); }), ms); };
+  function mergeTaste(items) {
+    const T = taste(); let ch = false;
+    for (const [id, x] of Object.entries(items || {})) {
+      if (!x || !x.v) continue;
+      const loc = T.r[id];
+      if ((!loc || x.at > loc.at) && !T.ops.some((o) => o.id === id)) { T.r[id] = { v: x.v, at: x.at, day: toIso(new Date(x.at)) }; ch = true; }
+    }
+    if (ch) save();
+    return ch;
+  }
+  function syncTaste(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (tasteSyncing) return tasteSyncing;
+    tasteSyncing = (async () => {
+      const T = taste();
+      try {
+        if (ghToken() && T.ops.length) {
+          for (let k = 0; k < 3; k++) {
+            const r = await gh("GET", TASTE_PATH);
+            const data = r ? JSON.parse(b64d(r.content)) : {};
+            data.info = TASTE_INFO; data.items = data.items || {};
+            const ops = T.ops.slice();
+            for (const o of ops) { if (o.op === "del") delete data.items[o.id]; else data.items[o.id] = { v: o.v, at: o.at, t: o.t, tags: o.tags, src: o.src }; }
+            data.updated = new Date().toISOString();
+            try {
+              await gh("PUT", TASTE_PATH, { message: `Koch-App: ${ops.length} ${ops.length === 1 ? "Bewertung" : "Bewertungen"} (Entdecken)`, content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+              T.ops = T.ops.slice(ops.length); T.pushed = Date.now(); save();
+              mergeTaste(data.items);
+              return true;
+            } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+          }
+        } else if (!T.ops.length) {
+          let items = null;
+          if (ghToken()) { const r = await gh("GET", TASTE_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
+          else { const res = await fetch("../geschmack/bewertungen.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; }
+          return mergeTaste(items);
+        }
+      } catch (e) {
+        if (!quiet && e.code === "auth") { toast(`Bewertungen nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
+      }
+      return false;
+    })().finally(() => { tasteSyncing = null; });
+    return tasteSyncing;
+  }
+  /* Woche: kleiner Hinweis, solange heute noch Gerichte warten */
+  async function discoverTeaser() {
+    if (embedded) return "";
+    try {
+      const pool = await tastePool(), deck = mainDeck(pool), left = deck.ids.filter((id) => !isDone(id, deck)).length;
+      if (!left) return "";
+      return `<a class="card teaser" href="#/entdecken"><span class="tz-stack" aria-hidden="true"><i></i><i></i><i>${HEART}</i></span><span class="ev-t"><small>Entdecken</small><b>${left === deck.ids.length ? `${left} Gerichte warten aufs Bewerten` : `Noch ${left} von ${deck.ids.length} Gerichten bewerten`}</b></span><span class="chev">${NEXT}</span></a>`;
+    } catch (e) { return ""; }
+  }
+  let swState = null, swAnim = false;
+  async function renderDiscover(view) {
+    const head = (k, eb) => `<header class="top sw-top"><div><div class="eyebrow">${k}${eb}</div><h1>Entdecken</h1></div></header>`;
+    let pool;
+    try { pool = await tastePool(); } catch (e) { pool = null; }
+    if (!pool || !pool.all.length) { view.innerHTML = head("", "Gerichte bewerten") + `<p class="empty">Die Gerichte ließen sich gerade nicht laden. Mit Internet nochmal öffnen.</p>`; return; }
+    const T = taste(), main = mainDeck(pool);
+    let deck = main, extra = false;
+    if (!main.ids.some((id) => !isDone(id, main)) && T.extra && T.extra.day === today()) {
+      const ex = { ids: T.extra.ids.filter((id) => pool.byId.has(id)), by: "app", key: "extra" };
+      if (ex.ids.some((id) => !isDone(id, ex))) { deck = ex; extra = true; }
+    }
+    const left = deck.ids.filter((id) => !isDone(id, deck));
+    const done = deck.ids.length - left.length;
+    swState = { pool, deck, left: left.slice(), extra };
+    if (!left.length) { view.innerHTML = swSummary(pool, main, head); return; }
+    let h = head(`<span class="kw" id="swcount">${done + 1} / ${deck.ids.length}</span>`, extra ? "Zusatzrunde" : deck.key < today() ? "Von gestern übrig" : "Heute zum Bewerten");
+    h += S.settings.swiped ? `<p class="sw-intro short"><b>Rechts</b> lecker · <b>links</b> nein danke · <b>oben</b> unbedingt bald</p>` : `<p class="sw-intro">Nach <b>rechts</b> wischen, was dir schmeckt, nach <b>links</b>, was nicht. Nach <b>oben</b>: unbedingt bald kochen – das plant der Buddy in den nächsten Wochen ein.</p>`;
+    h += `<div class="deck" id="deck">${left.slice(0, 3).map((id, i) => swCard(pool.byId.get(id), i)).reverse().join("")}</div>`;
+    h += `<div class="sw-btns">
+      <button class="swb undo" data-swipe="undo" aria-label="Letzte Bewertung zurücknehmen" ${T.hist.length ? "" : "disabled"}>${UNDO}<small>Zurück</small></button>
+      <button class="swb no" data-swipe="nope">${XMARK}<small>Nein danke</small></button>
+      <button class="swb up" data-swipe="super">${STAR}<small>Unbedingt</small></button>
+      <button class="swb yes" data-swipe="like">${HEART}<small>Lecker</small></button></div>`;
+    h += `<p class="sw-sync">${tasteSyncLine()}</p>`;
+    view.innerHTML = h;
+    if (!S.settings.swiped) setTimeout(() => { const c = $(".sw-card.front"); if (c && !swAnim) c.classList.add("nudge"); }, 700);
+  }
+  const tasteSyncLine = () => (embedded ? "" : !ghToken() ? `Bewertungen bleiben erst einmal auf diesem Gerät. Damit der Buddy sie sieht: <a href="#" data-act="gh-setup">einmalig Speichern einrichten</a>` : taste().ops.length ? "Wird gleich für den Buddy gespeichert …" : "Für den Buddy gespeichert – er plant künftig danach.");
+  function swCard(x, i) {
+    const p = PAL[x.art] || PAL.gemuese, tags = (x.tags || []).filter((t) => !["Thermomix", "Varoma", "Meal-Prep", "Vorkochen", "Einfrieren", "Eisen"].includes(t));
+    return `<article class="sw-card${i === 0 ? " front" : ""}" data-id="${esc(x.id)}" style="--c1:${p[0]};--c2:${p[1]};--i:${i}">
+      <div class="sw-art"><svg class="food" viewBox="0 0 120 120" aria-hidden="true">${FOOD[x.art] || FOOD.gemuese}</svg><span class="sw-src">${x.src === "rezept" ? "Aus eurer Sammlung" : "Neue Idee"}</span>${x.min ? `<span class="sw-min">${CLOCK}${x.min} Min.</span>` : ""}</div>
+      <div class="sw-body"><div class="chips">${tagChips(tags, 3)}</div><h2>${esc(x.t)}</h2>${x.d ? `<p>${esc(x.d)}</p>` : ""}</div>
+      <b class="stamp yes">Lecker</b><b class="stamp no">Nein danke</b><b class="stamp up">Unbedingt bald</b></article>`;
+  }
+  function swSummary(pool, main, head) {
+    const T = taste(), todays = main.ids.map((id) => pool.byId.get(id)).filter((x) => x && T.r[x.id]);
+    const by = (v) => todays.filter((x) => T.r[x.id].v === v);
+    const total = Object.keys(T.r).length, more = pool.all.some((x) => !T.r[x.id]);
+    let h = head("", "Heute erledigt");
+    h += `<section class="card today sw-done">${ART.plate}<h2>Danke – für heute fertig!</h2><p>Morgen warten neue Gerichte. Der Buddy stellt sie nach deinen Bewertungen zusammen und plant, was dir schmeckt.</p>
+      <div class="sw-stats"><span class="s-up">${STAR}<b>${by("super").length}</b>Unbedingt</span><span class="s-yes">${HEART}<b>${by("like").length}</b>Lecker</span><span class="s-no">${XMARK}<b>${by("nope").length}</b>Nein danke</span></div></section>`;
+    if (!embedded && !ghToken()) h += `<section class="act"><div class="act-h"><span class="act-ico">${HEART}</span><div><span class="act-k">Bitte einmal einrichten</span><b>Bewertungen für den Buddy speichern</b><div class="small">Bisher liegen sie nur auf diesem Gerät. Mit dem GitHub-Schlüssel (derselbe wie fürs Tauschen) kommen sie beim Buddy an.</div></div></div><div class="act-btns"><button class="btn primary" data-act="gh-setup">Jetzt einrichten</button></div></section>`;
+    else if (!embedded) h += `<p class="sw-sync">${tasteSyncLine()}</p>`;
+    const list = (v, title) => { const xs = by(v); return xs.length ? `<h2 class="section-title">${title}</h2><ul class="sw-list">${xs.map((x) => swRow(x, pool)).join("")}</ul>` : ""; };
+    h += list("super", "Unbedingt bald") + list("like", "Lecker") + list("nope", "Nein danke");
+    h += `<p class="small muted sw-foot">Insgesamt ${total} Gerichte bewertet. Antippen ändert die Bewertung.</p>`;
+    if (more) h += `<button class="btn big" data-act="sw-more">Noch 10 weitere Gerichte bewerten</button>`;
+    return h;
+  }
+  function swRow(x, pool) {
+    const v = taste().r[x.id].v, pl = pool.planned[x.id];
+    return `<li class="sw-row"><span class="sw-dot" style="--c1:${(PAL[x.art] || PAL.gemuese)[0]}"></span><span class="sw-rt"><b>${esc(x.t)}</b>${pl ? `<span class="chip ok">Eingeplant: ${esc(pl.kw || "")}</span>` : ""}</span>
+      <span class="sw-pick" role="group" aria-label="Bewertung ändern">${["nope", "like", "super"].map((k) => `<button class="${k}${v === k ? " on" : ""}" data-rerate="${esc(x.id)}|${k}" aria-label="${VERDICT[k]}" aria-pressed="${v === k}">${k === "nope" ? XMARK : k === "like" ? HEART : STAR}</button>`).join("")}</span></li>`;
+  }
+  /* Wischen: Karte folgt dem Finger, Stempel zeigen die Entscheidung, loslassen über der Schwelle entscheidet */
+  let swDrag = null;
+  document.addEventListener("pointerdown", (e) => {
+    const c = e.target.closest(".sw-card.front");
+    if (!c || swAnim || swDrag) return;
+    c.classList.remove("nudge");
+    swDrag = { el: c, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0, pid: e.pointerId, moved: false };
+    try { c.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
+    c.classList.add("drag");
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (!swDrag || e.pointerId !== swDrag.pid) return;
+    const d = swDrag; d.dx = e.clientX - d.x0; d.dy = e.clientY - d.y0;
+    if (Math.hypot(d.dx, d.dy) > 4) d.moved = true;
+    d.el.style.transform = `translate(${d.dx}px, ${d.dy}px) rotate(${d.dx * 0.06}deg)`;
+    const up = d.dy < 0 && Math.abs(d.dy) > Math.abs(d.dx) ? Math.min(1, -d.dy / 110) : 0;
+    d.el.style.setProperty("--yes", up ? 0 : Math.max(0, Math.min(1, d.dx / 100)));
+    d.el.style.setProperty("--no", up ? 0 : Math.max(0, Math.min(1, -d.dx / 100)));
+    d.el.style.setProperty("--up", up);
+  }, { passive: true });
+  const swEnd = (e) => {
+    if (!swDrag || (e && e.pointerId !== swDrag.pid)) return;
+    const d = swDrag; swDrag = null;
+    d.el.classList.remove("drag");
+    const v = d.dx > 110 ? "like" : d.dx < -110 ? "nope" : d.dy < -120 && Math.abs(d.dx) < Math.abs(d.dy) ? "super" : null;
+    if (v) swDecide(v, d.el);
+    else { d.el.style.transform = ""; ["--yes", "--no", "--up"].forEach((p) => d.el.style.setProperty(p, 0)); }
+  };
+  document.addEventListener("pointerup", swEnd);
+  document.addEventListener("pointercancel", swEnd);
+  document.addEventListener("keydown", (e) => {
+    if (!location.hash.startsWith("#/entdecken") || !$("#sheet").hidden || /INPUT|TEXTAREA/.test((e.target || {}).tagName || "")) return;
+    const v = { ArrowRight: "like", ArrowLeft: "nope", ArrowUp: "super" }[e.key];
+    if (v && $(".sw-card.front")) { e.preventDefault(); swDecide(v); }
+  });
+  function swDecide(v, el) {
+    if (swAnim || !swState) return;
+    const card = el || $(".sw-card.front");
+    if (!card) return;
+    const item = swState.pool.byId.get(card.dataset.id);
+    if (!item) return;
+    swAnim = true;
+    rate(item, v);
+    const W = window.innerWidth;
+    card.classList.add("fly");
+    card.style.setProperty(v === "like" ? "--yes" : v === "nope" ? "--no" : "--up", 1);
+    card.style.transform = v === "super" ? `translate(0, -${window.innerHeight}px) rotate(0deg)` : `translate(${v === "like" ? W * 1.3 : -W * 1.3}px, 40px) rotate(${v === "like" ? 24 : -24}deg)`;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => {
+      card.remove();
+      swState.left = swState.left.filter((id) => id !== item.id);
+      const deckEl = $("#deck");
+      if (!swState.left.length || !deckEl) { swAnim = false; syncTaste(true); rerenderSoft(); return; }
+      const cards = $$(".sw-card", deckEl).reverse(); // oben zuerst
+      cards.forEach((c, i) => { c.style.setProperty("--i", i); c.classList.toggle("front", i === 0); });
+      const next = swState.left[cards.length];
+      if (next && cards.length < 3) deckEl.insertAdjacentHTML("afterbegin", swCard(swState.pool.byId.get(next), cards.length).replace('class="sw-card', 'class="sw-card enter'));
+      const cnt = $("#swcount"); if (cnt) cnt.textContent = `${swState.deck.ids.length - swState.left.length + 1} / ${swState.deck.ids.length}`;
+      const u = $("[data-swipe='undo']"); if (u) u.disabled = false;
+      const sy = $(".sw-sync"); if (sy) sy.innerHTML = tasteSyncLine();
+      swAnim = false;
+    }, reduce ? 10 : 320);
+  }
+
   /* ---------- Alle Rezepte ---------- */
   let filter = { q: "", tag: "Alle" };
   async function renderAll(view) {
@@ -941,7 +1270,7 @@
     try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
     const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
     let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>`;
-    h += `<input class="search" type="search" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search>`;
+    h += `<label class="searchbox"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="search" type="search" aria-label="Rezepte durchsuchen" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search></label>`;
     h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
     h += `<ul class="r-list" id="rlist"></ul>`;
     view.innerHTML = h;
@@ -952,13 +1281,14 @@
     const q = filter.q.toLowerCase().trim();
     const items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
       (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
-    $("#rlist", view).innerHTML = items.map((m) => `<li><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
+    $("#rlist", view).innerHTML = items.map((m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
       `<li class="empty">Nichts gefunden.</li>`;
   }
 
   /* ---------- Timer ---------- */
   const clock = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
   const remaining = (t) => (t.state === "pause" ? t.rem : t.state === "done" ? 0 : Math.max(0, (t.end - Date.now()) / 1000));
+  const frac = (t) => { const r = remaining(t); return t.state === "done" ? 0 : Math.min(1, r / Math.max(t.total || 0, r, 1)); };
   function addTimer(o, quiet) {
     const t = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), title: o.title || "Timer", sub: o.sub || "", label: o.label || "", ctx: o.ctx || "",
       total: o.min, extra: o.max ? o.max - o.min : 0, end: o.endAt || Date.now() + o.min * 1000, state: "run" };
@@ -987,8 +1317,10 @@
   }
   function refreshLive() {
     for (const t of S.timers) {
-      $$(`[data-live="${t.id}"] span`).forEach((el) => (el.textContent = clock(remaining(t))));
-      const pill = $(`#dock [data-timer-open="${t.id}"] .tt`); if (pill) pill.textContent = t.state === "done" ? "Fertig" : clock(remaining(t));
+      const p = frac(t).toFixed(4);
+      $$(`[data-live="${t.id}"]`).forEach((el) => { el.style.setProperty("--p", p); $$("span", el).forEach((s) => (s.textContent = clock(remaining(t)))); });
+      const pill = $(`#dock [data-timer-open="${t.id}"]`);
+      if (pill) { pill.style.setProperty("--p", p); const tt = $(".tt", pill); if (tt) tt.textContent = t.state === "done" ? "Fertig" : clock(remaining(t)); }
     }
   }
   function renderDock() {
@@ -997,16 +1329,16 @@
     if (!list.length && !inCooking) { dock.hidden = true; document.documentElement.style.setProperty("--dock-h", "0px"); return; }
     dock.hidden = false;
     list.sort((a, b) => (a.state === "done" ? -1 : b.state === "done" ? 1 : remaining(a) - remaining(b)));
-    dock.innerHTML = list.map((t) => `<button class="tpill ${t.state === "done" ? "done" : t.state === "pause" ? "paused" : ""}" data-timer-open="${t.id}"><span class="tt">${t.state === "done" ? "Fertig" : clock(remaining(t))}</span><span class="tl2">${esc(t.title)}<br>${esc(t.label || t.sub)}</span></button>`).join("") +
-      `<button class="tpill add" data-act="new-timer">${CLOCK.replace("<svg", '<svg class="ico"')} Timer</button>`;
+    dock.innerHTML = list.map((t) => `<button class="tpill ${t.state === "done" ? "done" : t.state === "pause" ? "paused" : ""}" data-timer-open="${t.id}" style="--p:${frac(t).toFixed(4)}">${ring("mini")}<span class="tt">${t.state === "done" ? "Fertig" : clock(remaining(t))}</span><span class="tl2">${esc(t.title)}<br>${esc(t.label || t.sub)}</span></button>`).join("") +
+      `<button class="tpill add" data-act="new-timer">${CLOCK.replace("<svg", '<svg class="ico"')}<span>Eigener Timer</span></button>`;
     document.documentElement.style.setProperty("--dock-h", "62px");
   }
   function timerSheet(id) {
     const t = S.timers.find((x) => x.id === id);
     if (!t) return;
     openSheet(`<h2>${esc(t.title)}</h2><p class="muted" style="margin:4px 0 0">${esc(t.sub || t.label)}</p>
-      <div style="font:600 3rem/1.1 var(--font-mono);text-align:center;margin:18px 0" data-live="${t.id}"><span>${t.state === "done" ? "00:00" : clock(remaining(t))}</span></div>
-      <div class="presets"><button class="btn" data-tadd="-60">−1</button><button class="btn" data-tadd="60">+1</button><button class="btn" data-tadd="300">+5</button><button class="btn" data-tadd="600">+10</button></div>
+      <div class="dial${t.state === "pause" ? " paused" : ""}" data-live="${t.id}" style="--p:${frac(t).toFixed(4)}">${ring("big")}<span>${t.state === "done" ? "00:00" : clock(remaining(t))}</span><small>${t.state === "pause" ? "pausiert" : t.state === "done" ? "fertig" : "läuft"}</small></div>
+      <p class="small muted presets-l">Minuten abziehen oder dazugeben</p><div class="presets"><button class="btn" data-tadd="-60">−1</button><button class="btn" data-tadd="60">+1</button><button class="btn" data-tadd="300">+5</button><button class="btn" data-tadd="600">+10</button></div>
       <div class="row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${t.state === "run" ? '<button class="btn big" data-tact="pause">Pause</button>' : t.state === "pause" ? '<button class="btn big primary" data-tact="resume">Weiter</button>' : '<button class="btn big primary" data-tadd="60">+1 Min.</button>'}<button class="btn big pump" data-tact="stop">Stopp</button></div>`, { timer: id });
   }
   function adjustTimer(id, sec) {
@@ -1024,9 +1356,9 @@
     save(); scheduleTimers(); renderDock(); rerenderSoft(); updateWake(); dismissAlarmIfNone();
   }
   function newTimerSheet() {
-    openSheet(`<h2>Eigener Timer</h2><div class="presets">${[1, 3, 5, 8, 10, 12, 15, 20, 25, 30, 45, 60].map((m) => `<button class="btn" data-quick="${m}">${m}</button>`).join("")}</div>
+    openSheet(`<h2>Eigener Timer</h2><p class="small muted presets-l">Minuten antippen – der Timer startet sofort</p><div class="presets">${[1, 3, 5, 8, 10, 12, 15, 20, 25, 30, 45, 60].map((m) => `<button class="btn" data-quick="${m}">${m}</button>`).join("")}</div>
       <div class="row"><input class="field" style="flex:1" type="number" inputmode="numeric" min="1" max="600" placeholder="Minuten" data-qmin><input class="field" style="flex:2" type="text" placeholder="Wofür? z. B. Nudeln" data-qlabel></div>
-      <button class="btn primary big" style="margin-top:12px" data-act="quick-go">Starten</button><p class="small muted" style="margin:8px 0 0">Zahl antippen startet sofort (Minuten).</p>`);
+      <button class="btn primary big" style="margin-top:12px" data-act="quick-go">${PLAY}Starten</button><p class="small muted" style="margin:8px 0 0">Oder oben eine eigene Minutenzahl und wofür eintragen.</p>`);
   }
 
   /* ---------- Alarm ---------- */
@@ -1052,7 +1384,7 @@
     const t = due[0];
     const ago = Math.round((Date.now() - (t.firedAt || t.end)) / 60000);
     const late = Math.round((t.firedAt - t.end) / 60000);
-    box.innerHTML = `<div class="ring">⏰</div><div class="eyebrow" style="color:#fff;opacity:.85">${esc(t.title)}${t.label && t.sub ? " · " + esc(t.label) : ""}</div><h2>Zeit ist um</h2><p>${esc(t.sub || t.label)}</p>
+    box.innerHTML = `<div class="alarm-art"><i></i><i></i>${ART.bell}</div><div class="eyebrow">${esc(t.title)}${t.label && t.sub ? " · " + esc(t.label) : ""}</div><h2>Zeit ist um</h2><p>${esc(t.sub || t.label)}</p>
       ${t.extra ? `<p style="font-weight:700">Jetzt prüfen – bei Bedarf noch bis zu ${Math.round(t.extra / 60)} Min.</p>` : ""}
       ${late > 1 ? `<p class="small">Abgelaufen um ${hm(t.end)} (vor ${Math.max(late, ago)} Min.)</p>` : ""}
       ${due.length > 1 ? `<p class="small">Noch ${due.length - 1} weitere(r) Timer fertig</p>` : ""}
@@ -1120,7 +1452,7 @@
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -1140,6 +1472,15 @@
     if (d.go != null) { const ref = view.dataset.ref; S.cook[ref] = { ...(S.cook[ref] || { start: Date.now() }), step: +d.go }; cookRef = null; save(); navTo(`#/k/${ref}`, "push"); return; }
     if (d.jump != null) { cookStep = +d.jump; showList = false; S.cook[cookRef].step = cookStep; save(); drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); return; }
     if (d.expand) { if (!view.querySelector(`.today [data-expand="${d.expand}"]`)) { expanded[d.expand] = !expanded[d.expand]; rerenderSoft(); } return; }
+    if (d.jumpday) {
+      const id = d.jumpday, isToday = !!view.querySelector(`.today [data-expand="${id}"]`);
+      if (!isToday) expanded[id] = true;
+      const y = window.scrollY;
+      await route(); window.scrollTo(0, y);
+      const card = $(`#day-${id}`);
+      if (card) { card.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 1200); }
+      return;
+    }
     if (d.week) { weekId = d.week; weekManual = d.week !== (pickWeek(weeks) || {}).id; rerenderSoft(); return; }
     if (d.portion) {
       const ref = view.dataset.ref, r = await getRecipe(ref);
@@ -1159,6 +1500,8 @@
     if (d.bringopen) { S.bringOpened = S.bringOpened || {}; S.bringOpened[d.bringopen] = 1; save(); setTimeout(rerenderSoft, 1200); return; }
     if (d.bringmail) { bringMailSheet(d.bringmail); return; }
     if (d.bringdone) { S.bringAck = S.bringAck || {}; S.bringAck[d.bringdone] = 1; save(); rerenderSoft(); updateNavDot(); toast("Prima – die Bring-Liste ist auf dem neuen Stand"); return; }
+    if (d.swipe) { if (d.swipe === "undo") { if (swAnim) return; const id = undoRate(); if (id) { rerenderSoft(); toast("Zurückgenommen – nochmal bewerten"); } } else swDecide(d.swipe); return; }
+    if (d.rerate) { const [id, v] = d.rerate.split("|"), pool = await tastePool(), it = pool.byId.get(id); if (it) { rate(it, v); rerenderSoft(); toast(`Geändert: ${VERDICT[v]}`); } return; }
     if (d.swapopen) { swapSheet(d.swapopen); return; }
     if (d.swapto) { const id = $("#sheet").dataset.swap; closeSheet(); const [iso, slot] = d.swapto.split("|"); performSwap(id, iso, slot); return; }
     if (d.unswap) { unswap(d.unswap); return; }
@@ -1187,6 +1530,7 @@
       case "gh-save": saveToken(); break;
       case "gh-qr": e.preventDefault(); qrSheet(); break;
       case "gh-remove": setGhToken(""); closeSheet(); rerenderSoft(); toast("Schlüssel entfernt – Tauschen ist hier aus"); break;
+      case "sw-more": { const pool = await tastePool(); extraDeck(pool); rerenderSoft(); window.scrollTo(0, 0); break; }
       case "deals-retry": localStorage.removeItem(DEALS_KEY); rerenderSoft(); break;
       case "deals-render": el.disabled = true; renderDealPages().catch(() => toast("PDF-Seite ließ sich nicht anzeigen")); break;
       case "home": e.preventDefault(); navTo("#/", "jump"); break;
@@ -1219,7 +1563,7 @@
     const st = S.settings, dark = st.theme === "dark" || (st.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.dataset.scheme = dark ? "dark" : "light";
     document.documentElement.style.setProperty("--scale", st.scale);
-    const meta = $('meta[name="theme-color"]'); if (meta) meta.content = dark ? "#0E1715" : "#0D6657";
+    const meta = $('meta[name="theme-color"]'); if (meta) meta.content = dark ? "#0A1411" : "#EEF2EC";
   }
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applySettings);
   const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -1271,6 +1615,7 @@
       const v = online(await codeVersion()); // geht direkt ans Netz – schlägt fehl, wenn das Handy offline ist
       try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
       if (v && (await syncSwaps(true))) result = "changed";
+      if (v) syncTaste(true);
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
@@ -1296,6 +1641,7 @@
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
   syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
+  syncTaste(true).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen

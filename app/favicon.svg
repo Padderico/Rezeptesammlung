@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0D6657"/><g fill="#F2F5F0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0F3D30"/><g fill="none" stroke="#FFFFFF" stroke-opacity=".07" stroke-width="10"><circle cx="440" cy="72" r="70"/><circle cx="440" cy="72" r="120"/><circle cx="440" cy="72" r="170"/></g><g fill="#EEF6F1">
 <path d="M150 232 Q256 146 362 232 Z"/>
 <circle cx="256" cy="168" r="17"/>
 <rect x="116" y="230" width="280" height="26" rx="13"/>
@@ -6,5 +6,5 @@
 <rect x="88" y="270" width="58" height="22" rx="11"/>
 <rect x="366" y="270" width="58" height="22" rx="11"/>
 </g>
-<circle cx="256" cy="316" r="40" fill="#D8691A"/>
-<path d="M256 292 V318 L274 330" stroke="#F2F5F0" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+<circle cx="256" cy="316" r="40" fill="#E46A12"/>
+<path d="M256 292 V318 L274 330" stroke="#EEF6F1" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>

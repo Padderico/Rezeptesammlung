@@ -1,12 +1,12 @@
 /* Kochbuddy – Service Worker.
    Alles kommt frisch vom GitHub-Repo (Plan, Rezepte und der App-Code selbst). Der Speicher auf dem Handy ist nur
    der Rückfall ohne Netz bzw. bei sehr langsamem WLAN. Schriften und Icons ändern sich nie und kommen aus dem Speicher. */
-const VERSION = "kochbuddy-3";
+const VERSION = "kochbuddy-4";
 const SHELL = [
   "./", "index.html", "app.css", "app.js", "manifest.webmanifest", "favicon.svg",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/badge-96.png",
   "fonts/atkinson-hyperlegible-latin-400-normal.woff2", "fonts/atkinson-hyperlegible-latin-700-normal.woff2",
-  "fonts/bricolage-grotesque-latin-600-normal.woff2", "fonts/bricolage-grotesque-latin-800-normal.woff2",
+  "fonts/bricolage-grotesque-latin-var.woff2",
   "fonts/ibm-plex-mono-latin-600-normal.woff2",
 ];
 const SLOW_MS = 4000; // so lange wird aufs Netz gewartet, wenn schon eine gespeicherte Fassung da ist
