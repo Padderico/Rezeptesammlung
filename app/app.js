@@ -671,7 +671,7 @@
   async function swapSheet(toId) {
     const w = withSwaps(await week()), r = w.recipes[toId];
     if (!r) return;
-    openSheet(`<h2>${esc(r.title)}</h2><p class="small muted" style="margin:4px 0 8px">Wohin damit? Das bisherige Gericht wandert zu den Ersatzgerichten. Der Buddy übernimmt den Tausch heute gegen 21 Uhr in Plan, Bring-Liste und PDF und schickt Anja eine kurze Mail.</p>${dropTargets(w, true)}`, { swap: toId });
+    openSheet(`<h2>${esc(r.title)}</h2><p class="small muted" style="margin:4px 0 8px">Wohin damit? Das bisherige Gericht wandert zu den Ersatzgerichten. Der Buddy übernimmt den Tausch heute gegen 21 Uhr in Plan, Bring-Liste und PDF und verschickt eine kurze Info-Mail.</p>${dropTargets(w, true)}`, { swap: toId });
   }
   function tokenSheet(problem) {
     openSheet(`<h2>Tauschen einrichten</h2>
