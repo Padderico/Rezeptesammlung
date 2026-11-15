@@ -252,6 +252,7 @@
     if (lw.startsWith(sb) && INFL.includes(lw.slice(sb.length))) return amt;
     return `${amt} ${base}`;
   }
+  const shortIng = (ing) => (ing.n || "").replace(/\(.*?\)/g, "").split(",")[0].trim();
   const dayOf = (t) => { const ph = phaseOf(t).phase; const d = ph && ph.toLowerCase().match(/sonntag|montag|dienstag|mittwoch|donnerstag|freitag|samstag|vortag|vorabend/); return d ? d[0] : null; };
   /* Vorbereitungen gehören vor den ersten Schritt desselben Tages (z. B. „Montag: Feldsalat waschen“ vor „Montagabend: Ofen vorheizen“) */
   function prepForStep(r, i) {
@@ -260,6 +261,33 @@
       const j = d ? r.steps.findIndex((s) => dayOf(s.t) === d) : 0;
       return (j < 0 ? 0 : j) === i;
     });
+  }
+  /* Vorkoch-Zeitleiste: Welches Rezept ist gemeint? („Kartoffeln fürs Gratin …“, „für die Suppe …“)
+     Gesucht wird über die Wörter im Rezepttitel, die keine Zutat sind (Gratin, Suppe, Auflauf …). */
+  const TITLE_STOP = new Set("cremige cremiger mildes milde mildem frischem frischer frische selbst gemachte gemachtem".split(" "));
+  function titleKeys(r) {
+    const keys = new Set();
+    for (const w0 of r.title.toLowerCase().split(/[\s&,]+/)) for (const w of [w0, ...w0.split("-")]) {
+      const k = w.replace(/[^a-zäöüß]/g, "");
+      if (k.length < 5 || TITLE_STOP.has(k)) continue;
+      if (r.ingredients.some((ing) => nounStems(ing).some((st) => wordMatch(k, st)))) continue;
+      keys.add(k);
+    }
+    return [...keys];
+  }
+  function recipeFor(text, w, prefer) {
+    const words = (text.toLowerCase().match(/[a-zäöüß]+/g) || []).filter((x) => x.length >= 5);
+    const hits = [];
+    for (const [id, r] of Object.entries(w.recipes || {})) {
+      const keys = titleKeys(r);
+      // Zutatenwörter („Kartoffeln“) verraten das Rezept nicht – nur Gerichtwörter wie Gratin oder Suppe
+      const isIng = (x) => r.ingredients.some((ing) => nounStems(ing).some((st) => wordMatch(x, st)));
+      const pos = words.findIndex((x) => !isIng(x) && keys.some((k) => k === x || k.endsWith(x) || x.endsWith(k)));
+      if (pos >= 0) hits.push({ id, r, pos, pri: prefer.includes(id) ? 0 : 1 });
+    }
+    hits.sort((a, b) => a.pos - b.pos || a.pri - b.pri);
+    if (!hits.length || (hits[1] && hits[1].pos === hits[0].pos && hits[1].pri === hits[0].pri)) return null; // nicht eindeutig: lieber keine Mengen
+    return hits[0];
   }
   function ingsForStep(r, text) {
     const t = " " + (text || "").toLowerCase() + " ";
@@ -628,6 +656,20 @@
     const nextI = cur + 1 < (p.timeline || []).length ? cur + 1 : -1;
     let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw} · ${esc(p.short === "So" ? "Sonntag" : p.short || "")}</div><h1>${esc(p.title || "Vorkochen")}</h1></div></header>`;
     if (!p.timeline) { view.innerHTML = h + `<p class="empty">Diese Woche gibt es keinen Vorkoch-Block.</p>`; return; }
+    const prepText = (t) => {
+      const m = recipeFor(t, w, p.recipes || []);
+      if (!m) return esc(t);
+      const k = portions(`w:${weekId}:${m.id}`, m.r) / (m.r.base || 3), ann = annotate(m.r, t, k);
+      // „(Suppe, Schritte 1–3)“: was in diesen Schritten sonst noch reinkommt, mit Menge darunter
+      const sm = t.match(/Schritte?\s+(\d+)(?:\s*[–-]\s*(\d+))?/);
+      let extra = [];
+      if (sm) {
+        const a1 = +sm[1], a2 = +(sm[2] || sm[1]);
+        for (let x = a1; x <= a2 && x <= m.r.steps.length; x++) for (const idx of annotate(m.r, phaseOf(m.r.steps[x - 1].t).text, k).found) if (!ann.found.includes(idx) && !extra.includes(idx)) extra.push(idx);
+      }
+      const ex = extra.map((idx) => `${esc(shortIng(m.r.ingredients[idx]))} <b>${esc(amount(m.r.ingredients[idx], k))}</b>`).join(" · ");
+      return ann.html + (ex ? `<span class="tl-more">Dazu: ${ex}</span>` : "");
+    };
     if (p.when) h += `<p class="muted" style="margin:0 0 6px;font-weight:700">${esc(p.when)}</p>`;
     if (p.intro) h += `<p>${esc(p.intro)}</p>`;
     if (!B.start) h += `<div class="card prep-go"><button class="btn primary big" data-act="block-start">${PLAY}Jetzt mit dem Vorkochen starten</button><p class="small muted" style="margin:10px 0 0">Die Zeitleiste bekommt dann echte Uhrzeiten, der aktuelle Schritt wird markiert. Erledigtes antippen zum Abhaken.</p></div>`;
@@ -636,10 +678,12 @@
       h += `<div class="card today live"><div class="spread"><div><span class="kick"><i></i>Gestartet um ${hm(B.start)}</span><b class="nexttime">${nextI >= 0 ? `Als Nächstes um ${hm(nx)}` : "Letzter Schritt erreicht"}</b>${nextI >= 0 ? `<p>in ${Math.max(0, Math.ceil((nx - Date.now()) / 60000))} Min.: ${esc(excerpt(p.timeline[nextI].text, 80))}</p>` : ""}</div><button class="btn small light" data-act="block-reset">Neu starten</button></div>`;
       h += `<div class="set-row"><span>Bei jedem Zeitpunkt mit Ton erinnern</span><label class="switch"><input type="checkbox" data-act="block-beep" ${B.beep ? "checked" : ""}><span></span></label></div></div>`;
     }
-    h += `<ul class="tl">${p.timeline.map((x, i) => `<li class="${i === cur ? "now" : ""}${i < cur ? " past" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : `${esc(x.t)}${i === 0 ? "<small>Start</small>" : ""}`}</span><span class="node">${CHECK}</span><span class="tx">${esc(x.text)}</span></li>`).join("")}</ul>`;
-    if (p.recipes && p.recipes.length) {
-      h += `<div class="section-title">Rezepte im Vorkoch-Block</div><ul class="r-list">${p.recipes.map((id) => {
-        const r = w.recipes[id]; return r ? `<li><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="small muted">${esc(p.recipeNote || "")}</span></a></li>` : "";
+    h += `<ul class="tl">${p.timeline.map((x, i) => `<li class="${i === cur ? "now" : ""}${i < cur ? " past" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : `${esc(x.t)}${i === 0 ? "<small>Start</small>" : ""}`}</span><span class="node">${CHECK}</span><span class="tx">${prepText(x.text)}</span></li>`).join("")}</ul>`;
+    // Auch Rezepte, die nur in der Zeitleiste vorkommen (z. B. „Kartoffeln fürs Gratin“), hier verlinken
+    const blockIds = [...new Set([...(p.recipes || []), ...p.timeline.map((x) => (recipeFor(x.text, w, p.recipes || []) || {}).id).filter(Boolean)])];
+    if (blockIds.length) {
+      h += `<h2 class="section-title">Rezepte im Vorkoch-Block</h2><ul class="r-list">${blockIds.map((id) => {
+        const r = w.recipes[id]; return r ? `<li class="${tone(r.tags) ? "t-" + tone(r.tags) : ""}"><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="small muted">${(p.recipes || []).includes(id) ? esc(p.recipeNote || "") : "Rezept mit allen Mengen öffnen"}</span></a></li>` : "";
       }).join("")}</ul>`;
     }
     if (p.storage && p.storage.length) {

@@ -395,6 +395,7 @@ body.cooking #app { padding-bottom: calc(100px + var(--dock-h) + var(--safe-b));
 .tl li.now .box { border-color: var(--pumpkin); background: var(--pumpkin-soft); box-shadow: 0 0 0 6px color-mix(in srgb, var(--pumpkin) 22%, transparent); }
 .tl li.now .at { color: var(--pumpkin-ink); }
 .tl li.now .tx { font-weight: 700; }
+.tl li.now.on .box { background: var(--accent); border-color: var(--accent); box-shadow: none; }
 .tl li.now { background: var(--surface); border-radius: 16px; box-shadow: 0 0 0 1px var(--line); }
 .storage { width: 100%; border-collapse: collapse; font-size: .94rem; }
 .storage td { padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -648,6 +649,9 @@ body.dragging, body.dragging * { -webkit-user-select: none; user-select: none; }
 :root[data-scheme="dark"] .seg button[aria-pressed="true"], :root[data-scheme="dark"] .kw { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 
 /* Mengen direkt im Text */
+.tl-more { display: block; margin-top: 6px; font-size: .86rem; color: var(--muted); line-height: 1.6; }
+.tl-more b { color: var(--accent); font-variant-numeric: tabular-nums; }
+.tl li.on .tl-more { text-decoration: none; }
 .iq { white-space: nowrap; font-weight: 700; }
 .iq b { display: inline-block; margin-left: .32em; font: 700 .74em/1.45 var(--font-body); background: var(--accent-soft); color: var(--accent); padding: .06em .5em; border-radius: 999px; vertical-align: .1em; font-variant-numeric: tabular-nums; }
 .cook-step .iq, .steps-list .iq { cursor: pointer; }
