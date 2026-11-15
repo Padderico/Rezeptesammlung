@@ -462,7 +462,124 @@
     "Deutsch"
    ],
    "src": "idee"
+  },
+  "i:rinderrouladen-mit-rotkohl-und-knoedeln": {
+   "v": "like",
+   "at": "2026-11-15T07:36:13.883Z",
+   "t": "Rinderrouladen mit Rotkohl und Knödeln",
+   "tags": [
+    "Fleisch",
+    "Deutsch",
+    "Vorkochen",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:mildes-fischcurry-mit-kokos-und-reis": {
+   "v": "nope",
+   "at": "2026-11-15T07:36:15.530Z",
+   "t": "Mildes Fischcurry mit Kokos und Reis",
+   "tags": [
+    "Fisch",
+    "Asiatisch",
+    "One-Pot",
+    "Thermomix"
+   ],
+   "src": "idee"
+  },
+  "a:pfannkuchen-mit-selbst-gemachtem-apfelmus": {
+   "v": "like",
+   "at": "2026-11-15T07:36:18.009Z",
+   "t": "Pfannkuchen mit selbst gemachtem Apfelmus",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Kinderliebling"
+   ],
+   "src": "rezept"
+  },
+  "i:kaiserschmarrn-mit-apfelmus": {
+   "v": "like",
+   "at": "2026-11-15T07:36:19.038Z",
+   "t": "Kaiserschmarrn mit Apfelmus",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Österreichisch",
+    "Süß"
+   ],
+   "src": "idee"
+  },
+  "i:pellkartoffeln-mit-fruehlingsquark-und-leinoel": {
+   "v": "like",
+   "at": "2026-11-15T07:36:20.366Z",
+   "t": "Pellkartoffeln mit Frühlingsquark und Leinöl",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Kartoffel",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "a:kartoffel-gemuese-blech-mit-feta-varoma-brokkoli-und-kraeuterquark": {
+   "v": "like",
+   "at": "2026-11-15T07:36:24.694Z",
+   "t": "Kartoffel-Gemüse-Blech mit Feta, Varoma-Brokkoli & Kräuterquark",
+   "tags": [
+    "Vegetarisch",
+    "Blech",
+    "Kartoffel",
+    "Meal-Prep"
+   ],
+   "src": "rezept"
+  },
+  "i:gebratene-nudeln-mit-haehnchen-und-gemuese": {
+   "v": "like",
+   "at": "2026-11-15T07:36:26.300Z",
+   "t": "Gebratene Nudeln mit Hähnchen und Gemüse",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:cremige-fischsuppe-mit-kartoffeln": {
+   "v": "nope",
+   "at": "2026-11-15T07:36:27.579Z",
+   "t": "Cremige Fischsuppe mit Kartoffeln",
+   "tags": [
+    "Fisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "src": "idee"
+  },
+  "i:ofen-roesti-mit-apfelmus": {
+   "v": "like",
+   "at": "2026-11-15T07:36:29.158Z",
+   "t": "Ofen-Rösti mit Apfelmus",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel",
+    "Kinderliebling"
+   ],
+   "src": "idee"
+  },
+  "a:minestrone-mit-sternchennudeln": {
+   "v": "like",
+   "at": "2026-11-15T07:36:32.956Z",
+   "t": "Minestrone mit Sternchennudeln",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "src": "rezept"
   }
  },
- "updated": "2026-11-15T07:36:02.391Z"
+ "updated": "2026-11-15T07:36:33.831Z"
 }
