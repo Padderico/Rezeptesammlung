@@ -615,7 +615,76 @@
     "Meal-Prep"
    ],
    "src": "rezept"
+  },
+  "i:erbsensuppe-mit-croutons": {
+   "v": "nope",
+   "at": "2026-11-15T15:32:00.381Z",
+   "t": "Erbsensuppe mit Croûtons",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix"
+   ],
+   "src": "idee"
+  },
+  "i:huehnersuppe-mit-nudeln-und-gemuese": {
+   "v": "like",
+   "at": "2026-11-15T15:32:03.167Z",
+   "t": "Hühnersuppe mit Nudeln und Gemüse",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Vorkochen"
+   ],
+   "src": "idee"
+  },
+  "i:gnocchi-mit-salsiccia-tomaten-ragu": {
+   "v": "nope",
+   "at": "2026-11-15T15:32:10.002Z",
+   "t": "Gnocchi mit Salsiccia-Tomaten-Ragù",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "src": "idee"
+  },
+  "i:one-pot-penne-mit-haehnchen-brokkoli-und-parmesan": {
+   "v": "like",
+   "at": "2026-11-15T15:32:12.787Z",
+   "t": "One-Pot-Penne mit Hähnchen, Brokkoli und Parmesan",
+   "tags": [
+    "Fleisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "src": "idee"
+  },
+  "i:cevapcici-mit-djuvec-reis": {
+   "v": "like",
+   "at": "2026-11-15T15:32:15.588Z",
+   "t": "Ćevapčići mit Djuvec-Reis",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Balkan"
+   ],
+   "src": "idee"
+  },
+  "i:kaesespaetzle-mit-roestzwiebeln": {
+   "v": "like",
+   "at": "2026-11-15T15:32:18.245Z",
+   "t": "Käsespätzle mit Röstzwiebeln",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-15T15:31:56.684Z"
+ "updated": "2026-11-15T15:32:26.755Z"
 }
