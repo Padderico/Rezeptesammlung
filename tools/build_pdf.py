@@ -61,6 +61,9 @@ def abend_checkliste(plan):
     cards = ""
     for ev in c["evenings"]:
         tag = ev.get("tag", "")
+        if "Eisen" in tag:  # der Eisen-Tag ist der Folgetag, nicht der Abend selbst
+            wd = re.search(r"(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)", ev.get("for", ""))
+            tag = f"{wd.group(1)} ist Eisen-Tag" if wd else "morgen Eisen-Tag"
         items = "".join(f'<li><span class="cb"></span><span>{e(x)}</span></li>' for x in ev["items"])
         note = f'<p class="small" style="margin-top:1.5mm">{e(ev["note"])}</p>' if ev.get("note") else ""
         cards += (f'<div class="eve {"iron" if "Eisen" in tag else ""}"><h3><span>{e(ev["day"])} <span class="for">{e(ev.get("for", ""))}</span></span>'
@@ -224,7 +227,7 @@ ul, ol {{ margin:0; padding-left:5mm; }} li {{ margin-bottom:1mm; }}
 .eve.iron {{ border:1.5px solid var(--pumpkin); }}
 .eve h3 {{ font-size:12pt; display:flex; justify-content:space-between; align-items:baseline; gap:2mm; }}
 .eve .for {{ font-size:8.5pt; color:var(--muted); font-weight:400; }}
-.eve .tag {{ font-size:7pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; background:var(--soft); color:var(--accent); border-radius:2mm; padding:.4mm 2mm; white-space:nowrap; }}
+.eve .tag {{ font-size:7pt; font-weight:700; letter-spacing:.02em; background:var(--soft); color:var(--accent); border-radius:2mm; padding:.4mm 2mm; white-space:nowrap; }}
 .eve.iron .tag {{ background:var(--psoft); color:#8F430B; }}
 .tick {{ list-style:none; padding:0; margin:2mm 0 0; }}
 .tick li {{ display:grid; grid-template-columns:6mm 1fr; gap:2mm; align-items:start; padding:1.6mm 0; border-bottom:1px dashed var(--line); margin:0; }}

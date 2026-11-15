@@ -421,8 +421,8 @@
     if (todayDay) html += dayCard(w, todayDay, true);
     const ev = currentEvening(w);
     if (ev && t >= addDays(w.week.start, -1) && t <= addDays(w.week.start, 5)) {
-      const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length, n = ev.e.items.length;
-      html += `<a class="card evening${done >= n ? " full" : ""}" href="#/checkliste" style="--p:${n ? (done / n).toFixed(3) : 0}"><span class="ev-ring">${ring()}<b>${done}/${n}</b></span><span class="ev-t"><small>Heute Abend vorbereiten</small><b>${esc(ev.e.for ? ev.e.for.charAt(0).toUpperCase() + ev.e.for.slice(1) : "Für morgen")}</b>${ev.e.tag ? `<span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</span><span class="chev">${NEXT}</span></a>`;
+      const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length, n = ev.e.items.length, tIso = eveTarget(w, ev.e, ev.i), tFe = ironDays(w)(tIso);
+      html += `<a class="card evening${done >= n ? " full" : ""}" href="#/checkliste" style="--p:${n ? (done / n).toFixed(3) : 0}"><span class="ev-ring">${ring()}<b>${done}/${n}</b></span><span class="ev-t"><small>Heute Abend vorbereiten</small><b>${esc(ev.e.for ? ev.e.for.charAt(0).toUpperCase() + ev.e.for.slice(1) : "Für morgen")}</b>${tFe ? `<span class="fe-chip">${FE}${esc(DAY_LONG(tIso))} ist Eisen-Tag</span>` : ev.e.tag ? `<span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</span><span class="chev">${NEXT}</span></a>`;
     }
     html += actionBanners(ups, "info");
     html += await discoverTeaser();
@@ -448,13 +448,14 @@
   }
   /* Wochenleiste: alle Tage auf einen Blick, Tipp springt zum Tag. Punkte = Fleisch/Fisch/Vegetarisch je Mahlzeit. */
   function weekStrip(w, t) {
-    const leg = new Set();
+    const leg = new Set(), iron = ironDays(w);
     const days = w.days.map((d) => {
       const dots = d.meals.map((m) => { const r = w.recipes[m.recipe], c = r ? tone(r.tags) : ""; if (c) leg.add(c); return `<i class="${c}${m._swap ? " sw" : ""}"></i>`; }).join("");
-      return `<button class="wd${d.iso === t ? " now" : ""}${d.iso < t ? " past" : ""}" data-jumpday="${d.id}" aria-label="${esc(d.name)} ${esc(d.date)}"><small>${esc(d.name.slice(0, 2))}</small><b>${Number(d.iso.slice(8, 10))}</b><span class="dots">${dots}</span></button>`;
+      const fe = iron(d.iso); if (fe) leg.add("fe");
+      return `<button class="wd${d.iso === t ? " now" : ""}${d.iso < t ? " past" : ""}${fe ? " iron" : ""}" data-jumpday="${d.id}" aria-label="${esc(d.name)} ${esc(d.date)}${fe ? ", Eisen-Tag" : ""}">${fe ? FE : ""}<small>${esc(d.name.slice(0, 2))}</small><b>${Number(d.iso.slice(8, 10))}</b><span class="dots">${dots}</span></button>`;
     }).join("");
     const names = { meat: "Fleisch", fish: "Fisch", veg: "Vegetarisch" };
-    return `<nav class="wstrip" aria-label="Tage der Woche">${days}</nav><p class="legend">${["meat", "fish", "veg"].filter((c) => leg.has(c)).map((c) => `<span><i class="${c}"></i>${names[c]}</span>`).join("")}<span class="lg-tip">Tag antippen springt hin</span></p>`;
+    return `<nav class="wstrip" aria-label="Tage der Woche">${days}</nav><p class="legend">${["meat", "fish", "veg"].filter((c) => leg.has(c)).map((c) => `<span><i class="${c}"></i>${names[c]}</span>`).join("")}${leg.has("fe") ? `<span>${FE}Eisen-Tag fürs Kind</span>` : ""}<span class="lg-tip">Tag antippen springt hin</span></p>`;
   }
   function standLine(w) {
     if (embedded) return "Vorschau-Stand";
@@ -466,10 +467,10 @@
   function dayCard(w, d, open, past) {
     const isToday = d.iso === today();
     const rem = bag("rem", `${weekId}:${d.id}`);
-    const [, mo, dd] = d.iso.split("-").map(Number);
+    const [, mo, dd] = d.iso.split("-").map(Number), fe = ironDays(w)(d.iso);
     let h = `<section class="card day${isToday ? " today hero" : ""}${open ? " open" : " compact"}${past && !open ? " past" : ""}" id="day-${d.id}">`;
-    if (isToday) h += `<div class="day-h" data-expand="${d.id}"><div class="hd"><span class="kick"><i></i>Heute</span><h2>${esc(d.name)}</h2></div><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span></div>`;
-    else h += `<div class="day-h" data-expand="${d.id}"><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span><h2>${esc(d.name)}</h2><span class="chev" aria-hidden="true">${NEXT}</span></div>`;
+    if (isToday) h += `<div class="day-h" data-expand="${d.id}"><div class="hd"><span class="kick"><i></i>Heute${fe ? `<span class="kick-fe">${FE}Eisen-Tag fürs Kind</span>` : ""}</span><h2>${esc(d.name)}</h2></div><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span></div>`;
+    else h += `<div class="day-h" data-expand="${d.id}"><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span><h2>${esc(d.name)}${fe ? ` <span class="fe-chip">${FE}Eisen-Tag</span>` : ""}</h2><span class="chev" aria-hidden="true">${NEXT}</span></div>`;
     if (open && d.reminders && d.reminders.length) {
       h += `<ul class="checks rems">${d.reminders.map((x, i) => checkRow(rem[i], esc(x), `data-rem="${d.id}:${i}"`)).join("")}</ul>`;
     }
@@ -497,6 +498,25 @@
     if (!n) return "";
     return n >= r.steps.length ? "Gekocht ✓" : `Schritt ${n}/${r.steps.length}`;
   }
+  /* Abend-Checkliste: Jeder Abend bereitet den FOLGETAG vor. Ziel-Datum aus „für Montag 16.11.“, sonst aus der Reihenfolge (So → Mo …). */
+  const FE = '<span class="fe" aria-hidden="true">Fe</span>';
+  function eveTarget(w, e, i) {
+    const m = (e.for || "").match(/(\d{1,2})\.(\d{1,2})\./);
+    if (m) {
+      let y = w.week.year || Number(w.week.start.slice(0, 4));
+      if (Number(m[2]) === 1 && w.week.start.slice(5, 7) === "12") y += 1;
+      return `${y}-${pad(m[2])}-${pad(m[1])}`;
+    }
+    return addDays(w.week.start, i);
+  }
+  /* Eisen-Tage fürs Kind: jeden zweiten Tag. Maßgeblich ist der Plan (Abend mit tag „Eisen-Tag“ → Folgetag),
+     außerhalb der Checkliste die feste Regel ab Dienstag 10.11.2026. */
+  function ironDays(w) {
+    const evs = (w.checklist && w.checklist.evenings) || [], set = new Set(), known = new Set();
+    evs.forEach((e, i) => { const t = eveTarget(w, e, i); known.add(t); if (/eisen/i.test(e.tag || "")) set.add(t); });
+    return (iso) => (known.has(iso) ? set.has(iso) : Math.round((new Date(iso + "T12:00") - new Date("2026-11-10T12:00")) / 86400000) % 2 === 0);
+  }
+  const DAY_LONG = (iso) => DAYS[new Date(iso + "T12:00").getDay()];
   function currentEvening(w) {
     const evs = (w.checklist && w.checklist.evenings) || [];
     const name = DAYS[new Date().getDay()];
@@ -710,17 +730,29 @@
   async function renderChecklist(view) {
     const w = await week();
     const c = w.checklist || {};
-    const cur = currentEvening(w);
+    const cur = currentEvening(w), iron = ironDays(w), t = today();
     let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw}</div><h1>${esc(c.title || "Abend-Checkliste")}</h1></div></header>`;
     if (c.intro) h += `<p class="muted">${esc(c.intro)}</p>`;
+    // Die Woche fürs Kind: Eisen-Tage auf einen Blick (Mo–So)
+    const wk = [0, 1, 2, 3, 4, 5, 6].map((x) => addDays(w.week.start, x));
+    h += `<section class="fe-week" aria-label="Eisen-Tage dieser Woche"><div class="fe-row">${wk.map((iso) => `<span class="fd${iron(iso) ? " iron" : ""}${iso === t ? " now" : ""}${iso < t ? " past" : ""}"><small>${DAYS[new Date(iso + "T12:00").getDay()].slice(0, 2)}</small><b>${Number(iso.slice(8, 10))}</b>${iron(iso) ? FE : "<i></i>"}</span>`).join("")}</div>
+      <p>${FE}<span><b>Eisen-Tag fürs Kind</b> – jeden zweiten Tag. Vorbereitet wird immer <b>am Abend davor</b>: Apfelmark bereitstellen, Hirse bzw. Hafer einweichen.</span></p></section>`;
     const evs = (c.evenings || []).map((e, i) => ({ e, i }));
     if (cur) evs.sort((a, b) => (a.i === cur.i ? -1 : b.i === cur.i ? 1 : 0));
     h += evs.map(({ e, i }) => {
       const b = bag("check", `${weekId}:${i}`);
       const n = Object.keys(b).length;
-      const isCur = cur && cur.i === i, all = e.items.length;
-      return `<section class="card cl${isCur ? " today" : ""}${n >= all ? " full" : ""}" style="--p:${all ? (n / all).toFixed(3) : 0}"><div class="cl-h"><div>${isCur ? '<span class="kick"><i></i>Heute Abend</span>' : ""}<h2>${esc(e.day)}</h2><div class="cl-for">${esc(e.for || "")}</div></div><span class="ev-ring">${ring()}<b>${n}/${all}</b></span></div>
-        ${e.tag ? `<span class="chip pump cl-tag">${esc(e.tag)}</span>` : ""}<ul class="checks">${e.items.map((x, j) => checkRow(b[j], esc(x), `data-cl="${i}:${j}"`)).join("")}</ul>${e.note ? `<p class="small cl-note">${esc(e.note)}</p>` : ""}</section>`;
+      const isCur = cur && cur.i === i, all = e.items.length, tIso = eveTarget(w, e, i), fe = iron(tIso);
+      const otherTag = e.tag && !/eisen/i.test(e.tag) ? `<span class="chip pump">${esc(e.tag)}</span>` : "";
+      const items = e.items.map((x, j) => {
+        const ir = /^Eisen:\s*/i.test(x);
+        return checkRow(b[j], ir ? `${FE}${esc(x.replace(/^Eisen:\s*/i, ""))}` : esc(x), `data-cl="${i}:${j}"${ir ? ' data-iron="1"' : ""}`);
+      }).join("");
+      return `<section class="card cl${isCur ? " today" : ""}${n >= all ? " full" : ""}" style="--p:${all ? (n / all).toFixed(3) : 0}">
+        <div class="cl-h"><div>${isCur ? '<span class="kick"><i></i>Heute Abend erledigen</span>' : ""}<h2>${esc(e.day)}</h2></div><span class="ev-ring">${ring()}<b>${n}/${all}</b></span></div>
+        <div class="cl-target${fe ? " iron" : ""}"><span class="arrow" aria-hidden="true">${NEXT}</span><span class="date"><small>${DAYS[new Date(tIso + "T12:00").getDay()].slice(0, 2)}</small><b>${Number(tIso.slice(8, 10))}</b></span>
+          <span class="tg"><small>bereitet vor für</small><b>${esc(DAY_LONG(tIso))}, ${Number(tIso.slice(8, 10))}.${Number(tIso.slice(5, 7))}.</b></span>${fe ? `<span class="fe-chip">${FE}Eisen-Tag</span>` : ""}${otherTag}</div>
+        <ul class="checks">${items}</ul>${e.note ? `<p class="small cl-note">${esc(e.note)}</p>` : ""}</section>`;
     }).join("");
     if (!evs.length) h += `<p class="empty">Keine Checkliste in diesem Plan.</p>`;
     view.innerHTML = h;

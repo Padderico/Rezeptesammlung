@@ -416,9 +416,6 @@ body.cooking #app { padding-bottom: calc(100px + var(--dock-h) + var(--safe-b));
 .cl-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .cl-h h2 { font-size: 1.45rem; margin-top: 2px; }
 .today .cl-h h2 { font-size: 2.3rem; font-stretch: 78%; margin-top: 6px; }
-.cl-for { color: var(--muted); font-weight: 700; font-size: .92rem; margin-top: 2px; }
-.today .cl-for { color: var(--on-tanne-dim); }
-.cl-tag { margin-top: 10px; }
 .card.cl .checks { margin-top: 8px; }
 .today .ev-ring .ring .trk { stroke: rgba(255, 255, 255, .18); }
 .today .ev-ring .ring .val { stroke: var(--pumpkin-hi); }
@@ -664,6 +661,51 @@ body.dragging, body.dragging * { -webkit-user-select: none; user-select: none; }
 .card.prep-now .check { border-bottom-color: color-mix(in srgb, var(--pumpkin) 25%, transparent); }
 .card.prep-now .box { background: var(--surface); }
 .card.prep-now .check.on .box { background: var(--pumpkin); border-color: var(--pumpkin); }
+
+/* Eisen-Tage: „Fe“ auf Gusseisen – gehört immer zum Tag selbst, nicht zum Vorabend */
+:root { --iron: #2F353B; --iron-ink: #FFFFFF; --iron-soft: #E6E9EC; }
+:root[data-scheme="dark"] { --iron: #D3DAE0; --iron-ink: #11161A; --iron-soft: #222A30; }
+.fe { display: inline-grid; place-items: center; flex: none; width: 1.7em; height: 1.45em; border-radius: .35em; background: var(--iron); color: var(--iron-ink); font: 800 .78em/1 var(--font-display); font-stretch: 85%; letter-spacing: .02em; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .25); }
+.fe-chip { display: inline-flex; align-items: center; gap: 6px; font: 700 .78rem/1 var(--font-body); padding: 4px 9px 4px 4px; border-radius: 999px; background: var(--iron-soft); color: var(--ink); white-space: nowrap; vertical-align: middle; }
+.fe-chip .fe { font-size: .76rem; }
+h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
+.today .fe-chip { background: rgba(255, 255, 255, .14); color: var(--on-tanne); }
+.today .fe-chip .fe, .today .fe { background: #EEF6F1; color: #10261E; }
+.kick-fe { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--on-tanne); font-weight: 700; }
+.wd { position: relative; }
+.wd > .fe { position: absolute; top: -6px; right: -4px; font-size: .64rem; }
+.wd.now > .fe { background: #EEF6F1; color: #10261E; box-shadow: 0 0 0 2px var(--tanne); }
+.legend .fe { font-size: .62rem; margin-right: 2px; }
+.ev-t .fe-chip { margin-top: 2px; }
+/* Checkliste: Woche fürs Kind */
+.fe-week { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 14px 16px; margin: 14px 0 6px; }
+.fe-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.fd { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0 8px; border-radius: 14px; background: var(--surface-2); }
+.fd small { font-size: .74rem; font-weight: 700; color: var(--muted); }
+.fd b { font: 800 1.2rem/1 var(--font-display); font-stretch: 80%; font-variant-numeric: tabular-nums; }
+.fd > i { height: 1.45em; display: block; font-size: .7rem; }
+.fd .fe { font-size: .7rem; margin-top: 3px; }
+.fd.iron { background: var(--iron-soft); }
+.fd.now { box-shadow: inset 0 0 0 2px var(--pumpkin); }
+.fd.past { opacity: .5; }
+.fe-week p { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0 0; font-size: .9rem; color: var(--muted); }
+.fe-week p .fe { margin-top: 2px; }
+/* Checkliste: wofür der Abend ist */
+.cl-target { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 10px 0 4px; padding: 8px 10px; border-radius: 16px; background: var(--surface-2); }
+.cl-target .arrow { color: var(--muted); display: grid; }
+.cl-target .arrow .ico { width: 18px; height: 18px; }
+.cl-target .date { width: 44px; }
+.cl-target .date b { font-size: 1.3rem; padding: 3px 0 5px; }
+.cl-target .tg { display: flex; flex-direction: column; gap: 1px; margin-right: auto; }
+.cl-target .tg small { font-size: .76rem; font-weight: 700; color: var(--muted); }
+.cl-target .tg b { font: 700 1.06rem/1.15 var(--font-display); font-stretch: 92%; }
+.cl-target.iron { background: var(--iron-soft); }
+.today .cl-target { background: rgba(255, 255, 255, .1); }
+.today .cl-target .arrow, .today .cl-target .tg small { color: var(--on-tanne-dim); }
+.today .cl-target .date { box-shadow: none; background: #EEF6F1; color: #10261E; }
+.today .cl-target .date small { background: var(--pumpkin); color: #fff; }
+.check[data-iron] .txt { display: flex; gap: 8px; align-items: baseline; }
+.check[data-iron] .txt .fe { font-size: .7rem; position: relative; top: -1px; }
 
 /* ---------- Tablet: Heute links, Rest rechts ---------- */
 @media (min-width: 900px) {
