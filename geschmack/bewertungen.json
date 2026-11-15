@@ -228,7 +228,54 @@
     "Italienisch"
    ],
    "src": "idee"
+  },
+  "i:cremige-haehnchen-gnocchi-pfanne-mit-spinat": {
+   "v": "like",
+   "at": "2026-11-15T07:34:59.986Z",
+   "t": "Cremige Hähnchen-Gnocchi-Pfanne mit Spinat",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "src": "idee"
+  },
+  "i:risotto-mit-haehnchen-und-lauch": {
+   "v": "like",
+   "at": "2026-11-15T07:35:02.197Z",
+   "t": "Risotto mit Hähnchen und Lauch",
+   "tags": [
+    "Fleisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "src": "idee"
+  },
+  "i:kritharaki-topf-mit-rinderhack-und-tomaten": {
+   "v": "like",
+   "at": "2026-11-15T07:35:04.047Z",
+   "t": "Kritharaki-Topf mit Rinderhack und Tomaten",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Griechisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:schweinelendchen-in-apfel-rahm-mit-kartoffelpueree": {
+   "v": "like",
+   "at": "2026-11-15T07:35:12.888Z",
+   "t": "Schweinelendchen in Apfel-Rahm mit Kartoffelpüree",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-14T18:55:28.040Z"
+ "updated": "2026-11-15T07:35:13.116Z"
 }
