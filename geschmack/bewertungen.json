@@ -750,7 +750,42 @@
     "Orientalisch"
    ],
    "src": "idee"
+  },
+  "i:shepherd-s-pie": {
+   "v": "like",
+   "at": "2026-11-15T15:41:57.615Z",
+   "t": "Shepherd's Pie",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Britisch",
+    "Auflauf"
+   ],
+   "src": "idee"
+  },
+  "i:schaeufele-mit-kartoffelsalat": {
+   "v": "like",
+   "at": "2026-11-15T15:41:59.948Z",
+   "t": "Schäufele mit Kartoffelsalat",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Badisch"
+   ],
+   "src": "idee"
+  },
+  "i:farfalle-mit-lachs-in-tomaten-sahne-sosse": {
+   "v": "super",
+   "at": "2026-11-15T15:42:04.328Z",
+   "t": "Farfalle mit Lachs in Tomaten-Sahne-Soße",
+   "tags": [
+    "Fisch",
+    "Pasta",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-15T15:41:56.132Z"
+ "updated": "2026-11-15T15:42:13.030Z"
 }
