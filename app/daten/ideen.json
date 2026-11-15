@@ -23,6 +23,28 @@
    "i:milde-gemuese-biryani-mit-joghurt",
    "i:pierogi-mit-kartoffel-kaese-fuellung",
    "i:gebratene-griessschnitten-mit-apfel-birnen-kompott"
+  ],
+  "2026-11-16": [
+   "i:haehnchen-suess-sauer-mit-ananas-paprika-und-reis",
+   "i:cremige-lauch-pasta-mit-frischkaese-und-parmesan",
+   "i:farfalle-mit-lachs-in-tomaten-sahne-sosse",
+   "i:kuerbis-hafer-taler-mit-fruehlingsquark-und-feldsalat",
+   "i:koettbullar-mit-rahmsosse-kartoffelpueree-und-preiselbeeren",
+   "i:mie-nudeln-mit-gemuese-in-milder-erdnusssosse",
+   "i:gnocchi-mit-salsiccia-tomaten-ragu",
+   "i:aelplermagronen-mit-apfelmus",
+   "i:seelachs-mit-parmesankruste-und-kartoffel-kuerbis-stampf",
+   "i:geschmorte-schweinebaeckchen-mit-pueree-und-rahmkarotten",
+   "i:knusper-tofu-mit-honig-sesam-sosse-reis-und-brokkoli",
+   "i:one-pot-penne-mit-haehnchen-brokkoli-und-parmesan",
+   "i:spinatspaetzle-in-kaese-sahne-sosse",
+   "i:lachs-reis-bowl-mit-avocado-karotte-und-sesam",
+   "i:linsen-reis-pfanne-mit-roestzwiebeln-und-joghurt",
+   "i:haehnchen-katsu-mit-reis-und-milder-currysosse",
+   "i:kartoffel-pilz-groestl-mit-fruehlingsquark",
+   "i:kaese-tortelloni-in-tomaten-mascarpone-sosse",
+   "i:rinderhack-bulgogi-pfanne-mit-reis-und-gurke",
+   "i:suesse-schupfnudeln-mit-zimtbutter-und-pflaumenkompott"
   ]
  },
  "ideas": [
@@ -2000,6 +2022,262 @@
     "Deutsch"
    ],
    "min": 75,
+   "art": "suess"
+  },
+  {
+   "id": "haehnchen-suess-sauer-mit-ananas-paprika-und-reis",
+   "t": "Hähnchen süß-sauer mit Ananas, Paprika und Reis",
+   "d": "Saftige Hähnchenstücke in milder süß-saurer Soße mit Ananas und Paprika, dazu Reis.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "cremige-lauch-pasta-mit-frischkaese-und-parmesan",
+   "t": "Cremige Lauch-Pasta mit Frischkäse und Parmesan",
+   "d": "Sanft geschmorter Lauch, mit Frischkäse und Parmesan zur seidigen Soße für kurze Nudeln.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "farfalle-mit-lachs-in-tomaten-sahne-sosse",
+   "t": "Farfalle mit Lachs in Tomaten-Sahne-Soße",
+   "d": "Rosige Tomaten-Sahne-Soße mit zarten Lachswürfeln und etwas Lauch zu Schleifchennudeln.",
+   "tags": [
+    "Fisch",
+    "Pasta",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "fisch"
+  },
+  {
+   "id": "kuerbis-hafer-taler-mit-fruehlingsquark-und-feldsalat",
+   "t": "Kürbis-Hafer-Taler mit Frühlingsquark und Feldsalat",
+   "d": "Goldbraune Taler aus Kürbis und Haferflocken, dazu Frühlingsquark und Feldsalat.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "kuerbis"
+  },
+  {
+   "id": "koettbullar-mit-rahmsosse-kartoffelpueree-und-preiselbeeren",
+   "t": "Köttbullar mit Rahmsoße, Kartoffelpüree und Preiselbeeren",
+   "d": "Kleine Hackbällchen in cremiger Rahmsoße, dazu Püree und ein Klecks Preiselbeeren.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Skandinavisch",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "rind"
+  },
+  {
+   "id": "mie-nudeln-mit-gemuese-in-milder-erdnusssosse",
+   "t": "Mie-Nudeln mit Gemüse in milder Erdnusssoße",
+   "d": "Weiche Mie-Nudeln mit Karotte, Paprika und Erbsen in cremiger, milder Erdnusssoße.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "gnocchi-mit-salsiccia-tomaten-ragu",
+   "t": "Gnocchi mit Salsiccia-Tomaten-Ragù",
+   "d": "Zarte Gnocchi in fruchtiger Tomatensoße mit krümelig gebratener Salsiccia und Parmesan.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 30,
+   "art": "wurst"
+  },
+  {
+   "id": "aelplermagronen-mit-apfelmus",
+   "t": "Älplermagronen mit Apfelmus",
+   "d": "Nudeln und Kartoffeln in Käsesahne, obendrauf Röstzwiebeln, dazu Apfelmus wie auf der Alm.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Thermomix",
+    "Schweizerisch"
+   ],
+   "min": 40,
+   "art": "kaese"
+  },
+  {
+   "id": "seelachs-mit-parmesankruste-und-kartoffel-kuerbis-stampf",
+   "t": "Seelachs mit Parmesankruste und Kartoffel-Kürbis-Stampf",
+   "d": "Saftiges Fischfilet unter goldener Parmesan-Kräuter-Kruste auf orangem Kürbisstampf.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "fisch"
+  },
+  {
+   "id": "geschmorte-schweinebaeckchen-mit-pueree-und-rahmkarotten",
+   "t": "Geschmorte Schweinebäckchen mit Püree und Rahmkarotten",
+   "d": "Butterzart in dunkler Soße geschmort, dazu cremiges Kartoffelpüree und Rahmkarotten.",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Deutsch",
+    "Vorkochen"
+   ],
+   "min": 150,
+   "art": "rind"
+  },
+  {
+   "id": "knusper-tofu-mit-honig-sesam-sosse-reis-und-brokkoli",
+   "t": "Knusper-Tofu mit Honig-Sesam-Soße, Reis und Brokkoli",
+   "d": "Knusprig gebratene Tofuwürfel in glänzender Honig-Sesam-Soße, Brokkoli aus dem Varoma.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch"
+   ],
+   "min": 35,
+   "art": "reis"
+  },
+  {
+   "id": "one-pot-penne-mit-haehnchen-brokkoli-und-parmesan",
+   "t": "One-Pot-Penne mit Hähnchen, Brokkoli und Parmesan",
+   "d": "Penne, zarte Hähnchenstücke und Brokkoli aus einem Topf in cremiger Parmesansoße.",
+   "tags": [
+    "Fleisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "min": 30,
+   "art": "nudel"
+  },
+  {
+   "id": "spinatspaetzle-in-kaese-sahne-sosse",
+   "t": "Spinatspätzle in Käse-Sahne-Soße",
+   "d": "Grüne Spätzle mit Spinat im Teig, in milder Käse-Sahne-Soße geschwenkt.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch",
+    "Eisen"
+   ],
+   "min": 40,
+   "art": "blatt"
+  },
+  {
+   "id": "lachs-reis-bowl-mit-avocado-karotte-und-sesam",
+   "t": "Lachs-Reis-Bowl mit Avocado, Karotte und Sesam",
+   "d": "Gebratener Lachs auf warmem Reis mit Avocado, Karottenraspeln und milder Sesamsoße.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 30,
+   "art": "fisch"
+  },
+  {
+   "id": "linsen-reis-pfanne-mit-roestzwiebeln-und-joghurt",
+   "t": "Linsen-Reis-Pfanne mit Röstzwiebeln und Joghurt",
+   "d": "Braune Linsen und Reis sanft gewürzt, mit süßen Röstzwiebeln und kühlem Joghurt.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Orientalisch",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "bohne"
+  },
+  {
+   "id": "haehnchen-katsu-mit-reis-und-milder-currysosse",
+   "t": "Hähnchen-Katsu mit Reis und milder Currysoße",
+   "d": "Knusprig paniertes Hähnchen auf Reis mit einer sanften, leicht süßlichen Currysoße.",
+   "tags": [
+    "Fleisch",
+    "Heißluftfritteuse",
+    "Japanisch"
+   ],
+   "min": 40,
+   "art": "huhn"
+  },
+  {
+   "id": "kartoffel-pilz-groestl-mit-fruehlingsquark",
+   "t": "Kartoffel-Pilz-Gröstl mit Frühlingsquark",
+   "d": "Knusprig geröstete Kartoffelwürfel mit Champignons und Zwiebeln, dazu Frühlingsquark.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Österreichisch",
+    "Kartoffel"
+   ],
+   "min": 40,
+   "art": "kartoffel"
+  },
+  {
+   "id": "kaese-tortelloni-in-tomaten-mascarpone-sosse",
+   "t": "Käse-Tortelloni in Tomaten-Mascarpone-Soße",
+   "d": "Schnell gemacht: gefüllte Tortelloni in samtiger Tomaten-Mascarpone-Soße mit Basilikum.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 20,
+   "art": "tomate"
+  },
+  {
+   "id": "rinderhack-bulgogi-pfanne-mit-reis-und-gurke",
+   "t": "Rinderhack-Bulgogi-Pfanne mit Reis und Gurke",
+   "d": "Mild-süßes Rinderhack mit Sesam und Frühlingszwiebeln, dazu Reis und Gurkenstreifen.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Koreanisch",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "rind"
+  },
+  {
+   "id": "suesse-schupfnudeln-mit-zimtbutter-und-pflaumenkompott",
+   "t": "Süße Schupfnudeln mit Zimtbutter und Pflaumenkompott",
+   "d": "In Butter goldbraun gebraten, mit Zimtzucker bestreut und warmem Pflaumenkompott.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Süß",
+    "Schwäbisch"
+   ],
+   "min": 25,
    "art": "suess"
   }
  ]
