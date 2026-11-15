@@ -579,7 +579,43 @@
     "One-Pot"
    ],
    "src": "rezept"
+  },
+  "i:fischgratin-mit-spinat-und-kartoffeln": {
+   "v": "nope",
+   "at": "2026-11-15T15:31:34.160Z",
+   "t": "Fischgratin mit Spinat und Kartoffeln",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Auflauf",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "a:griessbrei-mit-apfel-zimt-kompott": {
+   "v": "like",
+   "at": "2026-11-15T15:31:41.671Z",
+   "t": "Grießbrei mit Apfel-Zimt-Kompott",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Leicht",
+    "Süß"
+   ],
+   "src": "rezept"
+  },
+  "a:kartoffel-gemuese-blech-mit-brokkoli-feta-und-kraeuterquark": {
+   "v": "like",
+   "at": "2026-11-15T15:31:48.103Z",
+   "t": "Kartoffel-Gemüse-Blech mit Brokkoli, Feta & Kräuterquark",
+   "tags": [
+    "Vegetarisch",
+    "Blech",
+    "Kartoffel",
+    "Meal-Prep"
+   ],
+   "src": "rezept"
   }
  },
- "updated": "2026-11-15T07:36:33.831Z"
+ "updated": "2026-11-15T15:31:56.684Z"
 }
