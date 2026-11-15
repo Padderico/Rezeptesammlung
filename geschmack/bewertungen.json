@@ -275,7 +275,194 @@
     "Deutsch"
    ],
    "src": "idee"
+  },
+  "i:haehnchen-in-milder-erdnusssosse-mit-reis": {
+   "v": "like",
+   "at": "2026-11-15T07:35:20.549Z",
+   "t": "Hähnchen in milder Erdnusssoße mit Reis",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:rinderschmortopf-mit-pflaumen-und-couscous": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:22.651Z",
+   "t": "Rinderschmortopf mit Pflaumen und Couscous",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Orientalisch",
+    "Vorkochen",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:krautgulasch-mit-schweinefleisch-und-salzkartoffeln": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:24.905Z",
+   "t": "Krautgulasch mit Schweinefleisch und Salzkartoffeln",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Deutsch",
+    "Vorkochen"
+   ],
+   "src": "idee"
+  },
+  "i:fischfrikassee-mit-erbsen-karotten-und-reis": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:26.833Z",
+   "t": "Fischfrikassee mit Erbsen, Karotten und Reis",
+   "tags": [
+    "Fisch",
+    "Thermomix",
+    "Varoma",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:udon-nudeln-mit-lachs-und-brokkoli-in-sesamsosse": {
+   "v": "like",
+   "at": "2026-11-15T07:35:30.333Z",
+   "t": "Udon-Nudeln mit Lachs und Brokkoli in Sesamsoße",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:lachs-kartoffel-pfanne-mit-lauch-und-dill-sahne": {
+   "v": "like",
+   "at": "2026-11-15T07:35:33.395Z",
+   "t": "Lachs-Kartoffel-Pfanne mit Lauch und Dill-Sahne",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "One-Pot",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:one-pot-pasta-mit-kuerbis-und-frischkaese": {
+   "v": "like",
+   "at": "2026-11-15T07:35:35.173Z",
+   "t": "One-Pot-Pasta mit Kürbis und Frischkäse",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "src": "idee"
+  },
+  "i:bandnudeln-in-champignon-rahm-mit-erbsen": {
+   "v": "like",
+   "at": "2026-11-15T07:35:36.875Z",
+   "t": "Bandnudeln in Champignon-Rahm mit Erbsen",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Pfanne"
+   ],
+   "src": "idee"
+  },
+  "i:spinat-risotto-mit-frischkaese": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:40.547Z",
+   "t": "Spinat-Risotto mit Frischkäse",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:graupenrisotto-mit-karotten-und-bergkaese": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:42.866Z",
+   "t": "Graupenrisotto mit Karotten und Bergkäse",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:hirse-karotten-taler-mit-fruehlingsquark": {
+   "v": "like",
+   "at": "2026-11-15T07:35:44.689Z",
+   "t": "Hirse-Karotten-Taler mit Frühlingsquark",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:krautspaetzle-mit-roestzwiebeln": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:47.610Z",
+   "t": "Krautspätzle mit Röstzwiebeln",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "src": "idee"
+  },
+  "i:mildes-kartoffel-spinat-curry-mit-reis": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:49.693Z",
+   "t": "Mildes Kartoffel-Spinat-Curry mit Reis",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Indisch",
+    "One-Pot",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:milde-gemuese-biryani-mit-joghurt": {
+   "v": "like",
+   "at": "2026-11-15T07:35:54.766Z",
+   "t": "Milde Gemüse-Biryani mit Joghurt",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Indisch"
+   ],
+   "src": "idee"
+  },
+  "i:pierogi-mit-kartoffel-kaese-fuellung": {
+   "v": "nope",
+   "at": "2026-11-15T07:35:59.085Z",
+   "t": "Pierogi mit Kartoffel-Käse-Füllung",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Osteuropäisch"
+   ],
+   "src": "idee"
+  },
+  "i:gebratene-griessschnitten-mit-apfel-birnen-kompott": {
+   "v": "like",
+   "at": "2026-11-15T07:36:01.477Z",
+   "t": "Gebratene Grießschnitten mit Apfel-Birnen-Kompott",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Süß",
+    "Deutsch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-15T07:35:13.116Z"
+ "updated": "2026-11-15T07:36:02.391Z"
 }
