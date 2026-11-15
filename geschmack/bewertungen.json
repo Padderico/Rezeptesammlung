@@ -785,7 +785,30 @@
     "Italienisch"
    ],
    "src": "idee"
+  },
+  "i:hackfleisch-reis-pfanne-mit-zucchini": {
+   "v": "nope",
+   "at": "2026-11-15T15:42:18.280Z",
+   "t": "Hackfleisch-Reis-Pfanne mit Zucchini",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "One-Pot",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:lauch-kartoffel-gratin": {
+   "v": "nope",
+   "at": "2026-11-15T15:42:23.720Z",
+   "t": "Lauch-Kartoffel-Gratin",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Kartoffel"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-15T15:42:13.030Z"
+ "updated": "2026-11-15T15:42:24.609Z"
 }
