@@ -163,7 +163,7 @@
 
   /* Zutaten, die in einem Schritt vorkommen (für "schon im Topf") */
   const ADJ = new Set("frisch frische frischer frisches braune braun rote rot gelbe gelb grüne grün kleine klein große groß vorwiegend festkochend mehligkochend festkochende edelsüß mittelscharf scharf salzarm gehackt gehackte tiefgekühlt tk getrocknet gemahlen gerieben geriebener natur griechischer weiche weich kalte kalt warme warm junge jung reife reif säuerlich säuerliche dünne dicke oder und für die der das zum zur mit von etwas nach geschmack bio optional dressing".split(" "));
-  const HEADS = ["käse", "öl", "brühe", "nudeln", "sahne", "milch", "mehl", "zucker", "essig", "saft", "mark", "pulver", "senf", "butter", "quark", "salz", "pfeffer", "tomaten", "reis", "salat"];
+  const HEADS = ["käse", "öl", "brühe", "nudeln", "sahne", "milch", "mehl", "zucker", "essig", "saft", "mark", "pulver", "senf", "butter", "quark", "salz", "pfeffer", "tomaten", "reis", "salat", "fleisch"];
   function stems(ing) {
     const base = (ing.n || "").replace(/\(.*?\)/g, " ").split(",")[0];
     const out = new Set();
@@ -178,6 +178,88 @@
     base.split(/[\s-]+/).forEach(add);
     if (ing.b) add(ing.b);
     return [...out];
+  }
+  /* Mengen direkt im Text: „Kartoffeln [1 kg] schälen“. Gesucht wird nach den Hauptwörtern der Zutat
+     (großgeschrieben, z. B. Kartoffeln, Zitrone, Fleisch); Wortformen und Zusammensetzungen wie
+     „Kartoffelscheiben“ oder „Orangensaft“ zählen mit, „Fleischprobe“ oder „Wasserbad“ nicht. */
+  const STOP_N = new Set("haut schale saft dressing stück stücke form metzger sorte sorten scheiben glas dose packung mutti tube flasche".split(" "));
+  const INFL = ["", "n", "e", "en", "s", "es", "er", "ern"];
+  const FORMS = ["scheiben", "würfel", "würfeln", "stücke", "stücken", "streifen", "schale", "saft", "filet", "filets", "hälften", "ringe", "spalten", "blätter", "röschen", "zehe", "zehen", "stifte", "raspeln"];
+  const nounMemo = new WeakMap();
+  function nounStems(ing) {
+    if (nounMemo.has(ing)) return nounMemo.get(ing);
+    const out = new Set();
+    const n0 = ing.n || "";
+    const src = n0.replace(/\(.*?\)/g, " ").split(",")[0] + " " + (ing.b || "") + " " + (n0.match(/\(([^)]*)\)/) || ["", ""])[1];
+    for (const w0 of src.split(/[\s/]+/)) for (const w1 of w0.split("-")) {
+      if (!/^[A-ZÄÖÜ]/.test(w1)) continue;
+      let w = w1.toLowerCase().replace(/[^a-zäöüß]/g, "");
+      if (w.length < 3 || STOP_N.has(w) || ADJ.has(w)) continue;
+      for (const hd of HEADS) if (w.endsWith(hd) && w !== hd) out.add(hd);
+      for (const suf of ["en", "n", "e", "s"]) if (w.length > 4 && w.endsWith(suf)) { w = w.slice(0, -suf.length); break; }
+      out.add(w);
+    }
+    const res = [...out];
+    nounMemo.set(ing, res);
+    return res;
+  }
+  function wordMatch(word, stem) {
+    if (!word.startsWith(stem)) return false;
+    const rest = word.slice(stem.length);
+    if (INFL.includes(rest)) return true;
+    const r2 = rest.replace(/^(en|n|e|s)(?=.)/, "");
+    return FORMS.includes(rest) || FORMS.includes(r2);
+  }
+  /* Text mit Mengen-Etiketten. withIng: Etikett ist antippbar (Zutat abhaken). Gibt html und die gefundenen Zutaten zurück. */
+  function annotate(r, text, k, withIng) {
+    const ingBag = withIng ? bag("ing", withIng) : null;
+    const used = new Set(), found = [];
+    let out = "", last = 0, m;
+    const re = /[A-Za-zÄÖÜäöüß]+(?:-[A-Za-zÄÖÜäöüß]+)*/g;
+    while ((m = re.exec(text))) {
+      const parts = m[0].toLowerCase().split("-");
+      let best = -1, bestLen = 0;
+      r.ingredients.forEach((ing, idx) => {
+        if (used.has(idx) || ing.a == null) return;
+        for (const st of nounStems(ing)) {
+          // vorne passend (Kartoffel|scheiben) zählt voll; nur der Anfang der Zutat („Hähnchen“ → Hähnchenbrustfilet) schwächer
+          const sc = parts.some((pt) => wordMatch(pt, st)) ? st.length : parts.some((pt) => pt.length >= 5 && st.startsWith(pt)) ? 1 : 0;
+          if (sc > bestLen) { best = idx; bestLen = sc; }
+        }
+      });
+      if (best < 0) continue;
+      used.add(best);
+      // Steht die Menge schon im Text („500 g Spätzle“) oder ist nur ein Teil gemeint („einen Schuss Wasser“, „den restlichen Käse“), nichts dazuschreiben
+      const before = text.slice(Math.max(0, m.index - 22), m.index), after = text.slice(m.index + m[0].length, m.index + m[0].length + 24);
+      if (/\d[\d,.½¼¾⅓⅔–-]*\s*(?:[a-zA-ZäöüÄÖÜß]{1,7}\.?\s+){0,2}$/.test(before.slice(-16))) continue;
+      if (/(?:schuss|etwas|wenig|bisschen|spritzer|prise|rest\w*|übrige\w*|hälfte(?:\s+(?:der|des|vom))?)\s+(?:\w+\s+)?$/i.test(before)) continue;
+      if (/^wasser/i.test(m[0]) && /spül|wasch|einweich|abgieß|abschreck/i.test(after)) continue;
+      found.push(best);
+      const amt = qtyLabel(r.ingredients[best], m[0], amount(r.ingredients[best], k), scaleVal(r.ingredients[best].a, null, k));
+      out += esc(text.slice(last, m.index)) + `<span class="iq${ingBag && ingBag[best] ? " on" : ""}"${withIng ? ` data-ing="${best}"` : ""}>${esc(m[0])}<b>${esc(amt)}</b></span>`;
+      last = m.index + m[0].length;
+    }
+    return { html: out + esc(text.slice(last)), found };
+  }
+  /* Stückzahlen verständlich machen: „Knoblauch 1 Zehe“, „Orangensaft 1 Orange“, „Zwiebeln 3“ */
+  function qtyLabel(ing, word, amt, num) {
+    if (ing.u) return amt;
+    const base = ((ing.n || "").replace(/\(.*?\)/g, " ").split(",")[0].match(/[A-ZÄÖÜ][a-zäöüß]+/) || [""])[0];
+    if (!base) return amt;
+    const lw = word.toLowerCase(), lb = base.toLowerCase();
+    if (lb.startsWith(lw) && lb.length - lw.length >= 3) { let rest = base.slice(lw.length); rest = rest.charAt(0).toUpperCase() + rest.slice(1); if (num > 1 && rest.endsWith("e")) rest += "n"; return `${amt} ${rest}`; }
+    const sb = lb.replace(/(en|n|e|s)$/, "");
+    if (lw.startsWith(sb) && INFL.includes(lw.slice(sb.length))) return amt;
+    return `${amt} ${base}`;
+  }
+  const dayOf = (t) => { const ph = phaseOf(t).phase; const d = ph && ph.toLowerCase().match(/sonntag|montag|dienstag|mittwoch|donnerstag|freitag|samstag|vortag|vorabend/); return d ? d[0] : null; };
+  /* Vorbereitungen gehören vor den ersten Schritt desselben Tages (z. B. „Montag: Feldsalat waschen“ vor „Montagabend: Ofen vorheizen“) */
+  function prepForStep(r, i) {
+    return (r.prep || []).map((x, n) => ({ x, n })).filter(({ x }) => {
+      const d = dayOf(x);
+      const j = d ? r.steps.findIndex((s) => dayOf(s.t) === d) : 0;
+      return (j < 0 ? 0 : j) === i;
+    });
   }
   function ingsForStep(r, text) {
     const t = " " + (text || "").toLowerCase() + " ";
@@ -416,10 +498,10 @@
     else if (r.servingsNote) h += `<p class="small muted">${esc(r.servingsNote)}</p>`;
     h += `<ul class="checks ing">${r.ingredients.map((i, n) => checkRow(ing[n], `<span class="q">${esc(amount(i, k))}</span><span>${esc(i.n)}</span>`, `data-ing="${n}"`)).join("")}</ul></div>`;
     h += `</div><div>`;
-    if (r.prep && r.prep.length) h += `<div class="card"><h3>Vorbereiten</h3><ul class="checks">${r.prep.map((x, n) => checkRow(pre[n], esc(x), `data-prep="${n}"`)).join("")}</ul></div>`;
+    if (r.prep && r.prep.length) h += `<div class="card"><h3>Vorbereiten</h3><ul class="checks">${r.prep.map((x, n) => { const ph = phaseOf(x); return checkRow(pre[n], `${ph.phase ? `<span class="phase">${esc(ph.phase)}</span> ` : ""}${annotate(r, ph.text, k).html}`, `data-prep="${n}"`); }).join("")}</ul></div>`;
     h += `<div class="card"><h3>Zubereitung</h3><ol class="steps-list">${r.steps.map((st, n) => {
       const ph = phaseOf(st.t);
-      return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${esc(ph.text)}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">${CLOCK}${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
+      return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${annotate(r, ph.text, k).html}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">${CLOCK}${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
     }).join("")}</ol></div>`;
     if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
     if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
@@ -473,7 +555,7 @@
     let h = `<div class="cook-top"><a class="icon-btn" href="#/r/${esc(ref)}" data-act="back" data-fallback="#/r/${esc(ref)}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Alles erledigt"} · ${doneCount} von ${n} abgehakt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte und Zutaten">${LIST}</button></div>`;
     h += `<div class="progress" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${doneCount}">${r.steps.map((_, x) => `<i class="${steps[x] ? "d" : ""}${x === i ? " c" : ""}"></i>`).join("")}</div>`;
     if (showList) {
-      h += `<div class="card"><h3>Alle Schritte</h3><ol class="steps-list">${r.steps.map((st, x) => `<li class="${steps[x] ? "done" : ""}" data-jump="${x}"><span class="stxt">${esc(phaseOf(st.t).text)}</span>${st.set ? `<div class="small muted">${esc(DEV_SHORT[st.dev] || "")} · ${esc(st.set)}</div>` : ""}</li>`).join("")}</ol></div>`;
+      h += `<div class="card"><h3>Alle Schritte</h3><ol class="steps-list">${r.steps.map((st, x) => `<li class="${steps[x] ? "done" : ""}" data-jump="${x}"><span class="stxt">${annotate(r, phaseOf(st.t).text, k).html}</span>${st.set ? `<div class="small muted">${esc(DEV_SHORT[st.dev] || "")} · ${esc(st.set)}</div>` : ""}</li>`).join("")}</ol></div>`;
       h += `<div class="card"><h3>Alle Zutaten</h3><ul class="checks ing">${r.ingredients.map((x, m) => checkRow(ing[m], `<span class="q">${esc(amount(x, k))}</span><span>${esc(x.n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
       view.innerHTML = h + cookFoot(i, n, true);
       return;
@@ -488,15 +570,18 @@
     }
     const st = r.steps[i], ph = phaseOf(st.t);
     const timers = stepTimers(st);
-    const hits = ingsForStep(r, st.t);
+    const ann = annotate(r, ph.text, k, ref);
+    const hits = [...new Set([...ann.found, ...ingsForStep(r, st.t)])];
+    const preNow = prepForStep(r, i), pre = bag("prep", ref);
     h += cookHint();
     h += `<div class="cook-cols"><div class="cook-step${dir ? (dir > 0 ? " in-fwd" : " in-back") : ""}">`;
+    if (preNow.length) h += `<div class="card prep-now"><h3>${i === 0 ? "Zuerst vorbereiten" : "Jetzt vorbereiten"}</h3><ul class="checks">${preNow.map(({ x, n: pn }) => checkRow(pre[pn], annotate(r, phaseOf(x).text, k).html, `data-prep="${pn}"`)).join("")}</ul></div>`;
     h += `<div class="num"><b>${i + 1}</b><span>von ${n}</span>${steps[i] ? '<em class="chip ok">erledigt</em>' : ""}${ph.phase ? `<span class="phase">${esc(ph.phase)}</span>` : ""}</div>`;
-    h += `<p class="stxt">${esc(ph.text)}</p>${readout(st)}`;
+    h += `<p class="stxt">${ann.html}</p>${readout(st)}`;
     if (timers.length) h += `<div class="cook-timers">${timers.map((t, x) => timerChip({ min: t.min, max: t.max, text: t.text, label: t.label, title: shortTitle(r.title), sub: `Schritt ${i + 1}: ${excerpt(t.main ? ph.text : t.label + " – " + ph.text)}`, ctx: `${ref}:${i}:${x}` }, `${ref}:${i}:${x}`)).join("")}</div>`;
     h += `</div><div>`;
     if (hits.length) {
-      h += `<div class="card cook-ings"><h3>In diesem Schritt</h3><p class="small muted" style="margin:2px 0 4px">Abhaken, was schon drin ist.</p><ul class="checks ing">${hits.map((m) => checkRow(ing[m], `<span class="q">${esc(amount(r.ingredients[m], k))}</span><span>${esc(r.ingredients[m].n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
+      h += `<div class="card cook-ings"><h3>In diesem Schritt</h3><p class="small muted" style="margin:2px 0 4px">Abhaken, was schon drin ist – oder direkt die Menge im Text antippen.</p><ul class="checks ing">${hits.map((m) => checkRow(ing[m], `<span class="q">${esc(amount(r.ingredients[m], k))}</span><span>${esc(r.ingredients[m].n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
     }
     const left = r.ingredients.length - Object.keys(ing).length;
     h += `<button class="btn ghost small all" data-act="cook-list">${LIST}Alle Zutaten & Schritte${left > 0 ? ` · ${left} Zutaten noch nicht abgehakt` : ""}</button>`;
@@ -1465,7 +1550,7 @@
       if (on && navigator.vibrate && S.settings.vibrate) navigator.vibrate(10);
       return;
     }
-    if (d.prep != null) { el.classList.toggle("on", toggle("prep", view.dataset.ref, d.prep)); return; }
+    if (d.prep != null) { el.classList.toggle("on", toggle("prep", inCooking ? cookRef : view.dataset.ref, d.prep)); return; }
     if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); return; }
     if (d.cl) { const [i, j] = d.cl.split(":"); toggle("check", `${weekId}:${i}`, j); rerenderSoft(); return; }
     if (d.tl != null) { const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on"); return; }
