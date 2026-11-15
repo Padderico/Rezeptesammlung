@@ -695,7 +695,62 @@
     "Mexikanisch"
    ],
    "src": "idee"
+  },
+  "i:gemuese-tortellini-suppe": {
+   "v": "like",
+   "at": "2026-11-15T15:41:30.064Z",
+   "t": "Gemüse-Tortellini-Suppe",
+   "tags": [
+    "Vegetarisch",
+    "Suppe"
+   ],
+   "src": "idee"
+  },
+  "i:bulgur-gemuese-pfanne-mit-joghurt": {
+   "v": "like",
+   "at": "2026-11-15T15:41:33.932Z",
+   "t": "Bulgur-Gemüse-Pfanne mit Joghurt",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Orientalisch"
+   ],
+   "src": "idee"
+  },
+  "i:semmelknoedel-mit-champignon-rahmsosse": {
+   "v": "like",
+   "at": "2026-11-15T15:41:37.981Z",
+   "t": "Semmelknödel mit Champignon-Rahmsoße",
+   "tags": [
+    "Vegetarisch",
+    "Varoma",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:hirse-gemuese-pfanne-mit-feta": {
+   "v": "nope",
+   "at": "2026-11-15T15:41:45.233Z",
+   "t": "Hirse-Gemüse-Pfanne mit Feta",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:fischpfanne-mit-paprika-und-zucchini": {
+   "v": "like",
+   "at": "2026-11-15T15:41:47.386Z",
+   "t": "Fischpfanne mit Paprika und Zucchini",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Orientalisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-15T15:32:29.211Z"
+ "updated": "2026-11-15T15:41:56.132Z"
 }
