@@ -808,7 +808,31 @@
     "Kartoffel"
    ],
    "src": "idee"
+  },
+  "i:haehnchen-suess-sauer-mit-ananas-paprika-und-reis": {
+   "v": "super",
+   "at": "2026-11-16T07:54:23.699Z",
+   "t": "Hähnchen süß-sauer mit Ananas, Paprika und Reis",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:cremige-lauch-pasta-mit-frischkaese-und-parmesan": {
+   "v": "like",
+   "at": "2026-11-16T07:54:29.998Z",
+   "t": "Cremige Lauch-Pasta mit Frischkäse und Parmesan",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-15T15:42:24.609Z"
+ "updated": "2026-11-16T07:54:38.603Z"
 }
