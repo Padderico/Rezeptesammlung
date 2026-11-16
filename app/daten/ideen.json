@@ -45,6 +45,28 @@
    "i:kaese-tortelloni-in-tomaten-mascarpone-sosse",
    "i:rinderhack-bulgogi-pfanne-mit-reis-und-gurke",
    "i:suesse-schupfnudeln-mit-zimtbutter-und-pflaumenkompott"
+  ],
+  "2026-11-17": [
+   "i:orangen-haehnchen-mit-reis-und-varoma-brokkoli",
+   "i:suess-saure-hackbaellchen-mit-paprika-und-reis",
+   "i:gefuellte-haehnchenbrust-mit-spinat-frischkaese-und-bandnudeln",
+   "i:mini-cordon-bleu-mit-petersilienkartoffeln-und-gurkensalat",
+   "i:kalbsbraten-in-rahmsosse-mit-spaetzle-und-karotten",
+   "i:milde-lamm-koefte-mit-joghurt-dip-und-bulgur",
+   "i:schweine-saltimbocca-mit-rosmarinkartoffeln",
+   "i:lachs-spinat-strudel-mit-fruehlingsquark-und-feldsalat",
+   "i:lachsbaellchen-in-dillrahm-mit-kartoffelpueree",
+   "i:paella-mit-seelachs-und-paprika",
+   "i:kaspressknoedel-mit-rahmlauch-und-feldsalat",
+   "i:apfelkuechle-mit-vanillesosse",
+   "i:cremiges-tomaten-orzo-mit-spinat-und-mozzarella",
+   "i:pasta-in-cremiger-paprika-frischkaese-sosse",
+   "i:brokkoli-kaese-taler-mit-fruehlingsquark",
+   "i:schupfnudel-pilz-pfanne-mit-lauch-in-rahm",
+   "i:pasta-e-fagioli-nudel-bohnen-topf",
+   "i:sellerieschnitzel-mit-kartoffelsalat",
+   "i:polenta-schnitten-mit-tomaten-paprika-sosse",
+   "i:bratkartoffeln-mit-fruehlingsquark-und-gurkensalat"
   ]
  },
  "ideas": [
@@ -2279,6 +2301,260 @@
    ],
    "min": 25,
    "art": "suess"
+  },
+  {
+   "id": "orangen-haehnchen-mit-reis-und-varoma-brokkoli",
+   "t": "Orangen-Hähnchen mit Reis und Varoma-Brokkoli",
+   "d": "Knusprige Hähnchenstücke in fruchtig-milder Orangen-Glasur, dazu Reis und zarter Brokkoli.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "suess-saure-hackbaellchen-mit-paprika-und-reis",
+   "t": "Süß-saure Hackbällchen mit Paprika und Reis",
+   "d": "Kleine Hackbällchen in mild-fruchtiger Paprika-Ananas-Soße, dazu lockerer Reis.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "rind"
+  },
+  {
+   "id": "gefuellte-haehnchenbrust-mit-spinat-frischkaese-und-bandnudeln",
+   "t": "Gefüllte Hähnchenbrust mit Spinat-Frischkäse und Bandnudeln",
+   "d": "Saftige Hähnchenbrust mit cremiger Spinatfüllung aus dem Ofen, dazu Bandnudeln.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Deutsch",
+    "Eisen"
+   ],
+   "min": 40,
+   "art": "huhn"
+  },
+  {
+   "id": "mini-cordon-bleu-mit-petersilienkartoffeln-und-gurkensalat",
+   "t": "Mini-Cordon-bleu mit Petersilienkartoffeln und Gurkensalat",
+   "d": "Kleine Schnitzel mit Schinken und Käse gefüllt, goldbraun gebraten, dazu Kartoffeln.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Deutsch",
+    "Kinderliebling"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "kalbsbraten-in-rahmsosse-mit-spaetzle-und-karotten",
+   "t": "Kalbsbraten in Rahmsoße mit Spätzle und Karotten",
+   "d": "Zart geschmorter Kalbsbraten in heller Rahmsoße, dazu Spätzle und Butterkarotten.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Deutsch",
+    "Vorkochen"
+   ],
+   "min": 120,
+   "art": "rind"
+  },
+  {
+   "id": "milde-lamm-koefte-mit-joghurt-dip-und-bulgur",
+   "t": "Milde Lamm-Köfte mit Joghurt-Dip und Bulgur",
+   "d": "Saftige Hackröllchen vom Lamm mit Petersilie, dazu Bulgur und kühler Joghurt-Dip.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Orientalisch",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "rind"
+  },
+  {
+   "id": "schweine-saltimbocca-mit-rosmarinkartoffeln",
+   "t": "Schweine-Saltimbocca mit Rosmarinkartoffeln",
+   "d": "Dünne Schnitzelchen mit Kochschinken und Salbei in Butter gebraten, dazu Ofenkartoffeln.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "rind"
+  },
+  {
+   "id": "lachs-spinat-strudel-mit-fruehlingsquark-und-feldsalat",
+   "t": "Lachs-Spinat-Strudel mit Frühlingsquark und Feldsalat",
+   "d": "Knuspriger Blätterteig mit Lachs und Rahmspinat gefüllt, dazu Frühlingsquark.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Deutsch",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "fisch"
+  },
+  {
+   "id": "lachsbaellchen-in-dillrahm-mit-kartoffelpueree",
+   "t": "Lachsbällchen in Dillrahm mit Kartoffelpüree",
+   "d": "Zarte Bällchen aus Lachs in milder Dill-Sahne-Soße, dazu cremiges Püree.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Thermomix",
+    "Skandinavisch"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "paella-mit-seelachs-und-paprika",
+   "t": "Paella mit Seelachs und Paprika",
+   "d": "Safranreis aus der großen Pfanne mit grätenfreiem Seelachs, Paprika und Erbsen.",
+   "tags": [
+    "Fisch",
+    "One-Pot",
+    "Spanisch"
+   ],
+   "min": 40,
+   "art": "fisch"
+  },
+  {
+   "id": "kaspressknoedel-mit-rahmlauch-und-feldsalat",
+   "t": "Kaspressknödel mit Rahmlauch und Feldsalat",
+   "d": "Goldbraun gebratene Käseknödel aus Knödelbrot, dazu cremiger Lauch und Feldsalat.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Österreichisch"
+   ],
+   "min": 40,
+   "art": "kaese"
+  },
+  {
+   "id": "apfelkuechle-mit-vanillesosse",
+   "t": "Apfelküchle mit Vanillesoße",
+   "d": "Apfelringe im fluffigen Teig ausgebacken, mit Zimtzucker und warmer Vanillesoße.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Süß",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "suess"
+  },
+  {
+   "id": "cremiges-tomaten-orzo-mit-spinat-und-mozzarella",
+   "t": "Cremiges Tomaten-Orzo mit Spinat und Mozzarella",
+   "d": "Kritharaki im Tomatenrahm gegart, mit Blattspinat und schmelzendem Mozzarella.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Thermomix",
+    "Italienisch",
+    "Eisen"
+   ],
+   "min": 25,
+   "art": "tomate"
+  },
+  {
+   "id": "pasta-in-cremiger-paprika-frischkaese-sosse",
+   "t": "Pasta in cremiger Paprika-Frischkäse-Soße",
+   "d": "Süße rote Paprika fein püriert mit Frischkäse und Parmesan, perfekt für kleine Esser.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "brokkoli-kaese-taler-mit-fruehlingsquark",
+   "t": "Brokkoli-Käse-Taler mit Frühlingsquark",
+   "d": "Knusprige Taler aus Brokkoli, Kartoffel und Käse aus der Pfanne, dazu Frühlingsquark.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "min": 35,
+   "art": "gemuese"
+  },
+  {
+   "id": "schupfnudel-pilz-pfanne-mit-lauch-in-rahm",
+   "t": "Schupfnudel-Pilz-Pfanne mit Lauch in Rahm",
+   "d": "Goldbraune Schupfnudeln mit Champignons und Lauch in milder Sahnesoße.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 25,
+   "art": "pilz"
+  },
+  {
+   "id": "pasta-e-fagioli-nudel-bohnen-topf",
+   "t": "Pasta e fagioli – Nudel-Bohnen-Topf",
+   "d": "Italienischer Eintopf mit kleinen Nudeln, weißen Bohnen, Gemüse und Tomate.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Suppe",
+    "Italienisch",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "bohne"
+  },
+  {
+   "id": "sellerieschnitzel-mit-kartoffelsalat",
+   "t": "Sellerieschnitzel mit Kartoffelsalat",
+   "d": "Knusprig panierte Selleriescheiben, innen zart und nussig, dazu Kartoffelsalat.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "gemuese"
+  },
+  {
+   "id": "polenta-schnitten-mit-tomaten-paprika-sosse",
+   "t": "Polenta-Schnitten mit Tomaten-Paprika-Soße",
+   "d": "Goldbraun gebratene Polenta-Schnitten mit Parmesan auf milder Tomaten-Paprika-Soße.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 50,
+   "art": "tomate"
+  },
+  {
+   "id": "bratkartoffeln-mit-fruehlingsquark-und-gurkensalat",
+   "t": "Bratkartoffeln mit Frühlingsquark und Gurkensalat",
+   "d": "Knusprige Bratkartoffeln mit Zwiebeln, dazu frischer Frühlingsquark und Gurkensalat.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "kartoffel"
   }
  ]
 }
