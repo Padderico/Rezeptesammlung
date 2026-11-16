@@ -1008,7 +1008,52 @@
     "Schwäbisch"
    ],
    "src": "idee"
+  },
+  "i:knusprige-fischbroetchen-mit-ofenpommes": {
+   "v": "like",
+   "at": "2026-11-16T20:47:49.778Z",
+   "t": "Knusprige Fischbrötchen mit Ofenpommes",
+   "tags": [
+    "Fisch",
+    "Heißluftfritteuse",
+    "Kinderliebling"
+   ],
+   "src": "idee"
+  },
+  "i:spinat-ricotta-lasagne": {
+   "v": "like",
+   "at": "2026-11-16T20:47:52.788Z",
+   "t": "Spinat-Ricotta-Lasagne",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:schupfnudel-pilz-pfanne-mit-lauch-in-rahm": {
+   "v": "like",
+   "at": "2026-11-16T20:47:54.880Z",
+   "t": "Schupfnudel-Pilz-Pfanne mit Lauch in Rahm",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "src": "idee"
+  },
+  "i:tomatenrisotto-mit-mozzarella": {
+   "v": "like",
+   "at": "2026-11-16T20:47:56.009Z",
+   "t": "Tomatenrisotto mit Mozzarella",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "Italienisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-16T07:55:28.053Z"
+ "updated": "2026-11-16T20:48:04.636Z"
 }
