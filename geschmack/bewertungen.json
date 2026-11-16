@@ -832,7 +832,183 @@
     "Italienisch"
    ],
    "src": "idee"
+  },
+  "i:kuerbis-hafer-taler-mit-fruehlingsquark-und-feldsalat": {
+   "v": "like",
+   "at": "2026-11-16T07:54:38.654Z",
+   "t": "Kürbis-Hafer-Taler mit Frühlingsquark und Feldsalat",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:koettbullar-mit-rahmsosse-kartoffelpueree-und-preiselbeeren": {
+   "v": "super",
+   "at": "2026-11-16T07:54:40.776Z",
+   "t": "Köttbullar mit Rahmsoße, Kartoffelpüree und Preiselbeeren",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Skandinavisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:mie-nudeln-mit-gemuese-in-milder-erdnusssosse": {
+   "v": "like",
+   "at": "2026-11-16T07:54:43.504Z",
+   "t": "Mie-Nudeln mit Gemüse in milder Erdnusssoße",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:aelplermagronen-mit-apfelmus": {
+   "v": "super",
+   "at": "2026-11-16T07:54:50.459Z",
+   "t": "Älplermagronen mit Apfelmus",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Thermomix",
+    "Schweizerisch"
+   ],
+   "src": "idee"
+  },
+  "i:seelachs-mit-parmesankruste-und-kartoffel-kuerbis-stampf": {
+   "v": "nope",
+   "at": "2026-11-16T07:54:53.105Z",
+   "t": "Seelachs mit Parmesankruste und Kartoffel-Kürbis-Stampf",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Varoma",
+    "Deutsch"
+   ],
+   "src": "idee"
+  },
+  "i:geschmorte-schweinebaeckchen-mit-pueree-und-rahmkarotten": {
+   "v": "like",
+   "at": "2026-11-16T07:54:57.520Z",
+   "t": "Geschmorte Schweinebäckchen mit Püree und Rahmkarotten",
+   "tags": [
+    "Fleisch",
+    "One-Pot",
+    "Deutsch",
+    "Vorkochen"
+   ],
+   "src": "idee"
+  },
+  "i:knusper-tofu-mit-honig-sesam-sosse-reis-und-brokkoli": {
+   "v": "nope",
+   "at": "2026-11-16T07:54:59.525Z",
+   "t": "Knusper-Tofu mit Honig-Sesam-Soße, Reis und Brokkoli",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:spinatspaetzle-in-kaese-sahne-sosse": {
+   "v": "like",
+   "at": "2026-11-16T07:55:02.854Z",
+   "t": "Spinatspätzle in Käse-Sahne-Soße",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:lachs-reis-bowl-mit-avocado-karotte-und-sesam": {
+   "v": "like",
+   "at": "2026-11-16T07:55:06.237Z",
+   "t": "Lachs-Reis-Bowl mit Avocado, Karotte und Sesam",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "src": "idee"
+  },
+  "i:linsen-reis-pfanne-mit-roestzwiebeln-und-joghurt": {
+   "v": "nope",
+   "at": "2026-11-16T07:55:09.360Z",
+   "t": "Linsen-Reis-Pfanne mit Röstzwiebeln und Joghurt",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Orientalisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:haehnchen-katsu-mit-reis-und-milder-currysosse": {
+   "v": "like",
+   "at": "2026-11-16T07:55:12.867Z",
+   "t": "Hähnchen-Katsu mit Reis und milder Currysoße",
+   "tags": [
+    "Fleisch",
+    "Heißluftfritteuse",
+    "Japanisch"
+   ],
+   "src": "idee"
+  },
+  "i:kartoffel-pilz-groestl-mit-fruehlingsquark": {
+   "v": "like",
+   "at": "2026-11-16T07:55:16.421Z",
+   "t": "Kartoffel-Pilz-Gröstl mit Frühlingsquark",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Österreichisch",
+    "Kartoffel"
+   ],
+   "src": "idee"
+  },
+  "i:kaese-tortelloni-in-tomaten-mascarpone-sosse": {
+   "v": "like",
+   "at": "2026-11-16T07:55:18.965Z",
+   "t": "Käse-Tortelloni in Tomaten-Mascarpone-Soße",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "src": "idee"
+  },
+  "i:rinderhack-bulgogi-pfanne-mit-reis-und-gurke": {
+   "v": "like",
+   "at": "2026-11-16T07:55:23.101Z",
+   "t": "Rinderhack-Bulgogi-Pfanne mit Reis und Gurke",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Koreanisch",
+    "Eisen"
+   ],
+   "src": "idee"
+  },
+  "i:suesse-schupfnudeln-mit-zimtbutter-und-pflaumenkompott": {
+   "v": "like",
+   "at": "2026-11-16T07:55:26.815Z",
+   "t": "Süße Schupfnudeln mit Zimtbutter und Pflaumenkompott",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Süß",
+    "Schwäbisch"
+   ],
+   "src": "idee"
   }
  },
- "updated": "2026-11-16T07:54:38.603Z"
+ "updated": "2026-11-16T07:55:28.053Z"
 }
