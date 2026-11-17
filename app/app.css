@@ -23,6 +23,7 @@
   --scale: 1; --nav-h: 66px; --dock-h: 0px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --ease: cubic-bezier(.2, .85, .25, 1);
+  --gold: #E59A00; --rose: #C2366A; --rose-soft: #FCE4EE;
   color-scheme: light;
 }
 :root[data-scheme="dark"] {
@@ -35,6 +36,7 @@
   --art-a: #2F8A6C; --art-c: #173A30;
   --shadow-float: 0 22px 44px -20px rgba(0, 0, 0, .8), 0 2px 8px -2px rgba(0, 0, 0, .5);
   --shadow-hero: 0 30px 60px -30px rgba(0, 0, 0, .9);
+  --gold: #FFC447; --rose: #F48DB4; --rose-soft: #3A1B28;
   color-scheme: dark;
 }
 
@@ -724,3 +726,84 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 }
 #upd { top: calc(12px + env(safe-area-inset-top, 0px)); bottom: auto; cursor: pointer; background: var(--pumpkin); color: #fff; animation: none; }
 @media (min-width: 900px) { .legend { max-width: 640px; } }
+
+/* ---------- Sterne & Anton-Stempel ---------- */
+.stars { display: inline-flex; gap: 0; align-items: center; }
+.stars button { border: 0; background: none; padding: 5px 3px; cursor: pointer; line-height: 0; color: var(--line-2); transition: transform .14s var(--ease); touch-action: manipulation; }
+.stars svg { width: 22px; height: 22px; fill: currentColor; stroke: none; }
+.stars button.on { color: var(--gold); }
+.stars button:active { transform: scale(.82); }
+.stars.set button.on svg { animation: starpop .32s var(--ease) both; }
+.stars.set button.on:nth-child(2) svg { animation-delay: .03s; } .stars.set button.on:nth-child(3) svg { animation-delay: .06s; }
+.stars.set button.on:nth-child(4) svg { animation-delay: .09s; } .stars.set button.on:nth-child(5) svg { animation-delay: .12s; }
+@keyframes starpop { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.stars.big button { padding: 6px 5px; }
+.stars.big svg { width: 38px; height: 38px; }
+.baby-btn { display: inline-flex; align-items: center; gap: 8px; border: 1.5px dashed var(--line-2); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 5px; min-height: 38px; min-width: 38px; justify-content: center; cursor: pointer; font-weight: 700; transition: background .15s, color .15s, border-color .15s, transform .12s var(--ease); }
+.baby-btn .ico { width: 24px; height: 24px; }
+.baby-btn.lbl { padding: 7px 16px 7px 9px; min-height: 46px; }
+.baby-btn.on { background: var(--rose-soft); color: var(--rose); border: 1.5px solid var(--rose); }
+.baby-btn:active { transform: scale(.93); }
+.ico.baby .ck { fill: currentColor; stroke: none; opacity: .35; }
+.baby-btn.on .ico.baby .ck { opacity: .6; }
+.meal-rate { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.meal-rate .baby-btn { min-height: 34px; min-width: 34px; padding: 3px; }
+.meal-rate .baby-btn .ico { width: 21px; height: 21px; }
+.rate-card { border: 1.5px solid color-mix(in srgb, var(--gold) 55%, transparent); background: color-mix(in srgb, var(--gold) 9%, var(--surface)); }
+.rc-h { display: flex; gap: 12px; align-items: center; }
+.rc-ico { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; color: var(--gold); }
+.rc-ico svg { width: 24px; height: 24px; fill: currentColor; }
+.rate-rows { list-style: none; margin: 10px 0 0; padding: 0; }
+.rrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.rrow:first-child { border-top: 0; }
+.rr-t { min-width: 0; flex: 1 1 180px; }
+.rr-t b { display: block; font: 700 1rem/1.25 var(--font-display); font-stretch: 92%; }
+.rr-t small { color: var(--muted); }
+.rr-a { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rrow .skip { min-height: 34px; padding: 0 10px; font-size: .82rem; }
+.rrow.done .rr-t b::after { content: " ✓"; color: var(--accent); }
+.review .rv-art { width: 120px; margin: 0 auto 4px; }
+.review h2 { margin: 2px 0 0; }
+.review .btn.big { width: 100%; margin-top: 16px; }
+.review .btn[disabled] { opacity: .55; cursor: default; }
+.rate-big { position: relative; }
+.rate-big .rate-word { font: 800 .95rem var(--font-display); color: var(--gold); }
+.r-head { position: relative; }
+.r-head.stamped h1, .r-head.stamped .chips { padding-right: 96px; }
+.astamp-wrap { position: absolute; right: -6px; top: -14px; width: 112px; height: 112px; pointer-events: none; transform: rotate(-13deg); color: var(--rose); opacity: .9; }
+.astamp-wrap.fresh { animation: stampin .55s cubic-bezier(.3, 1.5, .5, 1) both; }
+@keyframes stampin { 0% { transform: rotate(-30deg) scale(2.3); opacity: 0; } 55% { transform: rotate(-11deg) scale(.88); opacity: 1; } 75% { transform: rotate(-14deg) scale(1.05); } 100% { transform: rotate(-13deg) scale(1); opacity: .9; } }
+.astamp { width: 100%; height: 100%; overflow: visible; }
+.astamp .ring1 { fill: none; stroke: currentColor; stroke-width: 4; }
+.astamp .ring2 { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 2.5 3; }
+.astamp .arc { font: 800 13.5px var(--font-display); letter-spacing: 2.4px; fill: currentColor; }
+.astamp .hrt, .astamp .ck { fill: currentColor; }
+.astamp .ck { opacity: .4; }
+.astamp .head { fill: color-mix(in srgb, currentColor 12%, transparent); stroke: currentColor; stroke-width: 3; }
+.astamp .ln { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+:root[data-scheme="light"] .astamp-wrap, :root:not([data-scheme]) .astamp-wrap { mix-blend-mode: multiply; }
+.mini-rate { display: inline-flex; align-items: center; gap: 4px; margin-right: 2px; }
+.mini-rate .ms { color: var(--gold); font-size: .86rem; letter-spacing: .5px; line-height: 1; }
+.mini-rate .ms i { font-style: normal; color: var(--line-2); }
+.mb-baby { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--rose-soft); color: var(--rose); }
+.mb-baby .ico { width: 17px; height: 17px; }
+
+/* ---------- Alle Rezepte: Sortierung und A–Z-Leiste ---------- */
+.sortbar { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.sortbar .sb-l { font-size: .8rem; font-weight: 700; color: var(--muted); margin-right: 2px; }
+.sortbar button { border: 1px solid var(--line-2); background: var(--surface); border-radius: 12px; padding: 7px 12px; font-weight: 700; font-size: .88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+.sortbar button i { font-style: normal; opacity: .7; font-size: .8rem; }
+.sortbar button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.az-page { padding-right: 30px; }
+.r-list .az-h { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 8px 4px 2px; margin-bottom: -4px; }
+.r-list .az-h span { font: 800 1.35rem var(--font-display); color: var(--accent); }
+.r-list .st-h span { font-size: 1.05rem; color: var(--gold); }
+.r-list .st-h small { color: var(--muted); font: 700 .82rem var(--font-body); margin-left: 4px; }
+.az { position: fixed; z-index: 20; right: max(2px, calc((100vw - 1180px) / 2 + 2px)); top: calc(env(safe-area-inset-top, 0px) + 92px); bottom: calc(var(--nav-h) + var(--dock-h) + var(--safe-b) + 26px); width: 30px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 0; border-radius: 16px; touch-action: none; -webkit-user-select: none; user-select: none; transition: background .15s; }
+.az.drag { background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: 0 6px 20px -10px rgba(0, 0, 0, .35); }
+.az button { flex: 1 1 0; min-height: 0; width: 30px; border: 0; background: none; padding: 0; font: 800 .7rem/1 var(--font-display); color: var(--accent); cursor: pointer; display: grid; place-items: center; border-radius: 8px; transition: transform .1s var(--ease), color .1s; }
+.az button.off { color: var(--line-2); }
+.az button.cur { color: var(--ink); }
+.az button.hot { transform: scale(1.45) translateX(-6px); color: var(--pumpkin); }
+.az-bubble { position: fixed; z-index: 21; right: calc(max(2px, calc((100vw - 1180px) / 2 + 2px)) + 54px); top: 42%; width: 74px; height: 74px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 800 2.4rem var(--font-display); box-shadow: var(--shadow-float); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .astamp-wrap.fresh, .stars.set button.on svg { animation: none; } }

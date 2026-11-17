@@ -327,6 +327,7 @@
     const parts = h.split("/").filter(Boolean);
     const view = $("#view");
     inCooking = parts[0] === "k";
+    if (parts[0] !== "rezepte") view.classList.remove("az-page");
     document.body.classList.toggle("cooking", inCooking);
     if (parts[0] === "verbinden") {
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
@@ -337,6 +338,7 @@
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
+      if (weekId) { try { logMeals(withSwaps(await week())); } catch (e) { /* Woche fehlt */ } }
       if (!parts.length) await renderWeek(view);
       else if (parts[0] === "r") await renderRecipe(view, parts[1]);
       else if (parts[0] === "k") await renderCook(view, parts[1]);
@@ -352,6 +354,7 @@
     updateWake();
     renderDock();
     if (!embedded) updateNavDot();
+    maybeReview();
   }
   window.addEventListener("hashchange", () => { trackNav(); route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
 
@@ -424,6 +427,7 @@
       const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length, n = ev.e.items.length, tIso = eveTarget(w, ev.e, ev.i), tFe = ironDays(w)(tIso);
       html += `<a class="card evening${done >= n ? " full" : ""}" href="#/checkliste" style="--p:${n ? (done / n).toFixed(3) : 0}"><span class="ev-ring">${ring()}<b>${done}/${n}</b></span><span class="ev-t"><small>Heute Abend vorbereiten</small><b>${esc(ev.e.for ? ev.e.for.charAt(0).toUpperCase() + ev.e.for.slice(1) : "Für morgen")}</b>${tFe ? `<span class="fe-chip">${FE}${esc(DAY_LONG(tIso))} ist Eisen-Tag</span>` : ev.e.tag ? `<span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</span><span class="chev">${NEXT}</span></a>`;
     }
+    html += rateCard();
     html += actionBanners(ups, "info");
     html += await discoverTeaser();
     if (w.notice) html += `<div class="notice${noticeOpen ? "" : " clamp"}" data-act="notice"><b class="nt">Hinweis zum Plan</b><span>${esc(w.notice)}</span><i class="more">${noticeOpen ? "weniger" : "ganz lesen"}</i></div>`;
@@ -442,7 +446,7 @@
       html += `</section>`;
     }
     html += `</div></div>`;
-    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a></p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
+    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a>${embedded ? ` · <a href="#" data-act="review-demo">Wochen-Check zeigen</a>` : ""}</p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
     view.innerHTML = html;
     renderedDay = today();
   }
@@ -483,6 +487,7 @@
       h += `<div class="meal${c ? " t-" + c : ""}"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? "<em>Hauptmahlzeit</em>" : ""}</span>
         <div class="mb"><a class="mt" href="#/r/${ref}"><b>${esc(r.title)}</b></a>
         <span class="chips">${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost undo" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min., davon ${r.time.active} aktiv</span>`}${prog ? `<span class="chip ok">${prog}</span>` : ""}</span>`;
+      if (r.slug && eatenAt(d.iso, m.slot) <= Date.now()) h += `<div class="meal-rate">${starsHtml(r)}${babyBtn(r)}</div>`;
       if (open) {
         if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
         const nts = m.mode === "aufwaermen" ? noteTimers(m.note) : [];
@@ -535,7 +540,7 @@
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
     let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>`;
     const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
-    h += `<div class="r-head${c ? " t-" + c : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1></div>`;
+    h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).anton ? " stamped" : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
     h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
       <div class="tbar" aria-hidden="true"><i style="width:${share}%"></i></div>${r.time.active < r.time.total ? `<p class="tlegend"><i></i>Aktiv am Herd: ${r.time.active} Min. – die übrige Zeit gart es von allein.</p>` : ""}</div>`;
     h += `<div class="r-cols"><div class="sticky">`;
@@ -553,6 +558,7 @@
     }).join("")}</ol></div>`;
     if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
     if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
+    h += rateBlock(r);
     h += `<div class="links">${r.bring ? `<a class="btn small" href="${esc(r.bring)}">In Bring übernehmen</a>` : ""}${r.page ? `<a class="btn small ghost" href="${esc(r.page)}">Rezeptseite</a>` : ""}${nDone || Object.keys(ing).length || Object.keys(pre).length ? `<button class="btn small ghost" data-act="reset-recipe">Häkchen zurücksetzen</button>` : ""}</div>`;
     h += `</div></div>`;
     view.innerHTML = h;
@@ -610,6 +616,7 @@
     }
     if (i >= n) {
       h += `<div class="done-hero">${ART.plate}<h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
+      h += rateBlock(r, "Wie war's?");
       if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
       if (r.store) h += `<div class="card"><h3>Aufbewahren</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
       h += `<div class="links"><a class="btn primary" href="#/" data-act="home">Zur Woche</a><button class="btn ghost" data-act="cook-restart">Von vorn</button></div>`;
@@ -847,7 +854,7 @@
       <div class="tour-btns">${step > 0 ? `<button class="btn" data-act="tour-back">Zurück</button>` : `<button class="btn ghost" data-act="tour-end">Überspringen</button>`}
       <button class="btn primary" data-act="${last ? "tour-end" : "tour-next"}">${last ? "Los geht's" : "Weiter"}</button></div></div>`, { tour: "1" });
   }
-  function endTour() { S.settings.toured = 1; save(); closeSheet(); }
+  function endTour() { S.settings.toured = 1; save(); closeSheet(); setTimeout(maybeReview, 250); }
   const cookHint = () => (S.settings.hintCook ? "" : `<div class="tip guide"><b>So geht's:</b> Schritt lesen. Steht eine Zeit dabei, startet ein Tipp darauf den Timer. Zutaten abhaken, sobald sie im Topf sind. Dann „Erledigt · weiter“ – oder nach links wischen. Der Bildschirm bleibt an.<div style="margin-top:8px"><button class="btn small" data-act="hint-cook">Verstanden</button></div></div>`);
 
   /* ---------- Tauschen: Ersatzgerichte per Ziehen auf einen Tag ----------
@@ -1424,27 +1431,279 @@
     }, reduce ? 10 : 320);
   }
 
-  /* ---------- Alle Rezepte ---------- */
+  /* ---------- Sterne & Anton-Stempel: Bewertung jedes Gerichts ----------
+     1–5 Sterne pro Rezept (Schlüssel = Rezept-Slug), jederzeit änderbar. Dazu der Stempel „Für Anton geeignet“.
+     Was auf dem Plan stand, merkt sich die App im Essens-Log (die Wochendaten verschwinden, sobald der nächste Plan da ist).
+     Ab dem Samstag nach einer Planwoche fragt die App die Gerichte ohne Sterne ab, bevor es weitergeht.
+     Gespeichert wird auf dem Gerät und – mit dem GitHub-Schlüssel – in geschmack/sterne.json im Rezept-Repo. */
+  const STARS_PATH = "/contents/geschmack/sterne.json";
+  const STARS_INFO = "Sterne aus dem Kochbuddy. Schlüssel = Rezept-Slug aus rezepte/. s: 1–5 Sterne, anton: true = für Anton geeignet, t: Titel, at: Zeitpunkt.";
+  const STAR5 = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.75 5.6 6.15.9-4.45 4.33 1.05 6.12L12 16.87l-5.5 2.88 1.05-6.12L3.1 9.3l6.15-.9z"/></svg>';
+  const BABY = '<svg class="ico baby" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.2" r="7.6"/><path d="M12 5.6c-.4-1.9.9-3.2 2.4-2.7"/><path d="M8.6 12.6q1 1 2 0M13.4 12.6q1 1 2 0"/><path d="M10.6 16.2q1.4 1.1 2.8 0"/><circle cx="7.9" cy="15" r="1.1" class="ck"/><circle cx="16.1" cy="15" r="1.1" class="ck"/></svg>';
+  const RATE_WORD = ["", "Nicht so", "Geht so", "Gut", "Sehr gut", "Lieblingsgericht"];
+  let stampN = 0, justStamped = null;
+  /* Der Stempel: Babygesicht im runden Gummistempel mit Schrift im Kreis */
+  function stampSvg(cls = "") {
+    const id = "st" + ++stampN;
+    return `<svg class="astamp ${cls}" viewBox="0 0 140 140" role="img" aria-label="Stempel: Für Anton geeignet">
+      <defs><path id="${id}t" d="M22 70a48 48 0 0 1 96 0"/><path id="${id}b" d="M14 70a56 56 0 0 0 112 0"/>
+      <mask id="${id}m"><rect width="140" height="140" fill="#fff"/>${[[30, 34, 1.6], [104, 30, 1.2], [118, 84, 1.8], [40, 112, 1.4], [86, 118, 1.1], [62, 22, 1], [22, 92, 1.2], [96, 64, 1.3], [52, 78, .9]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#000"/>`).join("")}<path d="M18 50q30-6 50 2" stroke="#000" stroke-width=".8" fill="none" opacity=".7"/></mask></defs>
+      <g mask="url(#${id}m)">
+        <circle cx="70" cy="70" r="64" class="ring1"/><circle cx="70" cy="70" r="57" class="ring2"/>
+        <text class="arc"><textPath href="#${id}t" startOffset="50%" text-anchor="middle">FÜR ANTON</textPath></text>
+        <text class="arc lo"><textPath href="#${id}b" startOffset="50%" text-anchor="middle">GEEIGNET</textPath></text>
+        <path class="hrt" d="M17 70.5c-1.6-1.4-3.4-2.7-3.4-4.4a1.9 1.9 0 0 1 3.4-1.1 1.9 1.9 0 0 1 3.4 1.1c0 1.7-1.8 3-3.4 4.4zM123 70.5c-1.6-1.4-3.4-2.7-3.4-4.4a1.9 1.9 0 0 1 3.4-1.1 1.9 1.9 0 0 1 3.4 1.1c0 1.7-1.8 3-3.4 4.4z"/>
+        <g class="face"><circle cx="70" cy="74" r="25" class="head"/><path d="M45.5 72a5 5 0 0 0 0 9M94.5 72a5 5 0 0 1 0 9" class="ln"/>
+          <path d="M70 49c-2.5-6 2-10.5 7-8.5 3 1.3 2.6 5.2-.4 5.3" class="ln"/>
+          <path d="M58 71q4 4 8 0M74 71q4 4 8 0" class="ln"/><circle cx="56" cy="80.5" r="4" class="ck"/><circle cx="84" cy="80.5" r="4" class="ck"/>
+          <path d="M64 84q6 6 12 0" class="ln"/></g>
+      </g></svg>`;
+  }
+  const stars = () => { const T = (S.stars = S.stars || {}); T.r = T.r || {}; T.ops = T.ops || []; T.log = T.log || {}; T.skip = T.skip || {}; return T; };
+  const starMeta = {};
+  const slugOf = (ref, r) => (r && r.slug) || (ref && ref.startsWith("a:") ? ref.slice(2) : "");
+  const rating = (slug) => stars().r[slug] || {};
+  /* Sterne-Leiste: tippen setzt, nochmal tippen auf einen anderen Stern ändert */
+  function starsHtml(r, size = "") {
+    if (!r || !r.slug) return "";
+    starMeta[r.slug] = { t: r.title, tags: r.tags || [] };
+    const s = rating(r.slug).s || 0;
+    return `<span class="stars ${size}${s ? " set" : ""}" role="radiogroup" aria-label="Sterne für ${esc(r.title)}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${n === s}" aria-label="${n} ${n === 1 ? "Stern" : "Sterne"}" data-star="${esc(r.slug)}|${n}" class="${n <= s ? "on" : ""}">${STAR5}</button>`).join("")}</span>`;
+  }
+  const babyBtn = (r, label) => { const on = !!rating(r.slug).anton; return `<button type="button" class="baby-btn${on ? " on" : ""}${label ? " lbl" : ""}" data-anton="${esc(r.slug)}" aria-pressed="${on}" aria-label="Für Anton geeignet">${BABY}${label ? `<span>${on ? "Anton-geeignet" : "Für Anton geeignet?"}</span>` : ""}</button>`; };
+  function setStar(slug, patch) {
+    const T = stars(), cur = { ...(T.r[slug] || {}) }, at = new Date().toISOString(), m = starMeta[slug] || {};
+    Object.assign(cur, patch, { at });
+    if (!cur.anton) delete cur.anton;
+    T.r[slug] = cur;
+    T.ops.push({ slug, s: cur.s || 0, anton: !!cur.anton, at, t: m.t || cur.t || "", tags: m.tags || [] });
+    if (m.t) cur.t = m.t;
+    save(); scheduleStarsPush();
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(patch.anton ? [10, 40, 10] : 10);
+  }
+  /* Essens-Log: was wann auf dem Plan stand (Schlüssel Tag|Mahlzeit) */
+  function logMeals(w) {
+    const T = stars(); let ch = false;
+    for (const d of w.days) for (const m of d.meals) {
+      const r = w.recipes[m.recipe]; if (!r || !r.slug) continue;
+      const k = `${d.iso}|${m.slot}`, prev = T.log[k];
+      if (!prev || prev.slug !== r.slug) { T.log[k] = { slug: r.slug, t: r.title, tags: r.tags || [], wk: weekId }; ch = true; }
+      starMeta[r.slug] = { t: r.title, tags: r.tags || [] };
+    }
+    const old = addDays(today(), -70);
+    for (const k of Object.keys(T.log)) if (k < old) { delete T.log[k]; ch = true; }
+    if (ch) save();
+  }
+  const eatenAt = (iso, slot) => { const [H, M] = (S.settings.eat[slot] || (/mittag/i.test(slot) ? "12:00" : "18:00")).split(":").map(Number); const d = new Date(iso + "T00:00"); d.setHours(H, M + 30, 0, 0); return d.getTime(); };
+  const fridayOf = (iso) => { const dow = new Date(iso + "T12:00").getDay(); return addDays(iso, ((5 - dow) + 7) % 7); };
+  /* Gegessene Gerichte ohne Sterne; due = nur die, deren Planwoche schon vorbei ist (ab Samstag) */
+  function unrated(due) {
+    const T = stars(), now = Date.now(), t = today(), seen = new Map();
+    for (const k of Object.keys(T.log).sort()) {
+      const [iso, slot] = k.split("|"), x = T.log[k];
+      if (eatenAt(iso, slot) > now) continue;
+      if (due && fridayOf(iso) >= t) continue;
+      if ((T.r[x.slug] || {}).s || T.skip[x.slug + "|" + x.wk] || seen.has(x.slug)) continue;
+      starMeta[x.slug] = starMeta[x.slug] || { t: x.t, tags: x.tags };
+      seen.set(x.slug, { slug: x.slug, title: x.t, tags: x.tags, iso, slot, wk: x.wk });
+    }
+    return [...seen.values()];
+  }
+  const dayShort = (iso) => `${DAYS[new Date(iso + "T12:00").getDay()].slice(0, 2)} ${Number(iso.slice(8, 10))}.${Number(iso.slice(5, 7))}.`;
+  /* Woche: kleine Karte „Wie hat's geschmeckt?“ für gegessene Gerichte ohne Sterne */
+  function rateCard() {
+    const t = today(), list = unrated(false).filter((x) => fridayOf(x.iso) >= t).slice(0, 6);
+    if (!list.length) return "";
+    return `<section class="card rate-card"><div class="rc-h"><span class="rc-ico">${STAR5}</span><div><b>Wie hat's geschmeckt?</b><div class="small muted">${list.length === 1 ? "1 Gericht" : list.length + " Gerichte"} noch ohne Sterne – direkt hier antippen.</div></div></div>
+      <ul class="rate-rows">${list.map((x) => rateRow(x)).join("")}</ul></section>`;
+  }
+  const rateRow = (x, skip) => { const r = { slug: x.slug, title: x.title, tags: x.tags }, done = !!rating(x.slug).s;
+    return `<li class="rrow${done ? " done" : ""}"><div class="rr-t"><b>${esc(x.title)}</b><small>${esc(dayShort(x.iso))} · ${esc(x.slot)}</small></div><div class="rr-a">${starsHtml(r)}${babyBtn(r)}${skip && !done ? `<button type="button" class="btn small ghost skip" data-starskip="${esc(x.slug)}|${esc(x.wk || "")}">Gab's nicht</button>` : ""}</div></li>`; };
+  /* Wochen-Check: ab Samstag nach der Planwoche, bevor es weitergeht */
+  let reviewList = null;
+  function reviewDue() {
+    if (embedded && !S.settings.reviewDemo) return [];
+    return unrated(true);
+  }
+  function maybeReview() {
+    if (inCooking || !$("#alarm").hidden || (!$("#sheet").hidden && !$("#sheet").dataset.review) || (S.block[weekId] && S.block[weekId].start && !S.block[weekId].end && location.hash.startsWith("#/vorkochen"))) return;
+    if (!S.settings.toured && !embedded) return;
+    const list = reviewDue();
+    if (!list.length) { if ($("#sheet").dataset.review) closeSheet(); reviewList = null; return; }
+    if (!reviewList) reviewList = list;
+    else for (const x of list) if (!reviewList.some((y) => y.slug === x.slug)) reviewList.push(x);
+    drawReview();
+  }
+  function drawReview() {
+    const T = stars(), left = reviewList.filter((x) => !(T.r[x.slug] || {}).s && !T.skip[x.slug + "|" + x.wk]).length;
+    openSheet(`<div class="review"><div class="rv-art">${ART.plate}</div><span class="eyebrow">Wochen-Check</span><h2>Wie hat's euch geschmeckt?</h2>
+      <p class="muted" style="margin:6px 0 4px">Bevor es weitergeht: kurz Sterne für die Gerichte der letzten Woche vergeben. Das Baby antippen, wenn es auch für Anton gepasst hat.</p>
+      <ul class="rate-rows">${reviewList.map((x) => rateRow(x, true)).join("")}</ul>
+      <button class="btn primary big" data-act="review-done"${left ? " disabled" : ""}>${left ? `Noch ${left} ${left === 1 ? "Gericht" : "Gerichte"} offen` : "Fertig – weiter geht's"}</button>
+      ${starsSyncLine() ? `<p class="small muted" style="margin:12px 0 0">${starsSyncLine()}</p>` : ""}</div>`, { review: 1 });
+  }
+  let starsTimer = null, starsSyncing = null;
+  const scheduleStarsPush = (ms = 6000) => { clearTimeout(starsTimer); starsTimer = setTimeout(() => syncStars(true), ms); };
+  const starsSyncLine = () => (embedded ? "" : !ghToken() ? `Die Sterne bleiben erst einmal auf diesem Gerät. Damit der Buddy sie sieht: <a href="#" data-act="gh-setup">einmalig Speichern einrichten</a>` : "");
+  function mergeStars(items) {
+    const T = stars(); let ch = false;
+    for (const [slug, x] of Object.entries(items || {})) {
+      if (!x) continue;
+      const loc = T.r[slug];
+      if ((!loc || (x.at || "") > (loc.at || "")) && !T.ops.some((o) => o.slug === slug)) { T.r[slug] = { s: x.s || 0, at: x.at, t: x.t, ...(x.anton ? { anton: true } : {}) }; ch = true; }
+    }
+    if (ch) save();
+    return ch;
+  }
+  function syncStars(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (starsSyncing) return starsSyncing;
+    starsSyncing = (async () => {
+      const T = stars();
+      try {
+        if (ghToken() && T.ops.length) {
+          for (let k = 0; k < 3; k++) {
+            const r = await gh("GET", STARS_PATH);
+            const data = r ? JSON.parse(b64d(r.content)) : {};
+            data.info = STARS_INFO; data.items = data.items || {};
+            const ops = T.ops.slice();
+            for (const o of ops) {
+              const it = { ...(data.items[o.slug] || {}), s: o.s, at: o.at, t: o.t || (data.items[o.slug] || {}).t || "", tags: o.tags && o.tags.length ? o.tags : (data.items[o.slug] || {}).tags || [] };
+              if (o.anton) it.anton = true; else delete it.anton;
+              data.items[o.slug] = it;
+            }
+            data.updated = new Date().toISOString();
+            const names = [...new Set(ops.map((o) => shortTitle(o.t || o.slug)))];
+            try {
+              await gh("PUT", STARS_PATH, { message: `Koch-App: Sterne für ${names.slice(0, 3).join(", ")}${names.length > 3 ? " …" : ""}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+              T.ops = T.ops.slice(ops.length); T.pushed = Date.now(); save();
+              mergeStars(data.items);
+              return true;
+            } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+          }
+        } else if (!T.ops.length) {
+          let items = null;
+          if (ghToken()) { const r = await gh("GET", STARS_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
+          else { const res = await fetch("../geschmack/sterne.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; }
+          return mergeStars(items);
+        }
+      } catch (e) {
+        if (!quiet && e.code === "auth") { toast(`Sterne nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
+      }
+      return false;
+    })().finally(() => { starsSyncing = null; });
+    return starsSyncing;
+  }
+  /* Rezeptseite und Kochmodus-Ende: große Sterne, Baby-Knopf */
+  function rateBlock(r, title = "Eure Bewertung") {
+    if (!r.slug) return "";
+    const x = rating(r.slug);
+    return `<div class="card rate-big"><div class="spread"><h3>${esc(title)}</h3>${x.s ? `<span class="rate-word">${RATE_WORD[x.s]}</span>` : ""}</div>${starsHtml(r, "big")}
+      <p class="small muted" style="margin:6px 0 10px">${x.s ? "Jederzeit änderbar – einfach einen anderen Stern antippen." : "Nach dem Essen antippen. Der Buddy plant künftig danach."}</p>${babyBtn(r, true)}</div>`;
+  }
+  const stampHtml = (r) => (r.slug && rating(r.slug).anton ? `<div class="astamp-wrap${justStamped === r.slug ? " fresh" : ""}">${stampSvg()}</div>` : "");
+  const miniRating = (slug) => { const x = rating(slug); return x.s || x.anton ? `<span class="mini-rate">${x.s ? `<span class="ms" aria-label="${x.s} Sterne">${"★".repeat(x.s)}<i>${"★".repeat(5 - x.s)}</i></span>` : ""}${x.anton ? `<span class="mb-baby" title="Für Anton geeignet">${BABY}</span>` : ""}</span>` : ""; };
+
+  /* ---------- Alle Rezepte ----------
+     Sortieren: zuletzt im Plan, A–Z (mit Buchstabenleiste am rechten Rand zum Springen und Durchwischen) oder nach Sternen. */
   let filter = { q: "", tag: "Alle" };
+  let listSort = S.settings.listSort || "zuletzt";
+  const SORTS = [["zuletzt", "Zuletzt im Plan"], ["az", "A–Z"], ["sterne", "Sterne"]];
+  const AZ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const firstLetter = (t) => { const c = (t || "").trim().charAt(0).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(); return AZ.includes(c) ? c : "#"; };
+  const kwNum = (x) => { const m = String(x || "").match(/KW\s*(\d+)\/(\d{4})/); return m ? +m[2] * 100 + +m[1] : 0; };
   async function renderAll(view) {
     let list;
     try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
     const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
+    if (!SORTS.some(([k]) => k === listSort)) listSort = "zuletzt";
     let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>`;
     h += `<label class="searchbox"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="search" type="search" aria-label="Rezepte durchsuchen" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search></label>`;
+    h += `<div class="sortbar" role="group" aria-label="Sortieren"><span class="sb-l">Sortieren</span>${SORTS.map(([k, l]) => `<button data-sort="${k}" aria-pressed="${listSort === k}">${k === "az" ? `<b>A</b><i>→</i><b>Z</b>` : esc(l)}</button>`).join("")}</div>`;
     h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
-    h += `<ul class="r-list" id="rlist"></ul>`;
+    h += `<ul class="r-list${listSort === "az" ? " az-on" : ""}" id="rlist"></ul>`;
+    if (listSort === "az") h += `<nav class="az" id="az" aria-label="Zum Buchstaben springen"></nav><div class="az-bubble" id="az-bubble" hidden></div>`;
     view.innerHTML = h;
+    view.classList.toggle("az-page", listSort === "az");
     view._list = list;
     drawList(view);
   }
   function drawList(view) {
     const q = filter.q.toLowerCase().trim();
-    const items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
+    let items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
       (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
-    $("#rlist", view).innerHTML = items.map((m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
-      `<li class="empty">Nichts gefunden.</li>`;
+    const byTitle = (a, b) => a.title.localeCompare(b.title, "de", { sensitivity: "base" });
+    if (listSort === "az") items = items.slice().sort(byTitle);
+    else if (listSort === "sterne") items = items.slice().sort((a, b) => ((rating(b.slug).s || 0) - (rating(a.slug).s || 0)) || (!!rating(b.slug).anton - !!rating(a.slug).anton) || byTitle(a, b));
+    else items = items.slice().sort((a, b) => (kwNum(b.last) - kwNum(a.last)) || byTitle(a, b));
+    const row = (m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`;
+    let html = "", have = new Set();
+    if (listSort === "az") {
+      let cur = null;
+      for (const m of items) { const L = firstLetter(m.title); if (L !== cur) { cur = L; have.add(L); html += `<li class="az-h" id="az-${L === "#" ? "x" : L}" data-l="${L}"><span>${L}</span></li>`; } html += row(m); }
+    } else if (listSort === "sterne" && items.some((m) => rating(m.slug).s)) {
+      let cur = null;
+      for (const m of items) { const s = rating(m.slug).s || 0; if (s !== cur) { cur = s; html += `<li class="az-h st-h"><span>${s ? `${"★".repeat(s)} <small>${RATE_WORD[s]}</small>` : "Noch ohne Sterne"}</span></li>`; } html += row(m); }
+    } else html = items.map(row).join("");
+    $("#rlist", view).innerHTML = html || `<li class="empty">Nichts gefunden.</li>`;
+    const az = $("#az", view);
+    if (az) {
+      const letters = have.has("#") ? [...AZ, "#"] : AZ;
+      az.innerHTML = letters.map((L) => `<button type="button" data-letter="${L}"${have.has(L) ? "" : ' class="off" tabindex="-1"'} aria-label="${L === "#" ? "Sonstige" : L}">${L}</button>`).join("");
+      az.hidden = !items.length;
+      markLetter();
+    }
   }
+  /* Buchstabenleiste: antippen springt, darüberwischen scrollt mit – fehlende Buchstaben springen zum nächsten vorhandenen */
+  function jumpLetter(L, smooth = true) {
+    const az = $("#az"); if (!az) return;
+    const letters = [...az.querySelectorAll("[data-letter]")].map((b) => b.dataset.letter);
+    let i = letters.indexOf(L), head = null;
+    for (; i >= 0 && i < letters.length && !head; i++) head = $(`#az-${letters[i] === "#" ? "x" : letters[i]}`);
+    if (!head) for (i = letters.indexOf(L) - 1; i >= 0 && !head; i--) head = $(`#az-${letters[i] === "#" ? "x" : letters[i]}`);
+    if (!head) return;
+    const y = head.getBoundingClientRect().top + window.scrollY - 8;
+    window.scrollTo({ top: y, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "auto" });
+  }
+  let azDrag = null, azLast = "";
+  function letterAt(y) {
+    const az = $("#az"); if (!az) return null;
+    const bs = [...az.querySelectorAll("[data-letter]")];
+    for (const b of bs) { const r = b.getBoundingClientRect(); if (y >= r.top && y <= r.bottom) return b.dataset.letter; }
+    const r0 = bs[0].getBoundingClientRect(), r1 = bs[bs.length - 1].getBoundingClientRect();
+    return y < r0.top ? bs[0].dataset.letter : y > r1.bottom ? bs[bs.length - 1].dataset.letter : null;
+  }
+  function azShow(L) {
+    const bub = $("#az-bubble"); if (!bub || !L) return;
+    if (L !== azLast) { azLast = L; jumpLetter(L, false); if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(4); }
+    bub.textContent = L; bub.hidden = false;
+    $$("#az [data-letter]").forEach((b) => b.classList.toggle("hot", b.dataset.letter === L));
+  }
+  document.addEventListener("pointerdown", (e) => {
+    const az = e.target.closest("#az"); if (!az) return;
+    e.preventDefault(); azDrag = e.pointerId; azLast = ""; az.classList.add("drag");
+    try { az.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
+    azShow(letterAt(e.clientY));
+  });
+  document.addEventListener("pointermove", (e) => { if (azDrag === e.pointerId) { e.preventDefault(); azShow(letterAt(e.clientY)); } }, { passive: false });
+  const azEnd = (e) => {
+    if (azDrag !== e.pointerId) return;
+    azDrag = null; const az = $("#az"); if (az) az.classList.remove("drag");
+    const bub = $("#az-bubble"); if (bub) setTimeout(() => (bub.hidden = true), 380);
+    $$("#az [data-letter]").forEach((b) => b.classList.remove("hot"));
+    markLetter();
+  };
+  document.addEventListener("pointerup", azEnd);
+  document.addEventListener("pointercancel", azEnd);
+  /* aktuellen Buchstaben in der Leiste hervorheben */
+  function markLetter() {
+    const heads = $$("#rlist .az-h[data-l]"); if (!heads.length) return;
+    let cur = heads[0].dataset.l;
+    for (const h of heads) { if (h.getBoundingClientRect().top <= 90) cur = h.dataset.l; else break; }
+    $$("#az [data-letter]").forEach((b) => b.classList.toggle("cur", b.dataset.letter === cur));
+  }
+  let azRaf = 0;
+  window.addEventListener("scroll", () => { if (!$("#az") || azRaf) return; azRaf = requestAnimationFrame(() => { azRaf = 0; markLetter(); }); }, { passive: true });
 
   /* ---------- Timer ---------- */
   const clock = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
@@ -1601,9 +1860,10 @@
     s.dataset.swap = data.swap || "";
     s.dataset.tour = data.tour || "";
     s.dataset.bring = data.bring || "";
+    s.dataset.review = data.review || "";
     s.hidden = false;
   }
-  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; };
+  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; };
   let toastT = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2200); }
   function rerenderSoft() { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); }
@@ -1613,9 +1873,9 @@
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-anton],[data-starskip],[data-sort],[data-letter]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
-    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else closeSheet(); } return; }
+    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
     if (d.start) { e.preventDefault(); startFromChip(JSON.parse(d.start)); return; }
     if (d.timerOpen) { e.preventDefault(); timerSheet(d.timerOpen); return; }
@@ -1663,6 +1923,24 @@
     if (d.bringdone) { S.bringAck = S.bringAck || {}; S.bringAck[d.bringdone] = 1; save(); rerenderSoft(); updateNavDot(); toast("Prima – die Bring-Liste ist auf dem neuen Stand"); return; }
     if (d.swipe) { if (d.swipe === "undo") { if (swAnim) return; const id = undoRate(); if (id) { rerenderSoft(); toast("Zurückgenommen – nochmal bewerten"); } } else swDecide(d.swipe); return; }
     if (d.rerate) { const [id, v] = d.rerate.split("|"), pool = await tastePool(), it = pool.byId.get(id); if (it) { rate(it, v); rerenderSoft(); toast(`Geändert: ${VERDICT[v]}`); } return; }
+    if (d.star) {
+      const [slug, n] = d.star.split("|"), was = rating(slug).s;
+      setStar(slug, { s: +n });
+      if (!was) toast(`${n} ${+n === 1 ? "Stern" : "Sterne"} – danke!`);
+      if ($("#sheet").dataset.review) drawReview(); else rerenderSoft();
+      return;
+    }
+    if (d.anton) {
+      const on = !rating(d.anton).anton;
+      setStar(d.anton, { anton: on }); justStamped = on ? d.anton : null;
+      if (on) toast("Gestempelt: für Anton geeignet");
+      if ($("#sheet").dataset.review) drawReview(); else rerenderSoft();
+      setTimeout(() => { justStamped = null; }, 900);
+      return;
+    }
+    if (d.starskip) { const T = stars(); T.skip[d.starskip] = 1; save(); drawReview(); return; }
+    if (d.sort) { listSort = d.sort; S.settings.listSort = d.sort; save(); rerenderSoft(); return; }
+    if (d.letter) { if (e.detail === 0) jumpLetter(d.letter); return; }
     if (d.swapopen) { swapSheet(d.swapopen); return; }
     if (d.swapto) { const id = $("#sheet").dataset.swap; closeSheet(); const [iso, slot] = d.swapto.split("|"); performSwap(id, iso, slot); return; }
     if (d.unswap) { unswap(d.unswap); return; }
@@ -1709,6 +1987,13 @@
       case "nohint": S.settings.installHint = false; save(); rerenderSoft(); break;
       case "reload": e.preventDefault(); { const r = await checkUpdates(true); toast(r === "offline" ? "Gerade kein Netz – du siehst den letzten Stand" : r === "changed" ? "Plan aktualisiert" : "Alles aktuell"); rerenderSoft(); } break;
       case "apply-update": location.reload(); break;
+      case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); break;
+      case "review-demo": {
+        e.preventDefault();
+        const T = stars(), seen = new Map();
+        for (const k of Object.keys(T.log).sort()) { const x = T.log[k], [iso, slot] = k.split("|"); if (x.wk === weekId && !seen.has(x.slug)) seen.set(x.slug, { slug: x.slug, title: x.t, tags: x.tags, iso, slot, wk: x.wk }); }
+        reviewList = [...seen.values()]; if (reviewList.length) drawReview(); break;
+      }
     }
   });
 
@@ -1777,6 +2062,7 @@
       try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
       if (v && (await syncSwaps(true))) result = "changed";
       if (v) syncTaste(true);
+      if (v) syncStars(true);
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
@@ -1803,6 +2089,7 @@
   save();
   syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
   syncTaste(true).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); });
+  syncStars(true).then((ch) => { if (ch && !inCooking && $("#sheet").hidden) rerenderSoft(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
