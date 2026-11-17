@@ -68,6 +68,34 @@ def check_data():
         ok(f"{len(files)} JSON-Dateien lesbar, Wochen und Rezepte vollständig")
 
 
+def check_photos():
+    """Beispielfotos: Datei gültig, Rezepte vorhanden; Bilder erreichbar (nur Hinweis, blockiert den Livegang nicht)."""
+    import urllib.request
+    p = ROOT / "app/daten/fotos.json"
+    if not p.exists():
+        return
+    items = json.loads(p.read_text(encoding="utf-8")).get("items", {})
+    slugs = {r["slug"] for r in json.loads((ROOT / "rezepte/rezepte.json").read_text(encoding="utf-8"))}
+    for slug, f in items.items():
+        if slug not in slugs:
+            fail(f"fotos.json: unbekanntes Rezept {slug}")
+        if not re.fullmatch(r"photo-[0-9]+-[0-9a-f]+", f.get("id", "")) or not f.get("by") or not f.get("page", "").startswith("https://unsplash.com/photos/"):
+            fail(f"fotos.json: Eintrag {slug} unvollständig")
+    bad = []
+    if os.environ.get("CHECK_PHOTO_URLS"):
+        for slug, f in items.items():
+            url = f"https://images.unsplash.com/{f['id']}?w=64&q=50&auto=format"
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, method="HEAD", headers={"User-Agent": "kochbuddy-check"}), timeout=15) as r:
+                    if r.status != 200:
+                        bad.append(f"{slug} ({r.status})")
+            except Exception as e:  # noqa: BLE001
+                bad.append(f"{slug} ({e})")
+        for b in bad:
+            print("HINWEIS: Foto nicht erreichbar:", b)
+    ok(f"{len(items)} Beispielfotos eingetragen" + (f", {len(items) - len(bad)} erreichbar" if os.environ.get("CHECK_PHOTO_URLS") else ""))
+
+
 def check_privacy():
     names = re.compile(r"\b(" + "|".join(["An" + "ton", "An" + "ja", "Pad" + "de"]) + r")\b")
     hits = 0
@@ -154,6 +182,7 @@ def check_app():
 if __name__ == "__main__":
     check_data()
     check_privacy()
+    check_photos()
     try:
         check_app()
     except Exception as e:  # noqa: BLE001

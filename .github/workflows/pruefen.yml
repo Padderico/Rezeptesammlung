@@ -31,6 +31,8 @@ jobs:
           pip install playwright==1.48.0
           python -m playwright install --with-deps chromium
       - name: Daten, Datenschutz und App prüfen
+        env:
+          CHECK_PHOTO_URLS: "1"
         run: python tools/smoke_test.py .
 
   veroeffentlichen:

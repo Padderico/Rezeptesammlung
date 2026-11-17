@@ -362,6 +362,7 @@
     try {
       if (!weeks.length) await loadIndex();
       if (weekId) { try { logMeals(withSwaps(await week())); } catch (e) { /* Woche fehlt */ } }
+      await Promise.all([loadFotos(), loadRezIndex()]);
       if (!parts.length) await renderWeek(view);
       else if (parts[0] === "r") await renderRecipe(view, parts[1]);
       else if (parts[0] === "k") await renderCook(view, parts[1]);
@@ -466,7 +467,7 @@
       if (canDrop) html += `<p class="how"><span class="grip-demo">${GRIP}</span><span><b>Tauschen:</b> Griff festhalten und auf einen Tag ziehen – oder „Tauschen“ antippen.</span></p>`;
       html += `<ul class="r-list x-list">${w.extras.map((id) => {
         const r = w.recipes[id];
-        return r ? `<li class="xitem${tone(r.tags) ? " t-" + tone(r.tags) : ""}">${canDrop ? `<span class="grip" data-grip="${id}" role="button" aria-label="${esc(r.title)} auf einen Tag ziehen">${GRIP}</span>` : ""}<a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span></span></a>${canDrop ? `<button class="btn small" data-swapopen="${id}">Tauschen</button>` : ""}</li>` : "";
+        return r ? `<li class="xitem${tone(r.tags) ? " t-" + tone(r.tags) : ""}">${canDrop ? `<span class="grip" data-grip="${id}" role="button" aria-label="${esc(r.title)} auf einen Tag ziehen">${GRIP}</span>` : ""}<a href="#/r/w:${weekId}:${id}">${fotoThumb(r.slug)}<span class="xt"><b>${esc(r.title)}</b><span class="chips">${tagChips(r.tags, 2)}<span class="chip plain">${r.time.total} Min.</span>${lastChip(r.slug)}</span></span></a>${canDrop ? `<button class="btn small" data-swapopen="${id}">Tauschen</button>` : ""}</li>` : "";
       }).join("")}</ul>`;
       if (canDrop) html += `<p class="small muted" style="margin:14px 0 0">${ghToken() ? `Tauschen ist auf diesem Gerät eingerichtet. <a href="#" data-act="gh-qr">Weiteres Gerät verbinden</a>` : `<a href="#" data-act="gh-setup">Tauschen auf diesem Gerät einrichten</a>`}</p>`;
       html += `</section>`;
@@ -511,7 +512,7 @@
       const ref = `w:${weekId}:${m.recipe}`;
       const prog = progress(ref, r), c = tone(r.tags);
       h += `<div class="meal${c ? " t-" + c : ""}"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? "<em>Hauptmahlzeit</em>" : ""}</span>
-        <div class="mb"><a class="mt" href="#/r/${ref}"><b>${esc(r.title)}</b></a>
+        ${fotoThumb(r.slug, "meal-th")}<div class="mb"><a class="mt" href="#/r/${ref}"><b>${esc(r.title)}</b></a>
         <span class="chips">${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost undo" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min., davon ${r.time.active} aktiv</span>`}${prog ? `<span class="chip ok">${prog}</span>` : ""}</span>`;
       if (r.slug && eatenAt(d.iso, m.slot) <= Date.now()) h += `<div class="meal-rate">${starsHtml(r)}${babyBtn(r)}</div>`;
       if (open) {
@@ -566,6 +567,7 @@
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
     let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>`;
     const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
+    h += fotoHero(r);
     h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).kind ? " stamped" : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
     h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
       <div class="tbar" aria-hidden="true"><i style="width:${share}%"></i></div>${r.time.active < r.time.total ? `<p class="tlegend"><i></i>Aktiv am Herd: ${r.time.active} Min. – die übrige Zeit gart es von allein.</p>` : ""}</div>`;
@@ -587,6 +589,7 @@
     if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
     h += notesBox(r);
     h += rateBlock(r);
+    h += verlaufCard(r);
     h += `<div class="links">${r.bring ? `<a class="btn small" href="${esc(r.bring)}">In Bring übernehmen</a>` : ""}${r.page ? `<a class="btn small ghost" href="${esc(r.page)}">Rezeptseite</a>` : ""}${nDone || Object.keys(ing).length || Object.keys(pre).length ? `<button class="btn small ghost" data-act="reset-recipe">Häkchen zurücksetzen</button>` : ""}</div>`;
     h += `</div></div>`;
     view.innerHTML = h;
@@ -643,7 +646,7 @@
       return;
     }
     if (i >= n) {
-      h += `<div class="done-hero">${ART.plate}<h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
+      h += `<div class="done-hero">${fotoOf(r.slug) ? `<span class="done-ph">${fotoImg(fotoOf(r.slug), 600)}</span>` : ART.plate}<h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
       h += rateBlock(r, "Wie war's?");
       h += notesBox(r, { title: "Notiz fürs nächste Mal" });
       if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
@@ -1467,7 +1470,7 @@
   function swCard(x, i) {
     const p = PAL[x.art] || PAL.gemuese, tags = (x.tags || []).filter((t) => !["Thermomix", "Varoma", "Meal-Prep", "Vorkochen", "Einfrieren", "Eisen"].includes(t));
     return `<article class="sw-card${i === 0 ? " front" : ""}" data-id="${esc(x.id)}" style="--c1:${p[0]};--c2:${p[1]};--i:${i}">
-      <div class="sw-art"><svg class="food" viewBox="0 0 120 120" aria-hidden="true">${FOOD[x.art] || FOOD.gemuese}</svg><span class="sw-src">${x.src === "rezept" ? "Aus eurer Sammlung" : "Neue Idee"}</span>${x.min ? `<span class="sw-min">${CLOCK}${x.min} Min.</span>` : ""}</div>
+      <div class="sw-art${x.slug && fotoOf(x.slug) ? " has-ph" : ""}">${x.slug && fotoOf(x.slug) ? fotoImg(fotoOf(x.slug), 700, "sw-ph") : ""}<svg class="food" viewBox="0 0 120 120" aria-hidden="true">${FOOD[x.art] || FOOD.gemuese}</svg><span class="sw-src">${x.src === "rezept" ? "Aus eurer Sammlung" : "Neue Idee"}</span>${x.min ? `<span class="sw-min">${CLOCK}${x.min} Min.</span>` : ""}</div>
       <div class="sw-body"><div class="chips">${tagChips(tags, 3)}</div><h2>${esc(x.t)}</h2>${x.d ? `<p>${esc(x.d)}</p>` : ""}</div>
       <b class="stamp yes">Lecker</b><b class="stamp no">Nein danke</b><b class="stamp up">Unbedingt bald</b></article>`;
   }
@@ -1864,6 +1867,95 @@
   /* neu zeichnen nur, wenn gerade niemand tippt oder eine Schublade offen hat */
   const softIfIdle = () => { const a = document.activeElement; if (!inCooking && $("#sheet").hidden && !(a && /TEXTAREA|INPUT/.test(a.tagName))) rerenderSoft(); };
 
+  /* ---------- Beispielfotos (Unsplash, freie Lizenz) ----------
+     app/daten/fotos.json: items[slug] = {id, by, page}. Lädt das Bild nicht, bleibt die Illustration bzw. nichts. */
+  let fotos = null;
+  async function loadFotos() { if (fotos) return fotos; try { fotos = (await getJSON("daten/fotos.json")).items || {}; } catch (e) { fotos = {}; } return fotos; }
+  const fotoOf = (slug) => (fotos && slug && fotos[slug]) || null;
+  const fotoUrl = (f, w) => `https://images.unsplash.com/${encodeURIComponent(f.id)}?w=${w}&q=70&auto=format&fit=crop`;
+  const fotoImg = (f, w, cls = "") => `<img class="ph ${cls}" src="${fotoUrl(f, w)}" srcset="${fotoUrl(f, w)} 1x, ${fotoUrl(f, w * 2)} 2x" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('noimg')">`;
+  function fotoHero(r) {
+    const f = fotoOf(r.slug); if (!f) return "";
+    return `<figure class="r-photo">${fotoImg(f, 900)}<figcaption>Beispielfoto · <a href="${esc(f.page)}?utm_source=kochbuddy&amp;utm_medium=referral" target="_blank" rel="noopener">${esc(f.by)}</a> / <a href="https://unsplash.com/?utm_source=kochbuddy&amp;utm_medium=referral" target="_blank" rel="noopener">Unsplash</a></figcaption></figure>`;
+  }
+  const fotoThumb = (slug, cls = "") => { const f = fotoOf(slug); return f ? `<span class="thumb ${cls}">${fotoImg(f, 160)}</span>` : ""; };
+
+  /* ---------- Verlauf: wann gab es welches Gericht? ----------
+     Quelle: Essens-Log der App (was auf dem Plan stand und gegessen wurde, ohne „Gab's nicht“) – mit Schlüssel im
+     privaten Repo geschmack/verlauf.json für alle Geräte zusammengeführt. Dazu die Plan-Wochen aus rezepte.json. */
+  const VERLAUF_PATH = "/contents/geschmack/verlauf.json";
+  let rezIndex = null;
+  async function loadRezIndex() { if (rezIndex) return rezIndex; try { rezIndex = await getJSON("../rezepte/rezepte.json"); } catch (e) { rezIndex = (embedded && embedded.files["../rezepte/rezepte.json"]) || []; } return rezIndex; }
+  function eatenEntries() {
+    const T = stars(), now = Date.now(), all = { ...(S.verlauf || {}) };
+    for (const [k, x] of Object.entries(T.log)) if (!all[k]) all[k] = x;
+    const out = [];
+    for (const [k, x] of Object.entries(all)) {
+      const [iso, slot] = k.split("|");
+      if (!x || !x.slug || x.skip || T.skip[x.slug + "|" + x.wk] || eatenAt(iso, slot) > now) continue;
+      out.push({ k, iso, slot, slug: x.slug, t: x.t, wk: x.wk });
+    }
+    return out;
+  }
+  function verlaufOf(slug) {
+    const es = eatenEntries().filter((e) => e.slug === slug).sort((a, b) => (a.iso < b.iso ? 1 : -1));
+    const times = new Set(es.map((e) => e.wk || e.iso.slice(0, 7))).size;
+    const meta = (rezIndex || []).find((r) => r.slug === slug) || {};
+    const kw = (x) => String(x || "").replace(/\/(\d{4})$/, (m, y) => (y === today().slice(0, 4) ? "" : " " + y));
+    return { list: es, times, last: es[0] || null, first: kw(meta.first), lastKw: meta.extra ? "" : kw(meta.last) };
+  }
+  function agoText(iso) {
+    const d = Math.round((new Date(today() + "T12:00") - new Date(iso + "T12:00")) / 86400000);
+    if (d <= 0) return "heute"; if (d === 1) return "gestern"; if (d < 14) return `vor ${d} Tagen`;
+    if (d < 60) return `vor ${Math.round(d / 7)} Wochen`; return `vor ${Math.round(d / 30)} Monaten`;
+  }
+  /* kurzer Hinweis für Listen: „zuletzt vor 3 Wochen“ */
+  function lastChip(slug) {
+    const v = verlaufOf(slug);
+    if (v.last) return `<span class="chip plain hist">zuletzt ${esc(agoText(v.last.iso))}</span>`;
+    return v.lastKw ? `<span class="chip plain hist">zuletzt ${esc(v.lastKw)}</span>` : `<span class="chip plain hist">noch nicht gekocht</span>`;
+  }
+  function verlaufCard(r) {
+    if (!r.slug) return "";
+    const v = verlaufOf(r.slug), rt = rating(r.slug);
+    let h = `<div class="card verlauf"><h3>Verlauf</h3>`;
+    if (v.last) {
+      h += `<div class="vl-top"><div><b>${esc(agoText(v.last.iso))}</b><span>zuletzt gegessen</span></div><div><b>${v.times}×</b><span>${v.times === 1 ? "auf dem Plan" : "auf dem Plan"}</span></div>${rt.s ? `<div><b class="vl-st">${"★".repeat(rt.s)}</b><span>${RATE_WORD[rt.s]}</span></div>` : ""}</div>`;
+      h += `<ol class="vl-list">${v.list.slice(0, 8).map((e) => `<li><i></i><span>${esc(DAYS[new Date(e.iso + "T12:00").getDay()])}, ${Number(e.iso.slice(8, 10))}.${Number(e.iso.slice(5, 7))}.${e.iso.slice(0, 4) !== today().slice(0, 4) ? e.iso.slice(0, 4) : ""} · ${esc(e.slot)}</span></li>`).join("")}</ol>`;
+      if (v.first) h += `<p class="small muted" style="margin:6px 0 0">Zum ersten Mal im Plan: ${esc(v.first)}</p>`;
+    } else if (v.lastKw) {
+      h += `<p style="margin:6px 0 0">Zuletzt im Plan: <b>${esc(v.lastKw)}</b>${v.first && v.first !== v.lastKw ? ` · zum ersten Mal ${esc(v.first)}` : ""}</p><p class="small muted" style="margin:4px 0 0">Ab jetzt merkt sich die App jedes Mal, wann es das Gericht gab.</p>`;
+    } else h += `<p class="muted" style="margin:6px 0 0">Gab es bei euch noch nie – wird Zeit?</p>`;
+    return h + `</div>`;
+  }
+  /* mit dem privaten Repo abgleichen: nur ergänzen, nie löschen */
+  let verlaufSyncing = null;
+  function syncVerlauf() {
+    if (embedded || !ablage.privat || !dataReady() || !ghToken()) return Promise.resolve(false);
+    if (verlaufSyncing) return verlaufSyncing;
+    verlaufSyncing = (async () => {
+      const T = stars(), mine = {};
+      for (const [k, x] of Object.entries(T.log)) { const [iso, slot] = k.split("|"); if (x.slug && eatenAt(iso, slot) <= Date.now()) mine[k] = { slug: x.slug, t: x.t, wk: x.wk, ...(T.skip[x.slug + "|" + x.wk] ? { skip: true } : {}) }; }
+      for (let n = 0; n < 3; n++) {
+        const r = await dgh("GET", VERLAUF_PATH);
+        const data = r ? JSON.parse(b64d(r.content)) : { info: "Wann welches Gericht gegessen wurde (aus der Koch-App). Schlüssel JJJJ-MM-TT|Mahlzeit. skip = gab es doch nicht.", items: {} };
+        data.items = data.items || {};
+        let add = 0;
+        for (const [k, x] of Object.entries(mine)) { const cur = data.items[k]; if (!cur || cur.slug !== x.slug || !!cur.skip !== !!x.skip) { data.items[k] = x; add++; } }
+        const before = JSON.stringify(S.verlauf || {});
+        S.verlauf = data.items; save();
+        if (!add) return before !== JSON.stringify(S.verlauf);
+        data.updated = new Date().toISOString();
+        try {
+          await dgh("PUT", VERLAUF_PATH, { message: `Koch-App: Verlauf (${add} ${add === 1 ? "Mahlzeit" : "Mahlzeiten"})`, content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+          syncMark(true); return true;
+        } catch (e) { if (e.code === 409 || e.code === 422) continue; return false; }
+      }
+      return false;
+    })().catch(() => false).finally(() => { verlaufSyncing = null; });
+    return verlaufSyncing;
+  }
+
   /* ---------- Alle Rezepte ---------- */
   let filter = { q: "", tag: "Alle" };
   async function renderAll(view) {
@@ -1882,7 +1974,7 @@
     const q = filter.q.toLowerCase().trim();
     const items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
       (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
-    $("#rlist", view).innerHTML = items.map((m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
+    $("#rlist", view).innerHTML = items.map((m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"${fotoOf(m.slug) ? ' class="has-ph"' : ""}>${fotoThumb(m.slug)}<span class="xt"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span>${lastChip(m.slug)}</span></span></a></li>`).join("") ||
       `<li class="empty">Nichts gefunden.</li>`;
   }
 
@@ -2256,6 +2348,7 @@
       if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
       if (v) syncNotes(true);
       if (v) syncLog();
+      if (v) syncVerlauf();
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
@@ -2288,6 +2381,7 @@
   setTimeout(starsFirst, 6000);
   ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => setTimeout(syncLog, 5000));
+  ablageP.then(() => syncVerlauf()).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => { if (ablage.privat && !inCooking && $("#sheet").hidden) rerenderSoft(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });

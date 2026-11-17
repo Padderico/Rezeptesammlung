@@ -1,0 +1,160 @@
+{
+ "info": "Beispielfotos zu den Rezepten (Unsplash, kostenlose Unsplash-Lizenz, kein Unsplash+). id = Bild auf images.unsplash.com, by = Fotograf, page = Fotoseite. Neue Rezepte: passendes freies Foto ergänzen; ohne eindeutigen Treffer kein Foto (die App zeigt dann die Illustration).",
+ "items": {
+  "asia-haehnchen-mit-pak-choi-zuckerschoten-und-reis": {
+   "id": "photo-1788576999396-f73418a7f763",
+   "by": "Ritupon Baishya",
+   "page": "https://unsplash.com/photos/chicken-stir-fry-with-zucchini-YKUJ2L5YveQ"
+  },
+  "brokkoli-nudelauflauf-mit-kaesesosse": {
+   "id": "photo-1645453014403-4ad5170a386c",
+   "by": "Some Tale",
+   "page": "https://unsplash.com/photos/a-casserole-dish-with-cheese-and-parsley-lqRfdLcZm_w"
+  },
+  "cremige-maronen-karotten-suppe": {
+   "id": "photo-1764015939059-2c5dee249315",
+   "by": "Rob Wingate",
+   "page": "https://unsplash.com/photos/bowl-of-creamy-orange-soup-with-swirl-and-herb-garnish-6EYlAbV2F3M"
+  },
+  "flammkuchen-mit-lauch-und-zwiebeln": {
+   "id": "photo-1637341284945-628baa4fb7cb",
+   "by": "Stefan Schauberger",
+   "page": "https://unsplash.com/photos/a-pizza-sitting-on-top-of-a-wooden-cutting-board--ADnFC0jqkg"
+  },
+  "frikadellen-aus-der-heissluftfritteuse-mit-kartoffel-karotten-stampf": {
+   "id": "photo-1780081891218-4118de81bacc",
+   "by": "Jonathan Majam",
+   "page": "https://unsplash.com/photos/plate-of-mashed-potatoes-and-meatballs-on-a-wooden-table-4r-T1Hui-co"
+  },
+  "frischkaese-gemuese-wraps": {
+   "id": "photo-1752095809096-f09d22c466c5",
+   "by": "Giorgio Trovato",
+   "page": "https://unsplash.com/photos/a-wrap-and-salad-on-a-white-plate--KLZWBqfq6c"
+  },
+  "fusilli-bolognese-mit-verstecktem-gemuese": {
+   "id": "photo-1761545832779-bc0b4290fc5e",
+   "by": "Zayed Ahmed Zadu",
+   "page": "https://unsplash.com/photos/spaghetti-bolognese-served-on-a-teal-plate-with-garnishes-rQCBC9EgoDE"
+  },
+  "gnocchi-blech-mit-paprika-zucchini-und-feta": {
+   "id": "photo-1778837224436-82a8f1fa8bb1",
+   "by": "Eva Greenberg",
+   "page": "https://unsplash.com/photos/gnocchi-with-tomato-sauce-and-basil-garnish-O7Uq62XKz34"
+  },
+  "gnocchi-hackfleisch-auflauf-mit-tomatensosse": {
+   "id": "photo-1774828893338-50fd6c5f3062",
+   "by": "Arthur P.",
+   "page": "https://unsplash.com/photos/gnocchi-with-meat-sauce-red-wine-and-parmesan-cheese-R_-17QeZi6U"
+  },
+  "hackbaellchen-in-tomatensosse-mit-nudeln": {
+   "id": "photo-1515516969-d4008cc6241a",
+   "by": "Jason Leung",
+   "page": "https://unsplash.com/photos/meta-balls-with-noodles-served-on-white-ceramic-bowl-AUAuEgUxg5Q"
+  },
+  "karotten-kaese-muffins-mit-fruehlingsquark": {
+   "id": "photo-1784441607112-8d252798b696",
+   "by": "Mihály Vereb",
+   "page": "https://unsplash.com/photos/a-plate-of-golden-brown-savory-muffins-with-cheesy-tops-_4UDXsz3I5A"
+  },
+  "kartoffel-gemuese-blech-mit-brokkoli-feta-und-kraeuterquark": {
+   "id": "photo-1787585575945-a6bf2f34978d",
+   "by": "Le Tia",
+   "page": "https://unsplash.com/photos/roasted-potatoes-and-beans-with-dill-bGWPy3HHpbQ"
+  },
+  "kartoffel-gemuese-blech-mit-feta-varoma-brokkoli-und-kraeuterquark": {
+   "id": "photo-1787585575945-a6bf2f34978d",
+   "by": "Le Tia",
+   "page": "https://unsplash.com/photos/roasted-potatoes-and-beans-with-dill-bGWPy3HHpbQ"
+  },
+  "kartoffel-karotten-puffer-vom-blech-mit-fruehlingsquark": {
+   "id": "photo-1783684522943-7ab49ce47d43",
+   "by": "tommao wang",
+   "page": "https://unsplash.com/photos/golden-fried-fritters-with-a-white-sauce-on-a-plate-Dut3u5zJ0vE"
+  },
+  "kartoffel-lauch-suppe": {
+   "id": "photo-1616501268826-ee9731c915d4",
+   "by": "Julia Kicova",
+   "page": "https://unsplash.com/photos/soup-with-green-leaf-on-white-ceramic-bowl-18YZ7zuQG4Q"
+  },
+  "kartoffelgratin-mit-feldsalat-und-orangen-dressing": {
+   "id": "photo-1750772386927-4bd2547f6fd3",
+   "by": "Lilian Do Khac",
+   "page": "https://unsplash.com/photos/roasted-potato-casserole-in-a-baking-dish-7EHh2UuoCkY"
+  },
+  "kuerbis-karotten-suppe-mit-kokos": {
+   "id": "photo-1757489345059-31d51e241a3e",
+   "by": "Elena Leya",
+   "page": "https://unsplash.com/photos/creamy-pumpkin-soup-with-parsley-and-bread-JELuDsF96tA"
+  },
+  "kuerbissuppe-aus-dem-gefrierschrank": {
+   "id": "photo-1764015939164-d5359a90c79c",
+   "by": "Rob Wingate",
+   "page": "https://unsplash.com/photos/bowl-of-pumpkin-soup-with-bread-and-pumpkins-iJ9rhlY6Lo4"
+  },
+  "lachs-aus-dem-varoma-mit-kartoffeln-gemuese-und-zitronen-dill-sosse": {
+   "id": "photo-1774806244624-9a18e3399d2d",
+   "by": "Diego Arenas de Rodrigo",
+   "page": "https://unsplash.com/photos/salmon-with-roasted-potatoes-and-tomato-salad-NXlfHnzX_ew"
+  },
+  "mildes-haehnchen-gemuese-curry-mit-reis": {
+   "id": "photo-1708782344490-9026aaa5eec7",
+   "by": "Rimsha Noor",
+   "page": "https://unsplash.com/photos/a-bowl-of-chicken-curry-next-to-a-bowl-of-rice-tsQhEvzU6MQ"
+  },
+  "minestrone-mit-sternchennudeln": {
+   "id": "photo-1778079840437-74db44e6edb9",
+   "by": "Jay Sekhar",
+   "page": "https://unsplash.com/photos/spoonful-of-pasta-soup-with-vegetables-BqwRblBr2o4"
+  },
+  "one-pot-nudeln-mit-brokkoli-erbsen-und-frischkaese": {
+   "id": "photo-1647782180635-53abbb1e2ec4",
+   "by": "Dary Lam",
+   "page": "https://unsplash.com/photos/a-white-plate-topped-with-pasta-and-broccoli-7ICh_1vYtJs"
+  },
+  "one-pot-nudeln-mit-lachs-und-spinat": {
+   "id": "photo-1767913339092-a83ec214494e",
+   "by": "Brelyn Bashrum",
+   "page": "https://unsplash.com/photos/salmon-with-pasta-and-lemon-caper-sauce-sH5tnwlUbXc"
+  },
+  "pfannkuchen-mit-selbst-gemachtem-apfelmus": {
+   "id": "photo-1646728891569-3e1a038c89d4",
+   "by": "Matheo",
+   "page": "https://unsplash.com/photos/a-stack-of-pancakes-with-apples-on-a-plate-RrGiZhk7Nc4"
+  },
+  "rindergulasch-mit-karotten-und-spaetzle": {
+   "id": "photo-1783684539282-cc34b91ed983",
+   "by": "tommao wang",
+   "page": "https://unsplash.com/photos/plate-of-dark-stewed-meat-and-diced-potatoes-VjQUnfHYj54"
+  },
+  "rindergulasch-mit-spaetzle-und-gurkensalat": {
+   "id": "photo-1783684539282-cc34b91ed983",
+   "by": "tommao wang",
+   "page": "https://unsplash.com/photos/plate-of-dark-stewed-meat-and-diced-potatoes-VjQUnfHYj54"
+  },
+  "schweinegeschnetzeltes-mit-champignon-rahm-spaetzle-und-brokkoli": {
+   "id": "photo-1788462612914-44793f2980f2",
+   "by": "gabbiistudios",
+   "page": "https://unsplash.com/photos/chicken-dinner-with-mushroom-sauce-UdO-JP67I-4"
+  },
+  "spinat-kaese-frittata-aus-der-heissluftfritteuse": {
+   "id": "photo-1673960729830-76830e8b3db4",
+   "by": "Sandie Clarke",
+   "page": "https://unsplash.com/photos/a-square-casserole-dish-with-cheese-and-vegetables-zPjFI7oxJRw"
+  },
+  "tomaten-linsen-suppe-mit-karotten": {
+   "id": "photo-1781332152758-8cb1d61f2192",
+   "by": "Zayed Ahmed Zadu",
+   "page": "https://unsplash.com/photos/a-bowl-of-vibrant-orange-soup-garnished-with-fresh-herbs-VNYi27uNrxE"
+  },
+  "tomatensuppe-mit-feta-broeseln": {
+   "id": "photo-1476718406336-bb5a9690ee2a",
+   "by": "Cala",
+   "page": "https://unsplash.com/photos/soup-bowls-with-feta-and-seeds-w6ftFbPCs9I"
+  },
+  "vesper-brett-mit-frischem-kraeuterquark": {
+   "id": "photo-1695606392727-d8b959879721",
+   "by": "Daniel",
+   "page": "https://unsplash.com/photos/a-wooden-cutting-board-topped-with-lots-of-food-Tw2cU6VvTZo"
+  }
+ }
+}

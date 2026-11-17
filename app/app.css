@@ -810,3 +810,34 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 .note-tip p { margin: 2px 0 0; white-space: pre-wrap; }
 .note-btn { position: relative; }
 .note-btn i { position: absolute; top: -3px; right: -3px; min-width: 19px; height: 19px; border-radius: 10px; background: var(--gold); color: #1d1300; font: 800 .7rem/19px var(--font-body); font-style: normal; text-align: center; padding: 0 4px; }
+
+/* ---------- Beispielfotos ---------- */
+.ph { display: block; width: 100%; height: 100%; object-fit: cover; }
+.noimg:not(.sw-art) { display: none !important; }
+.r-photo { position: relative; margin: 12px 0 4px; border-radius: 24px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--surface-2); box-shadow: var(--shadow-float); }
+.r-photo figcaption { position: absolute; right: 8px; bottom: 8px; font-size: .7rem; line-height: 1.2; color: #fff; background: rgba(0, 0, 0, .45); padding: 4px 8px; border-radius: 999px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.r-photo figcaption a { color: #fff; }
+@media (min-width: 760px) { .r-photo { aspect-ratio: 21 / 9; } }
+.thumb { flex: none; width: 64px; height: 64px; border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+.r-list > li > a { display: flex; align-items: center; gap: 12px; }
+.r-list .xt { min-width: 0; flex: 1; display: block; }
+.card.day:not(.today) .meal-th { display: none; }
+.hero .meal .meal-th { position: absolute; right: 14px; top: 14px; width: 68px; height: 68px; border-radius: 16px; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .45); }
+.hero .meal:has(.meal-th:not(.noimg)) .mb, .hero .meal:has(.meal-th:not(.noimg)) .slot { padding-right: 80px; }
+.done-ph { display: block; width: min(320px, 80%); aspect-ratio: 1; margin: 0 auto 16px; border-radius: 50%; overflow: hidden; box-shadow: var(--shadow-hero); border: 6px solid var(--surface); }
+.sw-art.has-ph .food { display: none; }
+.sw-art.has-ph .sw-ph { position: absolute; inset: 0; }
+.sw-art.has-ph.noimg .food { display: block; }
+
+/* ---------- Verlauf ---------- */
+.chip.hist { font-weight: 700; }
+.verlauf .vl-top { display: flex; gap: 10px; margin: 10px 0 6px; flex-wrap: wrap; }
+.verlauf .vl-top > div { flex: 1 1 90px; background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
+.verlauf .vl-top b { display: block; font: 800 1.25rem/1.1 var(--font-display); }
+.verlauf .vl-top span { font-size: .78rem; color: var(--muted); font-weight: 700; }
+.verlauf .vl-st { color: var(--gold); letter-spacing: 1px; }
+.vl-list { list-style: none; margin: 8px 0 0; padding: 0 0 0 4px; }
+.vl-list li { position: relative; display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: .92rem; }
+.vl-list li i { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.vl-list li:not(:last-child)::after { content: ""; position: absolute; left: 4.5px; top: 20px; bottom: -6px; width: 1px; background: var(--line-2); }
+.sw-art.noimg .sw-ph { display: none; }
