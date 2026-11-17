@@ -93,6 +93,30 @@
   } catch (e) { /* frisch starten */ }
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { /* voll oder gesperrt */ } };
   const bag = (name, key) => { S[name] = S[name] || {}; return (S[name][key] = S[name][key] || {}); };
+  /* ---------- Fehlerprotokoll ----------
+     Fehler der App werden ohne persönliche Inhalte gesammelt (Meldung, Stelle im Code, Ansicht, App-Stand, System)
+     und mit Schlüssel ins private Repo geschrieben (logs/app-fehler.json). Der Buddy prüft das stündlich und meldet Neues. */
+  const NET_ERR = /Failed to fetch|NetworkError|Load failed|Gerade kein Netz|aborted|net::/i;
+  function logError(kind, msg, stack) {
+    try {
+      msg = String(msg || "").replace(/github_pat_\w+|ghp_\w+/g, "[Schlüssel]").slice(0, 300);
+      if (!msg || NET_ERR.test(msg)) return;
+      const where = (String(stack || "").split("\n").find((l) => /app\.js|deals\.mjs/.test(l)) || "").replace(/^\s*at\s*/, "").replace(/https?:\/\/[^/]+/, "").trim().slice(0, 160);
+      const key = `${kind}|${msg}|${where}`.slice(0, 400);
+      let ver = ""; try { ver = codeTag || ""; } catch (e) { ver = ""; }
+      S.errs = S.errs || {};
+      const x = S.errs[key] || { kind, msg, where, n: 0, sent: 0, first: new Date().toISOString() };
+      x.n++; x.last = new Date().toISOString(); x.route = (location.hash || "#/").split("/").slice(0, 2).join("/"); x.v = String(ver).slice(0, 40);
+      x.sys = (navigator.userAgent.match(/Android [\d.]+|iPhone OS [\d_]+|iPad; CPU OS [\d_]+|Windows NT [\d.]+|Mac OS X [\d_]+/) || [""])[0];
+      S.errs[key] = x;
+      const keys = Object.keys(S.errs).sort((a, b) => (S.errs[a].last < S.errs[b].last ? 1 : -1));
+      keys.slice(30).forEach((k) => delete S.errs[k]);
+      save();
+      if (typeof scheduleLogPush === "function") scheduleLogPush();
+    } catch (e) { /* Protokoll darf nie selbst stören */ }
+  }
+  window.addEventListener("error", (e) => logError("Fehler", e.message, e.error && e.error.stack));
+  window.addEventListener("unhandledrejection", (e) => logError("Promise", e.reason && (e.reason.message || e.reason), e.reason && e.reason.stack));
   function toggle(name, key, idx) { const b = bag(name, key); if (b[idx]) delete b[idx]; else b[idx] = 1; save(); return !!b[idx]; }
 
   /* ---------- Mengen ---------- */
@@ -348,6 +372,7 @@
       else if (parts[0] === "entdecken") await renderDiscover(view);
       else await renderWeek(view);
     } catch (e) {
+      if (navigator.onLine !== false) logError("Laden", e.message, e.stack);
       view.innerHTML = `<div class="top"><h1>Kochbuddy</h1></div><div class="card"><h2>Gerade nicht ladbar</h2><p class="muted">Ohne Internet zeigt die App die zuletzt geöffneten Daten. Diese hier waren noch nicht gespeichert.</p><p class="small muted">${esc(e.message)}</p><button class="btn primary" data-act="reload">Nochmal versuchen</button></div>`;
     }
     updateWake();
@@ -411,6 +436,7 @@
     html += `</header>`;
     html += weekStrip(w, t);
     html += syncBanner();
+    html += planMissingBanner();
     html += actionBanners(ups, "todo");
     if (installEvt && S.settings.installHint && !standalone()) {
       html += `<div class="banner"><p>Als App auf dem Handy installieren?</p><button class="btn small" data-act="install">Installieren</button><button class="icon-btn" style="width:40px;height:40px;background:transparent;border:0;color:inherit" data-act="nohint" aria-label="Ausblenden">${CLOSE}</button></div>`;
@@ -787,6 +813,45 @@
     else if (tok && p.n && Date.now() - p.since > 24 * 3600000) { k = "Nur zur Info"; title = "Seit über einem Tag nicht gespeichert"; text = `${p.n} ${p.n === 1 ? "Eintrag wartet" : "Einträge warten"} auf diesem Gerät. Sobald wieder Netz da ist, speichert die App von selbst.`; btn = `<button class="btn" data-act="sync-now">Jetzt speichern</button>`; }
     if (!k) return "";
     return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">${k}</span><b>${title}</b><div class="small">${text}</div></div></div><div class="act-btns">${btn}</div></section>`;
+  }
+  const LOG_PATH = "/contents/logs/app-fehler.json";
+  let logTimer = null, logSyncing = null;
+  function scheduleLogPush(ms = 15000) { if (embedded) return; clearTimeout(logTimer); logTimer = setTimeout(() => syncLog(), ms); }
+  function syncLog() {
+    if (embedded || !ablage.privat || !dataReady() || !ghToken()) return Promise.resolve(false);
+    const E = S.errs || {}, todo = Object.entries(E).filter(([, x]) => x.n > (x.sent || 0));
+    if (!todo.length || logSyncing) return logSyncing || Promise.resolve(false);
+    logSyncing = (async () => {
+      for (let k = 0; k < 3; k++) {
+        const r = await dgh("GET", LOG_PATH);
+        const data = r ? JSON.parse(b64d(r.content)) : { info: "Fehler aus dem Kochbuddy (ohne persönliche Inhalte). Der Buddy meldet neue Einträge per Push.", items: {} };
+        data.items = data.items || {};
+        for (const [key, x] of todo) {
+          const it = data.items[key] || { kind: x.kind, msg: x.msg, where: x.where, n: 0, first: x.first };
+          it.n += x.n - (x.sent || 0); it.last = x.last > (it.last || "") ? x.last : it.last; it.route = x.route; it.v = x.v; it.sys = x.sys;
+          data.items[key] = it;
+        }
+        data.updated = new Date().toISOString();
+        try {
+          await dgh("PUT", LOG_PATH, { message: `Koch-App: ${todo.length === 1 ? "1 Fehler" : todo.length + " Fehler"} protokolliert`, content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+          for (const [, x] of todo) x.sent = x.n;
+          save(); return true;
+        } catch (e) { if (e.code === 409 || e.code === 422) continue; return false; }
+      }
+      return false;
+    })().catch(() => false).finally(() => { logSyncing = null; });
+    return logSyncing;
+  }
+
+  /* ---------- Wächter: ab Donnerstag 8 Uhr muss der Plan für nächste Woche da sein ---------- */
+  function planMissingBanner() {
+    if (embedded || !weeks.length) return "";
+    const now = new Date(), dow = now.getDay();
+    if (!((dow === 4 && now.getHours() >= 8) || dow === 5 || dow === 6 || dow === 0)) return "";
+    const nextMon = addDays(today(), (8 - dow) % 7 || 7);
+    if (weeks.some((w) => w.start === nextMon)) return "";
+    const [, m, d] = nextMon.split("-").map(Number);
+    return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">Noch nicht da</span><b>Der Plan ab Montag, ${d}.${m}., fehlt</b><div class="small">Normalerweise kommt er donnerstags gegen 6 Uhr. Der Buddy prüft das stündlich, startet die Planung bei Bedarf neu und gibt Bescheid. <a href="#" data-act="reload">Jetzt nachsehen</a></div></div></div></section>`;
   }
   function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet)]).then((r) => r.some(Boolean)); }
 
@@ -2190,6 +2255,7 @@
       if (v) syncTaste(true);
       if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
       if (v) syncNotes(true);
+      if (v) syncLog();
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
@@ -2221,6 +2287,7 @@
   ablageP.then(() => syncStars(true)).then((ch) => { if (ch) softIfIdle(); starsFirst(); }, starsFirst);
   setTimeout(starsFirst, 6000);
   ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
+  ablageP.then(() => setTimeout(syncLog, 5000));
   ablageP.then(() => { if (ablage.privat && !inCooking && $("#sheet").hidden) rerenderSoft(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
