@@ -1074,9 +1074,14 @@
     } catch (e) { setGhToken(old); toast(e.code === "offline" ? "Gerade kein Netz – bitte später nochmal" : e.message); return; }
     syncMark(true);
     await loadAblage();
+    let priv = privOk;
+    if (priv == null) { try { priv = !!(await gh("GET", "", null, DATA_REPO)); } catch (e) { priv = false; } }
     closeSheet();
-    if (ablage.privat && !privOk) toast("Gespeichert – aber ohne Zugriff auf Einkaufsbuddy-Daten. Beim Schlüssel bitte auch dieses Repo auswählen.");
-    else toast("Speichern ist auf diesem Gerät eingerichtet");
+    openSheet(`<h2>Schlüssel geprüft</h2><ul class="checks" style="margin:10px 0">
+      <li class="check on">${CHECK}<span class="txt"><b>Rezeptesammlung</b> – Zugriff ok</span></li>
+      <li class="check${priv ? " on" : ""}">${CHECK}<span class="txt"><b>Einkaufsbuddy-Daten</b> – ${priv ? "Zugriff ok" : "kein Zugriff: Repo fehlt noch oder ist beim Schlüssel nicht ausgewählt"}</span></li></ul>
+      <p class="small muted">${priv ? "Alles bereit – Sterne, Notizen, Wischer und Tausche werden sicher gespeichert." : "Bis das private Repo erreichbar ist, speichert die App wie bisher in der Rezeptesammlung. Nichts geht verloren."}</p>
+      <button class="btn primary big" data-act="sheet-close">Gut</button>`);
     syncStars(true); syncNotes(true);
     syncTaste(true).then(() => { if (location.hash.startsWith("#/entdecken")) rerenderSoft(); });
     if (pendingSwap) { const s = pendingSwap; pendingSwap = null; await performSwap(s.to, s.iso, s.slot); }
@@ -2106,6 +2111,7 @@
       case "kidname-save": kidNameDone((($("[data-kidname]") || {}).value || "").trim().slice(0, 14)); break;
       case "kidname-skip": kidNameDone(""); break;
       case "sync-now": { await loadAblage(); const ch = await syncAll(false); toast(pendingInfo().n ? "Noch nicht alles gespeichert – neuer Versuch folgt" : "Alles gespeichert"); if (ch || true) rerenderSoft(); break; }
+      case "sheet-close": closeSheet(); break;
       case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); break;
       case "review-demo": {
         e.preventDefault();
