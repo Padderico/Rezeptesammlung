@@ -380,6 +380,7 @@
     renderDock();
     if (!embedded) updateNavDot();
     maybeReview();
+    if (!$("#newsbar")) setTimeout(maybeNews, 600);
   }
   window.addEventListener("hashchange", () => { trackNav(); route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
 
@@ -475,7 +476,7 @@
       html += `</section>`;
     }
     html += `</div></div>`;
-    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a>${embedded ? ` · <a href="#" data-act="review-demo">Wochen-Check zeigen</a>` : ""}</p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
+    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a> · <a href="#" data-act="news-open">Was ist neu?</a>${embedded ? ` · <a href="#" data-act="review-demo">Wochen-Check zeigen</a>` : ""}</p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
     view.innerHTML = html;
     renderedDay = today();
   }
@@ -1319,9 +1320,51 @@
   const KEEP_CAPS = new Set(["EDEKA", "REWE", "ALDI", "SÜD", "dm", "E", "XXL"]);
   const niceShop = (s) => (s || "").split(/\s+/).map((x) => (/^[A-ZÄÖÜ]{3,}$/.test(x) && !KEEP_CAPS.has(x) ? x.charAt(0) + x.slice(1).toLowerCase() : x)).join(" ");
   const shopKey = (s) => niceShop(s).split(" ")[0];
+  /* ---------- Prospekte der Läden (oben im Tab Angebote) ----------
+     Mit Schlüssel aus dem privaten Repo: angebote/prospekte.json (Läden, Gültigkeit, Links; schreibt die Wochenaufgabe).
+     Ohne Zugriff nur die allgemeinen Prospekt-Seiten der Händler (ohne Orte – das öffentliche Repo kennt keine Orte). */
+  const PROS_PATH = "/contents/angebote/prospekte.json";
+  const PROS_FALLBACK = [
+    { shop: "Lidl", stufe: 1, title: "Aktuelle Prospekte", overview: "https://www.lidl.de/c/online-prospekte/s10005610" },
+    { shop: "Kaufland", stufe: 1, title: "Aktuelle Prospekte", overview: "https://filiale.kaufland.de/prospekte.html" },
+    { shop: "ALDI SÜD", stufe: 2, title: "Aktuelle Prospekte", overview: "https://www.aldi-sued.de/de/angebote/prospekte.html" },
+  ];
+  let prosCache = null, prosAt = 0, prosLoading = null;
+  function loadPros() {
+    if (prosLoading) return prosLoading;
+    if (!(ablage.privat && dataReady() && ghToken())) return Promise.resolve(null);
+    prosLoading = dgh("GET", PROS_PATH).then((r) => (r ? JSON.parse(b64d(r.content)) : null))
+      .then((d) => { const ch = JSON.stringify(d) !== JSON.stringify(prosCache); prosCache = d; prosAt = Date.now(); S.prosCache = d; save(); return ch; })
+      .catch(() => false).finally(() => { prosLoading = null; });
+    return prosLoading;
+  }
+  const PROS_TONE = { lidl: "#0050AA", penny: "#CD1414", kaufland: "#E10915", edeka: "#1C4C9C", aldi: "#1E5AA8", rewe: "#CC071E" };
+  const shortDate = (iso) => { const d = new Date(iso + "T12:00"); return `${DAYS[d.getDay()].slice(0, 2)} ${d.getDate()}.${d.getMonth() + 1}.`; };
+  function prospekteHtml(dealItems) {
+    if (!prosCache && S.prosCache) prosCache = S.prosCache;
+    const list = (prosCache && prosCache.items) || PROS_FALLBACK, t = today();
+    const STUFE = { 1: "Hauptladen", 2: "Zweite Wahl", 3: "Nur bei Top-Angeboten" };
+    const cards = list.map((p) => {
+      let cur = p.url ? { title: p.title, von: p.von, bis: p.bis, url: p.url } : null, nxt = p.next || null;
+      if (cur && cur.bis && cur.bis < t) { cur = nxt && (!nxt.von || nxt.von <= t) ? nxt : null; nxt = null; }
+      const href = (cur && cur.url) || p.overview || p.url;
+      const key = (p.shop || "").toLowerCase().split(/\s+/)[0];
+      const nDeals = (dealItems || []).filter((it) => shopKey(it.shop).toLowerCase() === key).length;
+      const valid = cur && cur.bis ? `gültig bis ${shortDate(cur.bis)}` : cur ? "diese Woche" : "neuer Prospekt kommt";
+      return `<div class="pro" style="--pc:${PROS_TONE[key] || "var(--accent)"}"><a class="pro-main" href="${esc(href)}" target="_blank" rel="noopener">
+        <span class="pro-shop">${esc(p.shop)}</span><span class="pro-st">${esc(STUFE[p.stufe] || "")}${p.ort ? ` · ${esc(p.ort)}` : ""}</span>
+        <b>${esc((cur && cur.title) || p.title || "Prospekt")}</b><small>${esc(valid)}</small>
+        ${nDeals ? `<span class="pro-deal">${nDeals} ${nDeals === 1 ? "Top-Angebot" : "Top-Angebote"} unten</span>` : ""}
+        <span class="pro-go">Blättern ↗</span></a>
+        ${nxt && nxt.url ? `<a class="pro-next" href="${esc(nxt.url)}" target="_blank" rel="noopener">Nächste Woche${nxt.von ? ` ab ${esc(shortDate(nxt.von))}` : ""} ↗</a>` : ""}</div>`;
+    }).join("");
+    const note = prosCache ? (prosCache.stand ? `Stand ${shortDate(prosCache.stand)}` : "") : "Mit eingerichtetem Speichern stehen hier eure Läden mit Gültigkeit.";
+    return `<section id="prospekte"><div class="section-title" style="margin-top:6px">Prospekte der Woche</div><div class="pro-row">${cards}</div>${note ? `<p class="small muted" style="margin:4px 0 0">${esc(note)} · Öffnet die Seite des Händlers.</p>` : ""}</section>`;
+  }
   async function renderDeals(view) {
     const w0 = weeks[0];
-    const head = (sub) => `<header class="top"><div><div class="eyebrow">${esc(sub)}</div><h1>Angebote</h1></div></header>`;
+    const head = (sub) => `<header class="top"><div><div class="eyebrow">${esc(sub)}</div><h1>Angebote</h1></div></header>` + prospekteHtml();
+    if (!prosCache || Date.now() - prosAt > 30 * 60000) loadPros().then((ch) => { if (ch && location.hash.startsWith("#/angebote")) softIfIdle(); });
     if (!w0) { view.innerHTML = head("Angebote") + `<p class="empty">Noch kein Wochenplan da.</p>`; return; }
     const url = pdfUrl(w0);
     let cache = null;
@@ -1344,7 +1387,7 @@
   }
   function drawDeals(view, w0, d, url) {
     const ck = bag("dealcheck", `kw${w0.kw}-${w0.year}`);
-    let h = `<header class="top"><div><div class="eyebrow">KW ${w0.kw} · aus dem Wochen-PDF</div><h1>Angebote</h1></div></header>`;
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w0.kw} · aus dem Wochen-PDF</div><h1>Angebote</h1></div></header>` + prospekteHtml(d.items);
     if (!d.items || !d.items.length) {
       h += `<div class="card"><h2>Keine Angebotsseite</h2><p class="muted">In diesem Wochen-PDF gibt es diesmal keine Seite „Schnäppchen der Woche“.</p><a class="btn" href="${esc(url)}">PDF öffnen</a></div>`;
       if (d.pages && d.pages.length) h += `<button class="btn ghost" data-act="deals-render">Seite als Bild anzeigen</button><div id="dealpages"></div>`;
@@ -2084,6 +2127,57 @@
     return verlaufSyncing;
   }
 
+  /* ---------- Was ist neu? Kurze Tour nach Updates ----------
+     app/daten/neu.json: neuester Eintrag erscheint einmal pro Gerät (nach Einführung und Wochen-Check).
+     „Zeigen“ springt an die Stelle in der App, unten bleibt eine kleine Leiste „Weiter“ stehen. */
+  let news = null, newsStep = 0, newsItem = null;
+  async function loadNews() { if (news) return news; try { news = (await getJSON("daten/neu.json")).items || []; } catch (e) { news = []; } return news; }
+  const newsSeen = () => (S.settings.newsSeen = S.settings.newsSeen || []);
+  async function maybeNews() {
+    if (inCooking || !$("#sheet").hidden || !$("#alarm").hidden || !S.settings.toured || embedded) return;
+    const list = await loadNews(), top = list[0];
+    if (!top || newsSeen().includes(top.id) || $("#newsbar")) return;
+    showNews(0, top);
+  }
+  const newsText = (t) => esc(String(t || "").replace(/\{kind\}/g, kidName() || "das Kind"));
+  function showNews(step = 0, item) {
+    newsItem = item || newsItem; if (!newsItem) return;
+    const st = newsItem.schritte || []; newsStep = Math.max(0, Math.min(step, st.length - 1));
+    const s = st[newsStep], last = newsStep === st.length - 1;
+    $("#newsbar") && $("#newsbar").remove();
+    openSheet(`<div class="tour news"><span class="eyebrow">${esc(newsItem.titel || "Neu")} · seit ${esc(newsItem.datum || "")} · ${newsStep + 1} von ${st.length}</span><div class="tour-ico">${ART[s.ico] || ART.pot}</div><h2>${newsText(s.t)}</h2><p>${newsText(s.x)}</p>
+      <div class="tour-dots">${st.map((_, i) => `<i class="${i === newsStep ? "on" : ""}"></i>`).join("")}</div>
+      ${s.ziel ? `<button class="btn big news-show" data-act="news-show">Zeig's mir</button>` : ""}
+      <div class="tour-btns">${newsStep > 0 ? `<button class="btn" data-act="news-back">Zurück</button>` : `<button class="btn ghost" data-act="news-end">Später</button>`}
+      <button class="btn primary" data-act="${last ? "news-done" : "news-next"}">${last ? "Fertig" : "Weiter"}</button></div></div>`, { news: "1" });
+  }
+  function newsTarget(s) {
+    if (s.ziel !== "@rezept") return s.ziel;
+    const w = memo[weekFile(weekId)]; if (!w) return "#/rezepte";
+    const d = w.days.find((x) => x.iso === today()) || w.days[0];
+    const m = (d.meals.find((x) => x.kind === "haupt") || d.meals[0] || {});
+    return m.recipe ? `#/r/w:${weekId}:${m.recipe}` : "#/rezepte";
+  }
+  async function newsShow() {
+    const s = (newsItem.schritte || [])[newsStep]; if (!s) return;
+    closeSheet();
+    const target = newsTarget(s);
+    if (curHash() !== target) { navTo(target, "push"); await new Promise((r) => setTimeout(r, 500)); }
+    const el = s.zeige && $(s.zeige);
+    if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("news-flash"); setTimeout(() => el.classList.remove("news-flash"), 2600); }
+    const st = newsItem.schritte || [], last = newsStep === st.length - 1;
+    const bar = document.createElement("div");
+    bar.id = "newsbar"; bar.className = "newsbar";
+    bar.innerHTML = `<span><b>Neu ${newsStep + 1}/${st.length}:</b> ${newsText(s.t)}</span><button class="btn small primary" data-act="${last ? "news-done" : "news-next"}">${last ? "Fertig" : "Weiter"}</button><button class="icon-btn" data-act="news-end" aria-label="Tour beenden">${CLOSE}</button>`;
+    document.body.appendChild(bar);
+  }
+  function newsEnd(done) {
+    $("#newsbar") && $("#newsbar").remove();
+    if ($("#sheet").dataset.news) closeSheet();
+    if (done && newsItem && !newsSeen().includes(newsItem.id)) { newsSeen().push(newsItem.id); save(); toast("Viel Spaß mit den Neuerungen!"); }
+    else if (!done && newsItem && !newsSeen().includes(newsItem.id)) { newsSeen().push(newsItem.id); save(); toast("Die Tour findest du unten in der Woche unter „Was ist neu?“"); }
+  }
+
   /* ---------- Alle Rezepte ---------- */
   let filter = { q: "", tag: "Alle" };
   async function renderAll(view) {
@@ -2263,9 +2357,10 @@
     s.dataset.bring = data.bring || "";
     s.dataset.review = data.review || "";
     s.dataset.note = data.note || "";
+    s.dataset.news = data.news || "";
     s.hidden = false;
   }
-  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; $("#sheet").dataset.note = ""; };
+  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; $("#sheet").dataset.note = ""; $("#sheet").dataset.news = ""; };
   let toastT = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2200); }
   function rerenderSoft() { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); }
@@ -2276,8 +2371,8 @@
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
     let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel]");
-    if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
-    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if (reviewList) drawReview(); else closeSheet(); } return; }
+    if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
+    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
     if (d.start) { e.preventDefault(); startFromChip(JSON.parse(d.start)); return; }
     if (d.timerOpen) { e.preventDefault(); timerSheet(d.timerOpen); return; }
@@ -2403,7 +2498,13 @@
       case "kidname-skip": kidNameDone(""); break;
       case "sync-now": { await loadAblage(); const ch = await syncAll(false); toast(pendingInfo().n ? "Noch nicht alles gespeichert – neuer Versuch folgt" : "Alles gespeichert"); if (ch || true) rerenderSoft(); break; }
       case "sheet-close": closeSheet(); break;
-      case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); break;
+      case "news-next": showNews(newsStep + 1); break;
+      case "news-back": showNews(newsStep - 1); break;
+      case "news-show": newsShow(); break;
+      case "news-done": newsEnd(true); break;
+      case "news-end": newsEnd(false); break;
+      case "news-open": e.preventDefault(); { const l = await loadNews(); if (l[0]) showNews(0, l[0]); } break;
+      case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); setTimeout(maybeNews, 900); break;
       case "review-demo": {
         e.preventDefault();
         const T = stars(), seen = new Map();

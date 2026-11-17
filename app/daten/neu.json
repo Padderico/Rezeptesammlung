@@ -1,0 +1,21 @@
+{
+ "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
+ "items": [
+  {
+   "id": "2026-11-17",
+   "datum": "17.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "plate", "t": "Sterne fürs Essen", "x": "Nach dem Essen stehen bei jedem Gericht fünf Sterne – einfach antippen, ändern geht jederzeit. Der Buddy plant danach: Lieblingsgerichte kommen wieder, Gerichte mit 1–2 Sternen fliegen raus.", "ziel": "@rezept", "zeige": ".rate-big" },
+    { "ico": "plate", "t": "Der Baby-Stempel", "x": "Hat es auch {kind} geschmeckt? Das Baby antippen – dann landet ein Stempel auf dem Rezept, und der Buddy plant solche Gerichte öfter ein.", "ziel": "@rezept", "zeige": ".baby-btn.lbl" },
+    { "ico": "timer", "t": "Notizen fürs nächste Mal", "x": "„Beim nächsten Mal Paprika dazu“? Unten im Rezept notieren – oder mitten beim Kochen über den Stift oben rechts. Die Notiz steht beim nächsten Mal oben im Rezept, und der Buddy baut sie ein.", "ziel": "@rezept", "zeige": ".notes-box" },
+    { "ico": "pot", "t": "Fotos und Verlauf", "x": "Rezepte zeigen jetzt ein Beispielfoto und wann es das Gericht zuletzt gab. In den Listen steht „zuletzt vor …“ – praktisch beim Tauschen.", "ziel": "@rezept", "zeige": ".verlauf" },
+    { "ico": "cal", "t": "Dein Tag auf einen Blick", "x": "Unter „Heute“ ist der Tag jetzt nach Zeit sortiert – morgens, vormittags, mittags, abends – mit Uhrzeit zum Anfangen. Darunter steht, was du heute Abend für morgen vorbereitest, zum Abhaken.", "ziel": "#/", "zeige": ".agenda" },
+    { "ico": "bell", "t": "Wochen-Check am Wochenende", "x": "Ab Samstag fragt die App einmal nach den Sternen für die Gerichte der Woche. Gab es etwas doch nicht? Einfach „Gab's nicht“ antippen." },
+    { "ico": "pot", "t": "Vorkochen erledigt", "x": "Ist der Vorkoch-Block fertig, steht oben „Vorkochen erledigt“ und direkt darunter, was wohin kommt. Die Zeitleiste ist zugeklappt und lässt sich bei Bedarf öffnen.", "ziel": "#/vorkochen", "zeige": ".prep-done" },
+    { "ico": "cart", "t": "Prospekte der Woche", "x": "Unter „Angebote“ stehen ganz oben die aktuellen Prospekte eurer Läden – antippen zum Blättern, teils schon für nächste Woche.", "ziel": "#/angebote", "zeige": "#prospekte" },
+    { "ico": "swap", "t": "Sicher gespeichert", "x": "Sterne, Notizen und Tausche werden jetzt privat und sicher gespeichert. Steht oben einmal ein oranger Hinweis zum Speichern: antippen und einrichten – nichts geht verloren." }
+   ]
+  }
+ ]
+}

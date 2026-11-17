@@ -891,3 +891,27 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 .agp-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .today .ag-prep .box { border-color: var(--line-2); }
 .ag-prep .fe-chip { color: var(--ink); }
+
+/* ---------- Prospekte ---------- */
+.pro-row { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 10px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+.pro-row::-webkit-scrollbar { display: none; }
+.pro { flex: none; width: 168px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
+.pro-main { position: relative; display: flex; flex-direction: column; gap: 3px; min-height: 160px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 14px 12px; text-decoration: none; color: var(--ink); overflow: hidden; }
+.pro-main::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--pc); }
+.pro-shop { font: 800 1.25rem/1.1 var(--font-display); color: var(--pc); }
+:root[data-scheme="dark"] .pro-shop { color: var(--ink); }
+.pro-st { font-size: .72rem; font-weight: 700; color: var(--muted); }
+.pro-main b { font: 700 .95rem/1.2 var(--font-display); margin-top: 6px; }
+.pro-main small { color: var(--muted); font-weight: 700; }
+.pro-deal { align-self: flex-start; font-size: .72rem; font-weight: 800; background: var(--pumpkin-soft); color: var(--pumpkin-ink); padding: 3px 8px; border-radius: 999px; }
+.pro-go { margin-top: auto; padding-top: 8px; font-weight: 800; color: var(--accent); font-size: .88rem; }
+.pro-next { font-size: .8rem; font-weight: 700; color: var(--accent); text-decoration: none; padding: 0 6px; }
+
+/* ---------- Was ist neu? ---------- */
+.tour.news .eyebrow { display: block; margin-bottom: 4px; }
+.news-show { width: 100%; margin: 0 0 10px; background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.newsbar { position: fixed; z-index: 40; left: 12px; right: 12px; bottom: calc(var(--nav-h) + var(--dock-h) + var(--safe-b) + 18px); max-width: 620px; margin: 0 auto; display: flex; align-items: center; gap: 10px; background: var(--readout); color: var(--readout-ink); border-radius: 18px; padding: 10px 10px 10px 16px; box-shadow: var(--shadow-float); animation: up .3s var(--ease); }
+.newsbar span { flex: 1; min-width: 0; font-size: .9rem; }
+.newsbar .icon-btn { width: 40px; height: 40px; background: transparent; border: 0; color: inherit; }
+.news-flash { animation: newsflash 2.4s var(--ease); border-radius: 18px; }
+@keyframes newsflash { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 15%, 70% { box-shadow: 0 0 0 4px var(--pumpkin), 0 0 0 10px rgba(228, 106, 18, .18); } }
