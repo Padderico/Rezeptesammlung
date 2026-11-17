@@ -872,6 +872,26 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 .today .ag .rems { margin: 4px 0 0; }
 .ag .meals { margin-top: 8px; }
 .ag-tag { display: inline-block; font: 800 .7rem/1 var(--font-body); background: rgba(255, 255, 255, .14); padding: 3px 7px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+/* Woche: Erinnerungen nur zum Nachschauen – abgehakt wird in der Checkliste */
+.plan-notes { list-style: none; margin: 10px 0 2px; padding: 0; }
+.pn { position: relative; padding: 6px 0 6px 18px; line-height: 1.4; font-size: .95rem; }
+.pn::before { content: ""; position: absolute; left: 3px; top: calc(6px + .7em - 3px); width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); }
+.card.day:not(.today) .plan-notes { color: var(--muted); }
+.today .ag .plan-notes { margin: 4px 0 0; color: var(--on-tanne); }
+.today .pn::before { background: var(--on-tanne-dim); }
+.pn.auto .txt { font-weight: 700; }
+.today .pn.auto::before { background: var(--pumpkin-hi); }
+a.agp-go { display: block; text-decoration: none; transition: transform .12s var(--ease); }
+.card.today > a.agp-go.ag-prep { color: var(--ink); }
+a.agp-go:active { transform: scale(.98); }
+/* Checkliste: was heute ansteht, nach Tageszeit */
+.cl-sub { color: var(--on-tanne-dim); margin: 6px 0 0; }
+.cl-when { display: flex; align-items: baseline; gap: 8px; margin: 14px 0 0; }
+.cl-when b { font: 800 1rem/1.2 var(--font-display); }
+.cl-when small { font-weight: 700; font-size: .8rem; color: var(--muted); }
+.today .cl-when b { color: var(--on-tanne); }
+.today .cl-when small { color: var(--on-tanne-dim); }
+.cl-when + .checks { margin-top: 2px; }
 .check.info { padding-left: 0; }
 .check.info .txt { color: var(--on-tanne); font-weight: 700; }
 .check.info .txt::before { content: "→ "; color: var(--pumpkin-hi); }

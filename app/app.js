@@ -385,8 +385,8 @@
   window.addEventListener("hashchange", () => { trackNav(); route().then(() => { if (updateReady) applyUpdateIfIdle(); }); if (!inCooking) window.scrollTo(0, 0); });
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
-     Tabs stapeln sich nicht: Woche -> Vorkochen -> Checkliste, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/vorkochen", "#/checkliste", "#/angebote", "#/entdecken", "#/rezepte"];
+     Tabs stapeln sich nicht: Woche -> Checkliste -> Vorkochen, dann Zurück = Woche, nochmal Zurück = App zu. */
+  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/angebote", "#/entdecken", "#/rezepte"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -518,14 +518,13 @@
   }
   function dayCard(w, d, open, past) {
     const isToday = d.iso === today();
-    const rem = bag("rem", `${weekId}:${d.id}`);
     const [, mo, dd] = d.iso.split("-").map(Number), fe = ironDays(w)(d.iso);
     let h = `<section class="card day${isToday ? " today hero" : ""}${open ? " open" : " compact"}${past && !open ? " past" : ""}" id="day-${d.id}">`;
     if (isToday) h += `<div class="day-h" data-expand="${d.id}"><div class="hd"><span class="kick"><i></i>Heute${fe ? `<span class="kick-fe">${FE}Eisen-Tag fürs Kind</span>` : ""}</span><h2>${esc(d.name)}</h2></div><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span></div>`;
     else h += `<div class="day-h" data-expand="${d.id}"><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span><h2>${esc(d.name)}${fe ? ` <span class="fe-chip">${FE}Eisen-Tag</span>` : ""}</h2><span class="chev" aria-hidden="true">${NEXT}</span></div>`;
-    if (isToday) return h + agendaHtml(w, d, rem) + `</section>`;
+    if (isToday) return h + agendaHtml(w, d) + `</section>`;
     if (open && d.reminders && d.reminders.length) {
-      h += `<ul class="checks rems">${d.reminders.map((x, i) => checkRow(rem[i], esc(x), `data-rem="${d.id}:${i}"`)).join("")}</ul>`;
+      h += `<ul class="plan-notes">${d.reminders.map((x) => planNote(esc(x))).join("")}</ul>`;
     }
     h += `<div class="meals">${d.meals.map((m) => mealHtml(w, d, m, open)).join("")}</div>`;
     return h + `</section>`;
@@ -545,7 +544,8 @@
     if (/morgens|\bfrüh\b|frühstück|gleich nach dem aufstehen/.test(s)) return "frueh";
     return "";
   }
-  function agendaHtml(w, d, rem) {
+  /* Tagesplan berechnen (für die Woche zum Nachschauen und für die Checkliste zum Abhaken) */
+  function dayAgenda(w, d) {
     const eatM = toMin(S.settings.eat.Mittag || "12:00"), eatA = toMin(S.settings.eat.Abend || "18:00");
     const tmr = addDays(d.iso, 1), tmrName = DAY_LONG(tmr);
     const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
@@ -579,31 +579,40 @@
     if (!win.mittag.meals.length) win.mittag.time = "12–14 Uhr";
     if (!win.abend.meals.length) win.abend.time = "ab 17 Uhr";
     const order = ["heute", "frueh", "vorm", "mittag", "nachm", "abend"];
-    let curK = order.slice(1).find((k) => nowM < win[k].end) || "abend";
+    const curK = order.slice(1).find((k) => nowM < win[k].end) || "abend";
+    // Für morgen vorbereiten: Abend-Checkliste (zielt auf morgen) + Erinnerungen von heute Abend für morgen
+    const ev = d.iso === today() ? currentEvening(w) : null;
+    const evItems = ev ? ev.e.items : [];
+    // doppelte Punkte vermeiden: steht dasselbe Thema schon in der Abend-Checkliste, die Erinnerung weglassen
+    const evText = evItems.join(" ").toLowerCase();
+    for (let q = prepRems.length - 1; q >= 0; q--) { const words = (prepRems[q].x.toLowerCase().match(/[a-zäöüß]{5,}/g) || []).filter((x) => !["abends", "morgen", "heute"].includes(x)); if (words.length && words.filter((x) => evText.includes(x)).length / words.length >= 0.5) prepRems.splice(q, 1); }
+    return { win, order, curK, nowM, prepRems, ev, evItems, tmr, tmrName, eatA };
+  }
+  /* Abhaken nur noch in der Checkliste: hier nur der Stand des Abends (Abend-Liste + Erinnerungen für morgen) */
+  function prepCount(d, a) {
+    const rem = bag("rem", `${weekId}:${d.id}`), ck = a.ev ? bag("check", `${weekId}:${a.ev.i}`) : {};
+    return { done: Object.keys(ck).length + a.prepRems.filter((p) => rem[p.i]).length, n: a.evItems.length + a.prepRems.length };
+  }
+  const planNote = (inner, cls = "") => `<li class="pn${cls}"><span class="txt">${inner}</span></li>`;
+  /* Heute in der Woche: rein zum Nachschauen – Tagesablauf mit Gerichten und Uhrzeiten, ohne Häkchen */
+  function agendaHtml(w, d) {
+    const a = dayAgenda(w, d), { win, curK, nowM } = a;
     let h = `<div class="agenda">`;
-    for (const k of order) {
+    for (const k of a.order) {
       const x = win[k];
       if (!x.items.length && !x.meals.length) continue;
       const past = k !== "heute" && nowM >= x.end, isNow = k === curK;
       h += `<section class="ag${past ? " ag-past" : ""}${isNow ? " ag-now" : ""}"><div class="ag-h"><b>${x.label}</b><small>${esc(x.time)}</small>${isNow ? `<span class="ag-badge">jetzt</span>` : ""}</div>`;
-      if (x.items.length) h += `<ul class="checks rems">${x.items.map((it) => it.i == null ? `<li class="check info"><span class="txt">${esc(it.x)}</span></li>` : checkRow(rem[it.i], esc(it.x) + (it.tag ? ` <span class="ag-tag">${esc(it.tag)}</span>` : ""), `data-rem="${d.id}:${it.i}"`)).join("")}</ul>`;
+      if (x.items.length) h += `<ul class="plan-notes">${x.items.map((it) => planNote(esc(it.x) + (it.tag ? ` <span class="ag-tag">${esc(it.tag)}</span>` : ""), it.i == null ? " auto" : "")).join("")}</ul>`;
       if (x.meals.length) h += `<div class="meals">${x.meals.map((mm) => mealHtml(w, d, mm.m, true, mm.info)).join("")}</div>`;
       h += `</section>`;
     }
     h += `</div>`;
-    // Für morgen vorbereiten: Abend-Checkliste (zielt auf morgen) + Erinnerungen von heute Abend für morgen
-    const ev = currentEvening(w);
-    const evItems = ev ? ev.e.items : [], tFe = ironDays(w)(tmr);
-    // doppelte Punkte vermeiden: steht dasselbe Thema schon in der Abend-Checkliste, die Erinnerung weglassen
-    const evText = evItems.join(" ").toLowerCase();
-    for (let q = prepRems.length - 1; q >= 0; q--) { const words = (prepRems[q].x.toLowerCase().match(/[a-zäöüß]{5,}/g) || []).filter((x) => !["abends", "morgen", "heute"].includes(x)); if (words.length && words.filter((x) => evText.includes(x)).length / words.length >= 0.5) prepRems.splice(q, 1); }
-    if (evItems.length || prepRems.length) {
-      const ck = ev ? bag("check", `${weekId}:${ev.i}`) : {}, doneN = Object.keys(ck).length + prepRems.filter((p) => rem[p.i]).length, n = evItems.length + prepRems.length;
-      const [, tm, td] = tmr.split("-").map(Number);
-      h += `<section class="ag-prep${doneN >= n ? " full" : ""}"><div class="agp-h"><div><span class="agp-k">Heute Abend · ab ca. ${fromMin(eatA + 90)} Uhr</span><b>Für morgen vorbereiten</b><small>${esc(tmrName)}, ${td}.${tm}.${tFe ? ` · <span class="fe-chip">${FE}Eisen-Tag</span>` : ""}</small></div><span class="ev-ring" style="--p:${n ? (doneN / n).toFixed(3) : 0}">${ring()}<b>${doneN}/${n}</b></span></div>`;
-      h += `<ul class="checks">${evItems.map((it, j) => checkRow(ck[j], esc(it), `data-cl="${ev.i}:${j}"`)).join("")}${prepRems.map((p) => checkRow(rem[p.i], esc(p.x), `data-rem="${d.id}:${p.i}"`)).join("")}</ul>`;
-      if (ev && ev.e.note) h += `<p class="small agp-note">${esc(ev.e.note)}</p>`;
-      h += `<a class="agp-link" href="#/checkliste">Ganze Abend-Checkliste${NEXT}</a></section>`;
+    if (a.evItems.length || a.prepRems.length) {
+      const { done, n } = prepCount(d, a), tFe = ironDays(w)(a.tmr);
+      const [, tm, td] = a.tmr.split("-").map(Number);
+      h += `<a class="ag-prep agp-go${done >= n ? " full" : ""}" href="#/checkliste"><div class="agp-h"><div><span class="agp-k">Heute Abend · ab ca. ${fromMin(a.eatA + 90)} Uhr</span><b>Für morgen vorbereiten</b><small>${esc(a.tmrName)}, ${td}.${tm}.${tFe ? ` · <span class="fe-chip">${FE}Eisen-Tag</span>` : ""}</small></div><span class="ev-ring" style="--p:${n ? (done / n).toFixed(3) : 0}">${ring()}<b>${done}/${n}</b></span></div>`;
+      h += `<span class="agp-link">${done >= n ? "Alles erledigt – in der Checkliste ansehen" : "In der Checkliste abhaken"}${NEXT}</span></a>`;
     }
     return h;
   }
@@ -867,12 +876,34 @@
     save(); renderDock();
   }
 
-  /* ---------- Abend-Checkliste ---------- */
+  /* ---------- Checkliste: hier wird alles abgehakt – erst was heute ansteht, dann die Abende ---------- */
   async function renderChecklist(view) {
-    const w = await week();
+    const w = withSwaps(await week());
     const c = w.checklist || {};
     const cur = currentEvening(w), iron = ironDays(w), t = today();
-    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw}</div><h1>${esc(c.title || "Abend-Checkliste")}</h1></div></header>`;
+    const todayDay = w.days.find((d) => d.iso === t);
+    const ag = todayDay ? dayAgenda(w, todayDay) : null;
+    const rem = todayDay ? bag("rem", `${weekId}:${todayDay.id}`) : {};
+    // Erinnerungen von heute Abend für morgen kommen in die Abend-Karte; gibt es keine, bleiben sie bei „Heute“
+    const extraEve = ag && cur ? ag.prepRems : [];
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w.week.kw}</div><h1>Checkliste</h1></div></header>`;
+    if (ag) {
+      const groups = ag.order.map((k) => ({ k, x: ag.win[k], items: ag.win[k].items.filter((it) => it.i != null) }));
+      if (!cur) ag.prepRems.forEach((p) => groups[groups.length - 1].items.push({ x: p.x, i: p.i, tag: `für ${ag.tmrName.slice(0, 2)}` }));
+      const all = groups.reduce((s, g) => s + g.items.length, 0);
+      if (all) {
+        const n = groups.reduce((s, g) => s + g.items.filter((it) => rem[it.i]).length, 0);
+        const [, mo, dd] = t.split("-").map(Number);
+        h += `<section class="card cl cl-day today${n >= all ? " full" : ""}"><div class="cl-h"><div><span class="kick"><i></i>Heute erledigen</span><h2>${esc(todayDay.name)}</h2></div><span class="ev-ring" style="--p:${(n / all).toFixed(3)}">${ring()}<b>${n}/${all}</b></span></div>
+          <p class="small cl-sub">${dd}.${mo}. · Gerichte und Uhrzeiten stehen in der Woche</p>`;
+        for (const g of groups) {
+          if (!g.items.length) continue;
+          h += `<div class="cl-when"><b>${esc(g.x.label)}</b><small>${esc(g.x.time)}</small></div><ul class="checks">${g.items.map((it) => checkRow(rem[it.i], esc(it.x) + (it.tag ? ` <span class="ag-tag">${esc(it.tag)}</span>` : ""), `data-rem="${todayDay.id}:${it.i}"`)).join("")}</ul>`;
+        }
+        h += `</section>`;
+      }
+    }
+    h += `<h2 class="section-title">${esc(c.title || "Abend-Checkliste")}</h2>`;
     if (c.intro) h += `<p class="muted">${esc(c.intro)}</p>`;
     // Die Woche fürs Kind: Eisen-Tage auf einen Blick (Mo–So)
     const wk = [0, 1, 2, 3, 4, 5, 6].map((x) => addDays(w.week.start, x));
@@ -882,13 +913,14 @@
     if (cur) evs.sort((a, b) => (a.i === cur.i ? -1 : b.i === cur.i ? 1 : 0));
     h += evs.map(({ e, i }) => {
       const b = bag("check", `${weekId}:${i}`);
-      const n = Object.keys(b).length;
-      const isCur = cur && cur.i === i, all = e.items.length, tIso = eveTarget(w, e, i), fe = iron(tIso);
+      const isCur = cur && cur.i === i, extra = isCur ? extraEve : [];
+      const n = Object.keys(b).length + extra.filter((p) => rem[p.i]).length;
+      const all = e.items.length + extra.length, tIso = eveTarget(w, e, i), fe = iron(tIso);
       const otherTag = e.tag && !/eisen/i.test(e.tag) ? `<span class="chip pump">${esc(e.tag)}</span>` : "";
       const items = e.items.map((x, j) => {
         const ir = /^Eisen:\s*/i.test(x);
         return checkRow(b[j], ir ? `${FE}${esc(x.replace(/^Eisen:\s*/i, ""))}` : esc(x), `data-cl="${i}:${j}"${ir ? ' data-iron="1"' : ""}`);
-      }).join("");
+      }).join("") + extra.map((p) => checkRow(rem[p.i], esc(p.x), `data-rem="${todayDay.id}:${p.i}"`)).join("");
       return `<section class="card cl${isCur ? " today" : ""}${n >= all ? " full" : ""}" style="--p:${all ? (n / all).toFixed(3) : 0}">
         <div class="cl-h"><div>${isCur ? '<span class="kick"><i></i>Heute Abend erledigen</span>' : ""}<h2>${esc(e.day)}</h2></div><span class="ev-ring">${ring()}<b>${n}/${all}</b></span></div>
         <div class="cl-target${fe ? " iron" : ""}"><span class="arrow" aria-hidden="true">${NEXT}</span><span class="date"><small>${DAYS[new Date(tIso + "T12:00").getDay()].slice(0, 2)}</small><b>${Number(tIso.slice(8, 10))}</b></span>
@@ -1034,7 +1066,7 @@
   /* ---------- Einführung beim ersten Start und Hilfe ---------- */
   const TOUR = [
     { ico: "pot", t: "Willkommen beim Kochbuddy", x: "Hier siehst du jeden Tag, was gekocht wird – mit Rezept, Kochmodus und Timern. Plan, Rezepte und Angebote aktualisieren sich von selbst." },
-    { ico: "cal", t: "Oben steht immer heute", x: "Die Karte „Heute“ zeigt beide Mahlzeiten und was heute zu tun ist. Erledigtes abhaken. Ein Tipp auf ein Gericht öffnet das Rezept." },
+    { ico: "cal", t: "Oben steht immer heute", x: "Die Karte „Heute“ zeigt beide Mahlzeiten mit Uhrzeit und was heute ansteht – zum Nachschauen. Abgehakt wird in der Checkliste, dem zweiten Reiter unten. Ein Tipp auf ein Gericht öffnet das Rezept." },
     { ico: "timer", t: "Kochen mit Timer", x: "„Kochen“ führt dich Schritt für Schritt durchs Rezept. Eine Zeitangabe antippen startet den Timer, der Bildschirm bleibt dabei an. Zutaten abhaken, sobald sie im Topf sind." },
     { ico: "swap", t: "Gericht tauschen", x: "Lust auf etwas anderes? Unter „Ersatzgerichte“ das Gericht am Griff (sechs Punkte) auf einen Tag ziehen oder „Tauschen“ antippen. Abends passt der Buddy Plan und Einkaufsliste an." },
     { ico: "cart", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Unter „Angebote“ stehen die besten Angebote der Woche samt Einkaufszettel zum Abhaken." },
@@ -2384,7 +2416,7 @@
       return;
     }
     if (d.prep != null) { el.classList.toggle("on", toggle("prep", inCooking ? cookRef : view.dataset.ref, d.prep)); return; }
-    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); if (el.closest(".ag-prep")) rerenderSoft(); return; }
+    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); if (el.closest(".card.cl")) rerenderSoft(); return; }
     if (d.cl) { const [i, j] = d.cl.split(":"); toggle("check", `${weekId}:${i}`, j); rerenderSoft(); return; }
     if (d.tl != null) {
       const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on");
