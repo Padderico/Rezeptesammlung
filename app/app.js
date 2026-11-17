@@ -410,6 +410,7 @@
     }
     html += `</header>`;
     html += weekStrip(w, t);
+    html += syncBanner();
     html += actionBanners(ups, "todo");
     if (installEvt && S.settings.installHint && !standalone()) {
       html += `<div class="banner"><p>Als App auf dem Handy installieren?</p><button class="btn small" data-act="install">Installieren</button><button class="icon-btn" style="width:40px;height:40px;background:transparent;border:0;color:inherit" data-act="nohint" aria-label="Ausblenden">${CLOSE}</button></div>`;
@@ -768,6 +769,27 @@
     view.innerHTML = h;
   }
 
+  /* ---------- Sicherung: Hinweis, sobald etwas nur auf diesem Gerät liegt ---------- */
+  function pendingInfo() {
+    const ats = [];
+    const add = (ops) => (ops || []).forEach((o) => { const a = o.at || (o.swap && o.swap.at); if (a) ats.push(new Date(a).getTime()); else ats.push(Date.now()); });
+    add(stars().ops); add(notesSt().ops); add(taste().ops);
+    for (const k of Object.keys(S.swaps || {})) add((S.swaps[k] || {}).ops);
+    return { n: ats.length, since: ats.length ? Math.min(...ats) : 0 };
+  }
+  function syncBanner() {
+    if (embedded) return "";
+    const p = pendingInfo(), err = S.sync && S.sync.err, tok = !!ghToken();
+    let k = "", title = "", text = "", btn = `<button class="btn primary" data-act="gh-setup">Speichern einrichten</button>`;
+    if (!tok && (p.n || ablage.privat)) { k = "Bitte einrichten"; title = p.n ? `${p.n} ${p.n === 1 ? "Eintrag liegt" : "Einträge liegen"} nur auf diesem Gerät` : "Sterne und Notizen der anderen Geräte fehlen"; text = "Mit einem GitHub-Schlüssel wird alles sicher gespeichert und erscheint auf allen Geräten. Einmal einrichten, der Schlüssel läuft nie ab."; }
+    else if (tok && err && err.code === "auth") { k = "Speichern klappt gerade nicht"; title = "Schlüssel ungültig oder abgelaufen"; text = `${esc(err.msg)}. Nichts geht verloren – alles wartet auf diesem Gerät${p.n ? ` (${p.n} ${p.n === 1 ? "Eintrag" : "Einträge"})` : ""}, bis ein neuer Schlüssel eingetragen ist.`; btn = `<button class="btn primary" data-act="gh-setup">Neuen Schlüssel eintragen</button>`; }
+    else if (tok && ablage.privat && privOk === false) { k = "Einmal erneuern"; title = "Schlüssel braucht Zugriff auf die private Ablage"; text = `Die Daten liegen jetzt privat im Repo Einkaufsbuddy-Daten. Beim GitHub-Schlüssel dieses Repo zusätzlich auswählen (oder einen neuen Schlüssel ohne Ablauf anlegen). Bis dahin bleibt alles auf diesem Gerät${p.n ? ` (${p.n} ${p.n === 1 ? "Eintrag" : "Einträge"})` : ""}.`; btn = `<a class="btn primary" href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">Schlüssel bei GitHub öffnen</a><button class="btn" data-act="gh-setup">Neuen eintragen</button>`; }
+    else if (tok && p.n && Date.now() - p.since > 24 * 3600000) { k = "Nur zur Info"; title = "Seit über einem Tag nicht gespeichert"; text = `${p.n} ${p.n === 1 ? "Eintrag wartet" : "Einträge warten"} auf diesem Gerät. Sobald wieder Netz da ist, speichert die App von selbst.`; btn = `<button class="btn" data-act="sync-now">Jetzt speichern</button>`; }
+    if (!k) return "";
+    return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">${k}</span><b>${title}</b><div class="small">${text}</div></div></div><div class="act-btns">${btn}</div></section>`;
+  }
+  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet)]).then((r) => r.some(Boolean)); }
+
   /* ---------- Hinweise: Was ist noch zu tun? (oben in der Woche, orange) ---------- */
   async function bringUpdates() {
     const ids = [...new Set([weeks[0] && weeks[0].id, weekId].filter(Boolean))];
@@ -866,15 +888,35 @@
      Die stündliche Antwort-Aufgabe übernimmt offene Tausche abends gegen 21 Uhr in Plan, Bring-Liste und PDF. */
   const GH_REPO = "Padderico/Rezeptesammlung";
   const GH_KEY = "kochbuddy.gh";
+  const TOKEN_URL = "https://github.com/settings/personal-access-tokens/new?name=Kochbuddy&description=Koch-App%3A%20Rezeptesammlung%20und%20Einkaufsbuddy-Daten&target_name=Padderico&expires_in=none&contents=write";
   const ghToken = () => { try { return JSON.parse(localStorage.getItem(GH_KEY) || "{}").token || ""; } catch (e) { return ""; } };
   const setGhToken = (t) => { try { if (t) localStorage.setItem(GH_KEY, JSON.stringify({ token: t, at: Date.now() })); else localStorage.removeItem(GH_KEY); } catch (e) { /* gesperrt */ } };
   const validToken = (t) => /^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t || "");
-  async function gh(method, path, body) {
+  /* Private Ablage: Sobald app/daten/ablage.json {"privat": true} sagt, liegen Sterne, Notizen, Wischer und Tausche
+     im privaten Repo Einkaufsbuddy-Daten. Der Schlüssel des Geräts braucht dann Zugriff auf beide Repos.
+     Ohne Zugriff speichert die App nur auf dem Gerät weiter (nichts geht verloren) und zeigt oben einen Hinweis. */
+  const DATA_REPO = "Padderico/Einkaufsbuddy-Daten";
+  let ablage = { privat: false }, privOk = null;
+  async function loadAblage() {
+    try { const a = await getJSON("daten/ablage.json", true); ablage = a && a.privat ? a : { privat: false }; } catch (e) { ablage = { privat: false }; }
+    if (ablage.privat && ghToken()) { try { privOk = !!(await gh("GET", "", null, DATA_REPO)); } catch (e) { privOk = e.code === "offline" ? privOk : false; } }
+    return ablage;
+  }
+  const dataReady = () => !ablage.privat || privOk === true;
+  const dgh = (method, path, body) => gh(method, path, body, ablage.privat ? DATA_REPO : GH_REPO);
+  /* Sicherungs-Stand: wann zuletzt gespeichert, letzter Fehler */
+  function syncMark(ok, e) {
+    S.sync = S.sync || {};
+    if (ok) { S.sync.ok = Date.now(); delete S.sync.err; }
+    else if (e && e.code !== "offline") S.sync.err = { code: e.code || "", msg: e.message || "", at: Date.now() };
+    save();
+  }
+  async function gh(method, path, body, repo = GH_REPO) {
     const t = ghToken();
     if (!t) throw Object.assign(new Error("Kein Schlüssel auf diesem Gerät"), { code: "notoken" });
     let res;
     try {
-      res = await fetch(`https://api.github.com/repos/${GH_REPO}${path}`, {
+      res = await fetch(`https://api.github.com/repos/${repo}${path}`, {
         method, cache: "no-store",
         headers: { Authorization: `Bearer ${t}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(body ? { "Content-Type": "application/json" } : {}) },
         body: body ? JSON.stringify(body) : undefined,
@@ -882,7 +924,7 @@
     } catch (e) { throw Object.assign(new Error("Gerade kein Netz"), { code: "offline" }); }
     if (method === "GET" && res.status === 404) return null;
     if (res.status === 401) throw Object.assign(new Error("Schlüssel ungültig oder abgelaufen"), { code: "auth" });
-    if (res.status === 403 || res.status === 404) throw Object.assign(new Error("Schlüssel darf die Rezeptesammlung nicht beschreiben"), { code: "auth" });
+    if (res.status === 403 || res.status === 404) throw Object.assign(new Error(repo === GH_REPO ? "Schlüssel darf die Rezeptesammlung nicht beschreiben" : "Schlüssel darf die private Ablage (Einkaufsbuddy-Daten) nicht beschreiben"), { code: "auth" });
     if (!res.ok) throw Object.assign(new Error("GitHub antwortet " + res.status), { code: res.status });
     return res.status === 204 ? null : res.json();
   }
@@ -901,10 +943,12 @@
   const swapsFor = (wid) => { const st = swapState(wid); return applyOps(st.list || [], st.ops || []); };
   async function pullSwaps(wid) {
     let list;
+    if (ablage.privat && !dataReady()) return false;
     if (ghToken()) {
-      const r = await gh("GET", swapPath(wid));
+      const r = await dgh("GET", swapPath(wid));
       list = r ? JSON.parse(b64d(r.content)).swaps || [] : [];
-    } else {
+    } else if (ablage.privat) return false;
+    else {
       // ohne Schlüssel: dieselbe Datei über GitHub Pages lesen (wenige Minuten Verzögerung)
       let res;
       try { res = await fetch(`../tausch/${wid}.json`, { cache: "no-cache" }); } catch (e) { throw Object.assign(new Error("Gerade kein Netz"), { code: "offline" }); }
@@ -918,16 +962,16 @@
   }
   async function pushSwaps(wid) {
     const st = swapState(wid);
-    if (!st.ops.length) return false;
+    if (!st.ops.length || !dataReady()) return false;
     for (let attempt = 0; attempt < 3; attempt++) {
-      const r = await gh("GET", swapPath(wid));
+      const r = await dgh("GET", swapPath(wid));
       const data = r ? JSON.parse(b64d(r.content)) : { week: wid, swaps: [] };
       const ops = st.ops.slice();
       data.week = wid; data.swaps = applyOps(data.swaps || [], ops); data.updated = new Date().toISOString();
       const msg = ops.map((o) => (o.op === "add" ? `${o.swap.dayName} ${o.swap.slot}: ${o.swap.toTitle}` : "Tausch zurückgenommen")).join("; ");
       try {
-        await gh("PUT", swapPath(wid), { message: `Koch-App: ${msg}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
-        st.list = data.swaps; st.ops = st.ops.slice(ops.length); st.at = Date.now(); save();
+        await dgh("PUT", swapPath(wid), { message: `Koch-App: ${msg}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+        st.list = data.swaps; st.ops = st.ops.slice(ops.length); st.at = Date.now(); save(); syncMark(true);
         return true;
       } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
     }
@@ -946,6 +990,7 @@
         if (ghToken() && (await pushSwaps(wid))) changed = true;
         if (await pullSwaps(wid)) changed = true;
       } catch (e) {
+        syncMark(false, e);
         if (e.code === "auth" && !quiet) { toast(`Tausch nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
         else if (e.code !== "offline" && !quiet) toast(`Tausch noch nicht gespeichert (${e.message}) – neuer Versuch folgt`);
       }
@@ -1006,15 +1051,14 @@
   function tokenSheet(problem) {
     openSheet(`<h2>Speichern für den Buddy einrichten</h2>
       ${problem ? `<p class="notice" style="margin:8px 0">${esc(problem)}</p>` : ""}
-      <p class="small" style="margin:6px 0">Damit der Buddy Tausche abends übernimmt und deine Bewertungen aus „Entdecken“ kennt, legt die App sie in der Rezeptesammlung auf GitHub ab (ohne Namen). Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel.</p>
+      <p class="small" style="margin:6px 0">Damit Sterne, Notizen, Wischer und Tausche sicher gespeichert werden und auf allen Geräten ankommen, legt die App sie auf GitHub ab. Dafür braucht dieses Gerät einmalig einen GitHub-Schlüssel – einer reicht für alle Geräte.</p>
       <ol class="small" style="padding-left:20px;margin:8px 0">
-        <li>Auf github.com einloggen und „Fine-grained token“ erstellen (Knopf unten).</li>
-        <li>Name „Kochbuddy“, Ablaufdatum so spät wie möglich.</li>
-        <li>Repository access: <b>Only select repositories</b> → <b>Rezeptesammlung</b>.</li>
-        <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
-        <li>„Generate token“, Schlüssel kopieren und hier einfügen.</li>
+        <li>Knopf unten antippen und bei GitHub einloggen. Name, Rechte (<b>Contents: Read and write</b>) und Ablauf sind schon vorausgefüllt.</li>
+        <li>Expiration: <b>No expiration</b> (kein Ablaufdatum) – dann läuft der Schlüssel nie ab.</li>
+        <li>Repository access: <b>Only select repositories</b> → <b>Rezeptesammlung</b> und <b>Einkaufsbuddy-Daten</b>.</li>
+        <li>„Generate token“, Schlüssel kopieren und hier einfügen. Andere Geräte danach per QR-Code verbinden.</li>
       </ol>
-      <a class="btn small" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub öffnen</a>
+      <a class="btn small" href="${TOKEN_URL}" target="_blank" rel="noopener">GitHub öffnen</a>
       <input class="field" style="margin-top:12px" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" data-ghtoken>
       <button class="btn primary big" style="margin-top:10px" data-act="gh-save">Prüfen und speichern</button>
       <p class="small muted" style="margin:10px 0 0">Schon auf einem anderen Gerät eingerichtet? Dort in der Woche unter den Ersatzgerichten „Weiteres Gerät verbinden“ antippen und den QR-Code mit diesem Gerät scannen.</p>`);
@@ -1028,7 +1072,12 @@
       const repo = await gh("GET", "");
       if (!repo) throw Object.assign(new Error("Repo nicht gefunden – beim Schlüssel „Rezeptesammlung“ auswählen"), { code: "auth" });
     } catch (e) { setGhToken(old); toast(e.code === "offline" ? "Gerade kein Netz – bitte später nochmal" : e.message); return; }
-    closeSheet(); toast("Speichern ist auf diesem Gerät eingerichtet");
+    syncMark(true);
+    await loadAblage();
+    closeSheet();
+    if (ablage.privat && !privOk) toast("Gespeichert – aber ohne Zugriff auf Einkaufsbuddy-Daten. Beim Schlüssel bitte auch dieses Repo auswählen.");
+    else toast("Speichern ist auf diesem Gerät eingerichtet");
+    syncStars(true); syncNotes(true);
     syncTaste(true).then(() => { if (location.hash.startsWith("#/entdecken")) rerenderSoft(); });
     if (pendingSwap) { const s = pendingSwap; pendingSwap = null; await performSwap(s.to, s.iso, s.slot); }
     else { await syncSwaps(true); rerenderSoft(); }
@@ -1039,7 +1088,7 @@
     const url = `${location.origin}${location.pathname}#/verbinden/${t}`;
     let svg = "";
     try { const qr = (await import("./vendor/qrcode.mjs")).default(0, "M"); qr.addData(url); qr.make(); svg = qr.createSvgTag({ cellSize: 5, margin: 3, scalable: true }); } catch (e) { svg = ""; }
-    openSheet(`<h2>Weiteres Gerät verbinden</h2><p class="small" style="margin:6px 0 10px">Mit der Kamera des anderen Geräts scannen. Danach kann auch dort getauscht werden.</p>
+    openSheet(`<h2>Weiteres Gerät verbinden</h2><p class="small" style="margin:6px 0 10px">Mit der Kamera des anderen Geräts scannen. Danach speichert auch dieses Gerät Sterne, Notizen, Wischer und Tausche.</p>
       <div class="qrbox">${svg || "QR-Code konnte nicht erzeugt werden."}</div>
       <p class="small muted" style="margin:10px 0">Der Code enthält den Schlüssel – nur mit euren eigenen Geräten scannen.</p>
       <button class="btn small ghost" data-act="gh-remove">Schlüssel auf diesem Gerät entfernen</button>`);
@@ -1208,7 +1257,7 @@
     const [idea, recs, plan] = await Promise.all([
       getJSON("daten/ideen.json").catch(() => ({ ideas: [], days: {} })),
       getJSON("../rezepte/rezepte.json").catch(() => (embedded && embedded.files["../rezepte/rezepte.json"]) || []),
-      fetch("../geschmack/eingeplant.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
+      (ablage.privat ? (dataReady() && ghToken() ? dgh("GET", "/contents/geschmack/eingeplant.json").then((r) => (r ? JSON.parse(b64d(r.content)) : {})) : Promise.resolve({})) : fetch("../geschmack/eingeplant.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {}))).catch(() => ({})),
     ]);
     const ideas = (idea.ideas || []).filter((x) => x && x.id && x.t).map((x) => ({ id: "i:" + x.id, t: x.t, d: x.d || "", tags: x.tags || [], min: x.min, art: FOOD[x.art] ? x.art : artFor(x.t), src: "idee" }));
     const recipes = (recs || []).filter((r) => !SKIP_SLUGS.has(r.slug) && !(r.tags || []).includes("Vorrat")).map((r) => ({ id: "a:" + r.slug, t: r.title, d: r.last ? `Gab es bei euch zuletzt in ${r.last}. Wieder einplanen?` : "", tags: r.tags || [], min: r.total, art: artFor(r.title), src: "rezept", slug: r.slug }));
@@ -1276,29 +1325,31 @@
     if (tasteSyncing) return tasteSyncing;
     tasteSyncing = (async () => {
       const T = taste();
+      if (!dataReady()) return false;
       try {
         if (ghToken() && T.ops.length) {
           for (let k = 0; k < 3; k++) {
-            const r = await gh("GET", TASTE_PATH);
+            const r = await dgh("GET", TASTE_PATH);
             const data = r ? JSON.parse(b64d(r.content)) : {};
             data.info = TASTE_INFO; data.items = data.items || {};
             const ops = T.ops.slice();
             for (const o of ops) { if (o.op === "del") delete data.items[o.id]; else data.items[o.id] = { v: o.v, at: o.at, t: o.t, tags: o.tags, src: o.src }; }
             data.updated = new Date().toISOString();
             try {
-              await gh("PUT", TASTE_PATH, { message: `Koch-App: ${ops.length} ${ops.length === 1 ? "Bewertung" : "Bewertungen"} (Entdecken)`, content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
-              T.ops = T.ops.slice(ops.length); T.pushed = Date.now(); save();
+              await dgh("PUT", TASTE_PATH, { message: `Koch-App: ${ops.length} ${ops.length === 1 ? "Bewertung" : "Bewertungen"} (Entdecken)`, content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+              T.ops = T.ops.slice(ops.length); T.pushed = Date.now(); save(); syncMark(true);
               mergeTaste(data.items);
               return true;
             } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
           }
         } else if (!T.ops.length) {
           let items = null;
-          if (ghToken()) { const r = await gh("GET", TASTE_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
-          else { const res = await fetch("../geschmack/bewertungen.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; }
+          if (ghToken()) { const r = await dgh("GET", TASTE_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
+          else if (!ablage.privat) { const res = await fetch("../geschmack/bewertungen.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; }
           return mergeTaste(items);
         }
       } catch (e) {
+        syncMark(false, e);
         if (!quiet && e.code === "auth") { toast(`Bewertungen nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
       }
       return false;
@@ -1567,10 +1618,11 @@
     if (starsSyncing) return starsSyncing;
     starsSyncing = (async () => {
       const T = stars();
+      if (!dataReady()) return false;
       try {
         if (ghToken() && T.ops.length) {
           for (let k = 0; k < 3; k++) {
-            const r = await gh("GET", STARS_PATH);
+            const r = await dgh("GET", STARS_PATH);
             const data = r ? JSON.parse(b64d(r.content)) : {};
             data.info = STARS_INFO; data.items = data.items || {};
             const ops = T.ops.slice();
@@ -1583,19 +1635,20 @@
             data.updated = new Date().toISOString();
             const names = [...new Set(ops.map((o) => shortTitle(o.t || o.slug)))];
             try {
-              await gh("PUT", STARS_PATH, { message: `Koch-App: Sterne für ${names.slice(0, 3).join(", ")}${names.length > 3 ? " …" : ""}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
-              T.ops = T.ops.slice(ops.length); T.pushed = Date.now(); save();
+              await dgh("PUT", STARS_PATH, { message: `Koch-App: Sterne für ${names.slice(0, 3).join(", ")}${names.length > 3 ? " …" : ""}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+              T.ops = T.ops.slice(ops.length); T.pushed = Date.now(); save(); syncMark(true);
               mergeStars(data.items);
               return true;
             } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
           }
         } else if (!T.ops.length) {
           let items = null;
-          if (ghToken()) { const r = await gh("GET", STARS_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
-          else { const res = await fetch("../geschmack/sterne.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; }
+          if (ghToken()) { const r = await dgh("GET", STARS_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
+          else if (!ablage.privat) { const res = await fetch("../geschmack/sterne.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; }
           return mergeStars(items);
         }
       } catch (e) {
+        syncMark(false, e);
         if (!quiet && e.code === "auth") { toast(`Sterne nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
       }
       return false;
@@ -1700,10 +1753,11 @@
     if (notesSyncing) return notesSyncing;
     notesSyncing = (async () => {
       const N = notesSt();
+      if (!dataReady()) return false;
       try {
         if (ghToken() && N.ops.length) {
           for (let k = 0; k < 3; k++) {
-            const r = await gh("GET", NOTES_PATH);
+            const r = await dgh("GET", NOTES_PATH);
             const data = r ? JSON.parse(b64d(r.content)) : {};
             data.info = NOTES_INFO; data.items = data.items || {};
             const ops = N.ops.slice();
@@ -1717,19 +1771,20 @@
             data.updated = new Date().toISOString();
             const names = [...new Set(ops.map((o) => shortTitle((data.items[o.slug] || {}).t || o.t || o.slug)))];
             try {
-              await gh("PUT", NOTES_PATH, { message: `Koch-App: Notiz zu ${names.slice(0, 3).join(", ")}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
-              N.ops = N.ops.slice(ops.length); save();
+              await dgh("PUT", NOTES_PATH, { message: `Koch-App: Notiz zu ${names.slice(0, 3).join(", ")}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+              N.ops = N.ops.slice(ops.length); save(); syncMark(true);
               if (!N.ops.length) setNotesFrom(data.items);
               return true;
             } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
           }
         } else if (!N.ops.length) {
           let items = null;
-          if (ghToken()) { const r = await gh("GET", NOTES_PATH); items = r ? JSON.parse(b64d(r.content)).items : {}; }
-          else { const res = await fetch("../geschmack/notizen.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; else if (res.status === 404) items = null; }
+          if (ghToken()) { const r = await dgh("GET", NOTES_PATH); items = r ? JSON.parse(b64d(r.content)).items : null; }
+          else if (!ablage.privat) { const res = await fetch("../geschmack/notizen.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; else if (res.status === 404) items = null; }
           return items ? setNotesFrom(items) : false;
         }
       } catch (e) {
+        syncMark(false, e);
         if (!quiet && e.code === "auth") { toast(`Notiz nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
       }
       return false;
@@ -2050,6 +2105,7 @@
       case "kidname": e.preventDefault(); kidNameSheet(null); break;
       case "kidname-save": kidNameDone((($("[data-kidname]") || {}).value || "").trim().slice(0, 14)); break;
       case "kidname-skip": kidNameDone(""); break;
+      case "sync-now": { await loadAblage(); const ch = await syncAll(false); toast(pendingInfo().n ? "Noch nicht alles gespeichert – neuer Versuch folgt" : "Alles gespeichert"); if (ch || true) rerenderSoft(); break; }
       case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); break;
       case "review-demo": {
         e.preventDefault();
@@ -2123,6 +2179,7 @@
       let result = "same";
       const v = online(await codeVersion()); // geht direkt ans Netz – schlägt fehl, wenn das Handy offline ist
       try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
+      if (v) await loadAblage();
       if (v && (await syncSwaps(true))) result = "changed";
       if (v) syncTaste(true);
       if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
@@ -2151,12 +2208,14 @@
   setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, 10 * 60000);
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
-  syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
-  syncTaste(true).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); });
+  const ablageP = loadAblage();
+  ablageP.then(() => syncSwaps(true)).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
+  ablageP.then(() => syncTaste(true)).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); });
   const starsFirst = () => { if (starsReady) return; starsReady = true; reviewList = null; maybeReview(); };
-  syncStars(true).then((ch) => { if (ch) softIfIdle(); starsFirst(); }, starsFirst);
+  ablageP.then(() => syncStars(true)).then((ch) => { if (ch) softIfIdle(); starsFirst(); }, starsFirst);
   setTimeout(starsFirst, 6000);
-  syncNotes(true).then((ch) => { if (ch) softIfIdle(); });
+  ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
+  ablageP.then(() => { if (ablage.privat && !inCooking && $("#sheet").hidden) rerenderSoft(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
