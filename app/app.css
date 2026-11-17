@@ -892,6 +892,20 @@ a.agp-go:active { transform: scale(.98); }
 .today .cl-when b { color: var(--on-tanne); }
 .today .cl-when small { color: var(--on-tanne-dim); }
 .cl-when + .checks { margin-top: 2px; }
+/* Fertig abgehakt: Liste klappt zu, Tipp auf den Kopf öffnet sie wieder */
+.cl-r { flex: none; display: flex; align-items: center; gap: 8px; }
+.card.cl.full .cl-h { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.card.cl.folded > :not(.cl-h) { display: none; }
+.card.cl.folded { padding-top: 14px; padding-bottom: 14px; }
+.card.cl.folded .ev-ring { width: 48px; height: 48px; }
+.card.cl.folded .ev-ring b { font-size: .86rem; }
+.today.cl.folded .cl-h h2 { font-size: 1.6rem; }
+.today.cl.folded .kick { display: none; }
+.cl-done { display: block; margin-top: 3px; font-weight: 700; font-size: .84rem; color: var(--veg); }
+.today .cl-done { color: #9FE0A6; }
+.cl-chev .ico { transform: rotate(-90deg); }
+.folded .cl-chev .ico { transform: rotate(90deg); }
+.today .cl-chev { background: rgba(255, 255, 255, .12); color: var(--on-tanne); }
 .check.info { padding-left: 0; }
 .check.info .txt { color: var(--on-tanne); font-weight: 700; }
 .check.info .txt::before { content: "→ "; color: var(--pumpkin-hi); }

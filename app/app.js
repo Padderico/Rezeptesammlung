@@ -877,6 +877,14 @@
   }
 
   /* ---------- Checkliste: hier wird alles abgehakt – erst was heute ansteht, dann die Abende ---------- */
+  // Fertig abgehakte Listen klappen zu; ein Tipp auf den Kopf öffnet sie wieder (gemerkt, bis die Liste wieder offen ist)
+  const clOpen = {};
+  function clFold(key, n, all, done) {
+    const full = all > 0 && n >= all;
+    if (!full) { delete clOpen[key]; return { cls: "", attrs: "", extra: "" }; }
+    const open = !!clOpen[key];
+    return { cls: open ? " full" : " full folded", attrs: ` data-clfold="${key}" role="button" aria-expanded="${open}"`, extra: `<small class="cl-done">${done}</small>`, chev: `<span class="chev cl-chev" aria-hidden="true">${NEXT}</span>` };
+  }
   async function renderChecklist(view) {
     const w = withSwaps(await week());
     const c = w.checklist || {};
@@ -893,8 +901,8 @@
       const all = groups.reduce((s, g) => s + g.items.length, 0);
       if (all) {
         const n = groups.reduce((s, g) => s + g.items.filter((it) => rem[it.i]).length, 0);
-        const [, mo, dd] = t.split("-").map(Number);
-        h += `<section class="card cl cl-day today${n >= all ? " full" : ""}"><div class="cl-h"><div><span class="kick"><i></i>Heute erledigen</span><h2>${esc(todayDay.name)}</h2></div><span class="ev-ring" style="--p:${(n / all).toFixed(3)}">${ring()}<b>${n}/${all}</b></span></div>
+        const [, mo, dd] = t.split("-").map(Number), f = clFold(`d:${todayDay.id}`, n, all, "Alles erledigt ✓");
+        h += `<section class="card cl cl-day today${f.cls}"><div class="cl-h"${f.attrs}><div><span class="kick"><i></i>Heute erledigen</span><h2>${esc(todayDay.name)}</h2>${f.extra}</div><span class="cl-r"><span class="ev-ring" style="--p:${(n / all).toFixed(3)}">${ring()}<b>${n}/${all}</b></span>${f.chev || ""}</span></div>
           <p class="small cl-sub">${dd}.${mo}. · Gerichte und Uhrzeiten stehen in der Woche</p>`;
         for (const g of groups) {
           if (!g.items.length) continue;
@@ -917,12 +925,13 @@
       const n = Object.keys(b).length + extra.filter((p) => rem[p.i]).length;
       const all = e.items.length + extra.length, tIso = eveTarget(w, e, i), fe = iron(tIso);
       const otherTag = e.tag && !/eisen/i.test(e.tag) ? `<span class="chip pump">${esc(e.tag)}</span>` : "";
+      const f = clFold(`e:${i}`, n, all, `Alles erledigt · für ${esc(DAY_LONG(tIso))}, ${Number(tIso.slice(8, 10))}.${Number(tIso.slice(5, 7))}.`);
       const items = e.items.map((x, j) => {
         const ir = /^Eisen:\s*/i.test(x);
         return checkRow(b[j], ir ? `${FE}${esc(x.replace(/^Eisen:\s*/i, ""))}` : esc(x), `data-cl="${i}:${j}"${ir ? ' data-iron="1"' : ""}`);
       }).join("") + extra.map((p) => checkRow(rem[p.i], esc(p.x), `data-rem="${todayDay.id}:${p.i}"`)).join("");
-      return `<section class="card cl${isCur ? " today" : ""}${n >= all ? " full" : ""}" style="--p:${all ? (n / all).toFixed(3) : 0}">
-        <div class="cl-h"><div>${isCur ? '<span class="kick"><i></i>Heute Abend erledigen</span>' : ""}<h2>${esc(e.day)}</h2></div><span class="ev-ring">${ring()}<b>${n}/${all}</b></span></div>
+      return `<section class="card cl${isCur ? " today" : ""}${f.cls}" style="--p:${all ? (n / all).toFixed(3) : 0}">
+        <div class="cl-h"${f.attrs}><div>${isCur ? '<span class="kick"><i></i>Heute Abend erledigen</span>' : ""}<h2>${esc(e.day)}</h2>${f.extra}</div><span class="cl-r"><span class="ev-ring">${ring()}<b>${n}/${all}</b></span>${f.chev || ""}</span></div>
         <div class="cl-target${fe ? " iron" : ""}"><span class="arrow" aria-hidden="true">${NEXT}</span><span class="date"><small>${DAYS[new Date(tIso + "T12:00").getDay()].slice(0, 2)}</small><b>${Number(tIso.slice(8, 10))}</b></span>
           <span class="tg"><small>bereitet vor für</small><b>${esc(DAY_LONG(tIso))}, ${Number(tIso.slice(8, 10))}.${Number(tIso.slice(5, 7))}.</b></span>${fe ? `<span class="fe-chip">${FE}Eisen-Tag</span>` : ""}${otherTag}</div>
         <ul class="checks">${items}</ul>${e.note ? `<p class="small cl-note">${esc(e.note)}</p>` : ""}</section>`;
@@ -2396,13 +2405,20 @@
   let toastT = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2200); }
   function rerenderSoft() { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); }
+  /* Checkliste: nach dem letzten Haken kurz das Häkchen zeigen, dann klappt die Liste zu */
+  function clDone(el) {
+    const card = el.closest(".card.cl");
+    const full = card && [...card.querySelectorAll(".check")].every((x) => x.classList.contains("on"));
+    if (full && !card.classList.contains("full")) { toast("Alles erledigt – Liste zugeklappt"); setTimeout(rerenderSoft, 450); }
+    else rerenderSoft();
+  }
 
   /* ---------- Klicks ---------- */
   document.addEventListener("click", async (e) => {
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -2416,8 +2432,9 @@
       return;
     }
     if (d.prep != null) { el.classList.toggle("on", toggle("prep", inCooking ? cookRef : view.dataset.ref, d.prep)); return; }
-    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); if (el.closest(".card.cl")) rerenderSoft(); return; }
-    if (d.cl) { const [i, j] = d.cl.split(":"); toggle("check", `${weekId}:${i}`, j); rerenderSoft(); return; }
+    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); if (el.closest(".card.cl")) clDone(el); return; }
+    if (d.cl) { const [i, j] = d.cl.split(":"); el.classList.toggle("on", toggle("check", `${weekId}:${i}`, j)); clDone(el); return; }
+    if (d.clfold) { const open = el.closest(".card.cl").classList.toggle("folded") === false; clOpen[d.clfold] = open ? 1 : 0; el.setAttribute("aria-expanded", open); return; }
     if (d.tl != null) {
       const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on");
       const w = await week();
