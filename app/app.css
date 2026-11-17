@@ -727,7 +727,7 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 #upd { top: calc(12px + env(safe-area-inset-top, 0px)); bottom: auto; cursor: pointer; background: var(--pumpkin); color: #fff; animation: none; }
 @media (min-width: 900px) { .legend { max-width: 640px; } }
 
-/* ---------- Sterne & Anton-Stempel ---------- */
+/* ---------- Sterne & Kinder-Stempel ---------- */
 .stars { display: inline-flex; gap: 0; align-items: center; }
 .stars button { border: 0; background: none; padding: 5px 3px; cursor: pointer; line-height: 0; color: var(--line-2); transition: transform .14s var(--ease); touch-action: manipulation; }
 .stars svg { width: 22px; height: 22px; fill: currentColor; stroke: none; }
@@ -788,22 +788,25 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 .mb-baby { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--rose-soft); color: var(--rose); }
 .mb-baby .ico { width: 17px; height: 17px; }
 
-/* ---------- Alle Rezepte: Sortierung und A–Z-Leiste ---------- */
-.sortbar { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-.sortbar .sb-l { font-size: .8rem; font-weight: 700; color: var(--muted); margin-right: 2px; }
-.sortbar button { border: 1px solid var(--line-2); background: var(--surface); border-radius: 12px; padding: 7px 12px; font-weight: 700; font-size: .88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
-.sortbar button i { font-style: normal; opacity: .7; font-size: .8rem; }
-.sortbar button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.az-page { padding-right: 30px; }
-.r-list .az-h { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 8px 4px 2px; margin-bottom: -4px; }
-.r-list .az-h span { font: 800 1.35rem var(--font-display); color: var(--accent); }
-.r-list .st-h span { font-size: 1.05rem; color: var(--gold); }
-.r-list .st-h small { color: var(--muted); font: 700 .82rem var(--font-body); margin-left: 4px; }
-.az { position: fixed; z-index: 20; right: max(2px, calc((100vw - 1180px) / 2 + 2px)); top: calc(env(safe-area-inset-top, 0px) + 92px); bottom: calc(var(--nav-h) + var(--dock-h) + var(--safe-b) + 26px); width: 30px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 0; border-radius: 16px; touch-action: none; -webkit-user-select: none; user-select: none; transition: background .15s; }
-.az.drag { background: color-mix(in srgb, var(--surface) 88%, transparent); box-shadow: 0 6px 20px -10px rgba(0, 0, 0, .35); }
-.az button { flex: 1 1 0; min-height: 0; width: 30px; border: 0; background: none; padding: 0; font: 800 .7rem/1 var(--font-display); color: var(--accent); cursor: pointer; display: grid; place-items: center; border-radius: 8px; transition: transform .1s var(--ease), color .1s; }
-.az button.off { color: var(--line-2); }
-.az button.cur { color: var(--ink); }
-.az button.hot { transform: scale(1.45) translateX(-6px); color: var(--pumpkin); }
-.az-bubble { position: fixed; z-index: 21; right: calc(max(2px, calc((100vw - 1180px) / 2 + 2px)) + 54px); top: 42%; width: 74px; height: 74px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 800 2.4rem var(--font-display); box-shadow: var(--shadow-float); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .astamp-wrap.fresh, .stars.set button.on svg { animation: none; } }
+
+/* ---------- Notizen am Rezept ---------- */
+.notes-box .nb-h { display: flex; align-items: center; gap: 8px; }
+.notes-box .nb-h .ico { width: 20px; height: 20px; color: var(--accent); }
+.note-list { list-style: none; margin: 8px 0 10px; padding: 0; display: grid; gap: 8px; }
+.note-list li { background: color-mix(in srgb, var(--gold) 12%, var(--surface)); border-left: 4px solid var(--gold); border-radius: 12px; padding: 10px 12px 8px; }
+.note-list li.editing { outline: 2px solid var(--accent); }
+.note-list p { margin: 0; white-space: pre-wrap; }
+.nl-f { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+.nl-f small { color: var(--muted); margin-right: auto; }
+.lnk { border: 0; background: none; padding: 6px 0; font: 700 .85rem var(--font-body); color: var(--accent); cursor: pointer; }
+.lnk.del { color: var(--meat); }
+.note-in, .txt-in { width: 100%; font: 1rem/1.45 var(--font-body); color: var(--ink); background: var(--surface-2); border: 1.5px solid var(--line-2); border-radius: 14px; padding: 12px 14px; resize: vertical; min-height: 54px; }
+.txt-in { min-height: 50px; font-size: 1.1rem; }
+.note-in:focus, .txt-in:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+.nb-btns { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.note-tip { display: flex; gap: 14px; align-items: flex-start; background: color-mix(in srgb, var(--gold) 14%, var(--surface)); border: 1.5px solid color-mix(in srgb, var(--gold) 45%, transparent); }
+.note-tip .tip-ico { color: var(--gold); }
+.note-tip p { margin: 2px 0 0; white-space: pre-wrap; }
+.note-btn { position: relative; }
+.note-btn i { position: absolute; top: -3px; right: -3px; min-width: 19px; height: 19px; border-radius: 10px; background: var(--gold); color: #1d1300; font: 800 .7rem/19px var(--font-body); font-style: normal; text-align: center; padding: 0 4px; }

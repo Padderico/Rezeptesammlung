@@ -327,7 +327,6 @@
     const parts = h.split("/").filter(Boolean);
     const view = $("#view");
     inCooking = parts[0] === "k";
-    if (parts[0] !== "rezepte") view.classList.remove("az-page");
     document.body.classList.toggle("cooking", inCooking);
     if (parts[0] === "verbinden") {
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
@@ -540,7 +539,7 @@
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
     let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>`;
     const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
-    h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).anton ? " stamped" : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
+    h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).kind ? " stamped" : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
     h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
       <div class="tbar" aria-hidden="true"><i style="width:${share}%"></i></div>${r.time.active < r.time.total ? `<p class="tlegend"><i></i>Aktiv am Herd: ${r.time.active} Min. – die übrige Zeit gart es von allein.</p>` : ""}</div>`;
     h += `<div class="r-cols"><div class="sticky">`;
@@ -551,6 +550,7 @@
     else if (r.servingsNote) h += `<p class="small muted">${esc(r.servingsNote)}</p>`;
     h += `<ul class="checks ing">${r.ingredients.map((i, n) => checkRow(ing[n], `<span class="q">${esc(amount(i, k))}</span><span>${esc(i.n)}</span>`, `data-ing="${n}"`)).join("")}</ul></div>`;
     h += `</div><div>`;
+    h += notesTip(r.slug);
     if (r.prep && r.prep.length) h += `<div class="card"><h3>Vorbereiten</h3><ul class="checks">${r.prep.map((x, n) => { const ph = phaseOf(x); return checkRow(pre[n], `${ph.phase ? `<span class="phase">${esc(ph.phase)}</span> ` : ""}${annotate(r, ph.text, k).html}`, `data-prep="${n}"`); }).join("")}</ul></div>`;
     h += `<div class="card"><h3>Zubereitung</h3><ol class="steps-list">${r.steps.map((st, n) => {
       const ph = phaseOf(st.t);
@@ -558,6 +558,7 @@
     }).join("")}</ol></div>`;
     if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
     if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
+    h += notesBox(r);
     h += rateBlock(r);
     h += `<div class="links">${r.bring ? `<a class="btn small" href="${esc(r.bring)}">In Bring übernehmen</a>` : ""}${r.page ? `<a class="btn small ghost" href="${esc(r.page)}">Rezeptseite</a>` : ""}${nDone || Object.keys(ing).length || Object.keys(pre).length ? `<button class="btn small ghost" data-act="reset-recipe">Häkchen zurücksetzen</button>` : ""}</div>`;
     h += `</div></div>`;
@@ -606,7 +607,7 @@
     const doneCount = Object.keys(steps).length;
     const c = S.cook[ref] || {};
     const dir = animDir; animDir = 0;
-    let h = `<div class="cook-top"><a class="icon-btn" href="#/r/${esc(ref)}" data-act="back" data-fallback="#/r/${esc(ref)}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Alles erledigt"} · ${doneCount} von ${n} abgehakt</span></div><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte und Zutaten">${LIST}</button></div>`;
+    let h = `<div class="cook-top"><a class="icon-btn" href="#/r/${esc(ref)}" data-act="back" data-fallback="#/r/${esc(ref)}" aria-label="Kochmodus beenden">${CLOSE}</a><div class="ttl"><b>${esc(r.title)}</b><span>${i < n ? `Schritt ${i + 1} von ${n}` : "Alles erledigt"} · ${doneCount} von ${n} abgehakt</span></div><button class="icon-btn note-btn" data-act="cook-note" aria-label="Notiz zum Rezept">${PEN}${notesOf(r.slug).length ? `<i>${notesOf(r.slug).length}</i>` : ""}</button><button class="icon-btn" data-act="cook-list" aria-label="Alle Schritte und Zutaten">${LIST}</button></div>`;
     h += `<div class="progress" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${doneCount}">${r.steps.map((_, x) => `<i class="${steps[x] ? "d" : ""}${x === i ? " c" : ""}"></i>`).join("")}</div>`;
     if (showList) {
       h += `<div class="card"><h3>Alle Schritte</h3><ol class="steps-list">${r.steps.map((st, x) => `<li class="${steps[x] ? "done" : ""}" data-jump="${x}"><span class="stxt">${annotate(r, phaseOf(st.t).text, k).html}</span>${st.set ? `<div class="small muted">${esc(DEV_SHORT[st.dev] || "")} · ${esc(st.set)}</div>` : ""}</li>`).join("")}</ol></div>`;
@@ -617,6 +618,7 @@
     if (i >= n) {
       h += `<div class="done-hero">${ART.plate}<h1>Fertig – guten Appetit!</h1><p class="muted">${c.start ? `Gekocht in ${Math.max(1, Math.round((Date.now() - c.start) / 60000))} Min.` : ""}</p></div>`;
       h += rateBlock(r, "Wie war's?");
+      h += notesBox(r, { title: "Notiz fürs nächste Mal" });
       if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
       if (r.store) h += `<div class="card"><h3>Aufbewahren</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
       h += `<div class="links"><a class="btn primary" href="#/" data-act="home">Zur Woche</a><button class="btn ghost" data-act="cook-restart">Von vorn</button></div>`;
@@ -629,6 +631,7 @@
     const hits = [...new Set([...ann.found, ...ingsForStep(r, st.t)])];
     const preNow = prepForStep(r, i), pre = bag("prep", ref);
     h += cookHint();
+    if (i === 0) h += notesTip(r.slug);
     h += `<div class="cook-cols"><div class="cook-step${dir ? (dir > 0 ? " in-fwd" : " in-back") : ""}">`;
     if (preNow.length) h += `<div class="card prep-now"><h3>${i === 0 ? "Zuerst vorbereiten" : "Jetzt vorbereiten"}</h3><ul class="checks">${preNow.map(({ x, n: pn }) => checkRow(pre[pn], annotate(r, phaseOf(x).text, k).html, `data-prep="${pn}"`)).join("")}</ul></div>`;
     h += `<div class="num"><b>${i + 1}</b><span>von ${n}</span>${steps[i] ? '<em class="chip ok">erledigt</em>' : ""}${ph.phase ? `<span class="phase">${esc(ph.phase)}</span>` : ""}</div>`;
@@ -1431,26 +1434,26 @@
     }, reduce ? 10 : 320);
   }
 
-  /* ---------- Sterne & Anton-Stempel: Bewertung jedes Gerichts ----------
-     1–5 Sterne pro Rezept (Schlüssel = Rezept-Slug), jederzeit änderbar. Dazu der Stempel „Für Anton geeignet“.
+  /* ---------- Sterne & Kinder-Stempel: Bewertung jedes Gerichts ----------
+     1–5 Sterne pro Rezept (Schlüssel = Rezept-Slug), jederzeit änderbar. Dazu der Stempel „Für <Kind> geeignet“ (Name nur auf dem Gerät).
      Was auf dem Plan stand, merkt sich die App im Essens-Log (die Wochendaten verschwinden, sobald der nächste Plan da ist).
      Ab dem Samstag nach einer Planwoche fragt die App die Gerichte ohne Sterne ab, bevor es weitergeht.
      Gespeichert wird auf dem Gerät und – mit dem GitHub-Schlüssel – in geschmack/sterne.json im Rezept-Repo. */
   const STARS_PATH = "/contents/geschmack/sterne.json";
-  const STARS_INFO = "Sterne aus dem Kochbuddy. Schlüssel = Rezept-Slug aus rezepte/. s: 1–5 Sterne, anton: true = für Anton geeignet, t: Titel, at: Zeitpunkt.";
+  const STARS_INFO = "Sterne aus dem Kochbuddy. Schlüssel = Rezept-Slug aus rezepte/. s: 1–5 Sterne, kind: true = fürs Kind geeignet, t: Titel, at: Zeitpunkt.";
   const STAR5 = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.75 5.6 6.15.9-4.45 4.33 1.05 6.12L12 16.87l-5.5 2.88 1.05-6.12L3.1 9.3l6.15-.9z"/></svg>';
   const BABY = '<svg class="ico baby" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.2" r="7.6"/><path d="M12 5.6c-.4-1.9.9-3.2 2.4-2.7"/><path d="M8.6 12.6q1 1 2 0M13.4 12.6q1 1 2 0"/><path d="M10.6 16.2q1.4 1.1 2.8 0"/><circle cx="7.9" cy="15" r="1.1" class="ck"/><circle cx="16.1" cy="15" r="1.1" class="ck"/></svg>';
   const RATE_WORD = ["", "Nicht so", "Geht so", "Gut", "Sehr gut", "Lieblingsgericht"];
-  let stampN = 0, justStamped = null;
+  let stampN = 0, justStamped = null, lastDeleted = null;
   /* Der Stempel: Babygesicht im runden Gummistempel mit Schrift im Kreis */
   function stampSvg(cls = "") {
     const id = "st" + ++stampN;
-    return `<svg class="astamp ${cls}" viewBox="0 0 140 140" role="img" aria-label="Stempel: Für Anton geeignet">
+    return `<svg class="astamp ${cls}" viewBox="0 0 140 140" role="img" aria-label="Stempel: Für ${esc(kidFor())} geeignet">
       <defs><path id="${id}t" d="M22 70a48 48 0 0 1 96 0"/><path id="${id}b" d="M14 70a56 56 0 0 0 112 0"/>
       <mask id="${id}m"><rect width="140" height="140" fill="#fff"/>${[[30, 34, 1.6], [104, 30, 1.2], [118, 84, 1.8], [40, 112, 1.4], [86, 118, 1.1], [62, 22, 1], [22, 92, 1.2], [96, 64, 1.3], [52, 78, .9]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#000"/>`).join("")}<path d="M18 50q30-6 50 2" stroke="#000" stroke-width=".8" fill="none" opacity=".7"/></mask></defs>
       <g mask="url(#${id}m)">
         <circle cx="70" cy="70" r="64" class="ring1"/><circle cx="70" cy="70" r="57" class="ring2"/>
-        <text class="arc"><textPath href="#${id}t" startOffset="50%" text-anchor="middle">FÜR ANTON</textPath></text>
+        <text class="arc"><textPath href="#${id}t" startOffset="50%" text-anchor="middle">${esc(kidName() && kidName().length <= 9 ? "FÜR " + kidName().toUpperCase() : "FÜRS KIND")}</textPath></text>
         <text class="arc lo"><textPath href="#${id}b" startOffset="50%" text-anchor="middle">GEEIGNET</textPath></text>
         <path class="hrt" d="M17 70.5c-1.6-1.4-3.4-2.7-3.4-4.4a1.9 1.9 0 0 1 3.4-1.1 1.9 1.9 0 0 1 3.4 1.1c0 1.7-1.8 3-3.4 4.4zM123 70.5c-1.6-1.4-3.4-2.7-3.4-4.4a1.9 1.9 0 0 1 3.4-1.1 1.9 1.9 0 0 1 3.4 1.1c0 1.7-1.8 3-3.4 4.4z"/>
         <g class="face"><circle cx="70" cy="74" r="25" class="head"/><path d="M45.5 72a5 5 0 0 0 0 9M94.5 72a5 5 0 0 1 0 9" class="ln"/>
@@ -1460,6 +1463,7 @@
       </g></svg>`;
   }
   const stars = () => { const T = (S.stars = S.stars || {}); T.r = T.r || {}; T.ops = T.ops || []; T.log = T.log || {}; T.skip = T.skip || {}; return T; };
+  { const T = stars(), old = "an" + "ton"; for (const x of [...Object.values(T.r), ...T.ops]) if (x && old in x) { if (x[old]) x.kind = true; delete x[old]; } }
   const starMeta = {};
   const slugOf = (ref, r) => (r && r.slug) || (ref && ref.startsWith("a:") ? ref.slice(2) : "");
   const rating = (slug) => stars().r[slug] || {};
@@ -1470,16 +1474,16 @@
     const s = rating(r.slug).s || 0;
     return `<span class="stars ${size}${s ? " set" : ""}" role="radiogroup" aria-label="Sterne für ${esc(r.title)}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${n === s}" aria-label="${n} ${n === 1 ? "Stern" : "Sterne"}" data-star="${esc(r.slug)}|${n}" class="${n <= s ? "on" : ""}">${STAR5}</button>`).join("")}</span>`;
   }
-  const babyBtn = (r, label) => { const on = !!rating(r.slug).anton; return `<button type="button" class="baby-btn${on ? " on" : ""}${label ? " lbl" : ""}" data-anton="${esc(r.slug)}" aria-pressed="${on}" aria-label="Für Anton geeignet">${BABY}${label ? `<span>${on ? "Anton-geeignet" : "Für Anton geeignet?"}</span>` : ""}</button>`; };
+  const babyBtn = (r, label) => { const on = !!rating(r.slug).kind; return `<button type="button" class="baby-btn${on ? " on" : ""}${label ? " lbl" : ""}" data-kid="${esc(r.slug)}" aria-pressed="${on}" aria-label="Für ${esc(kidFor())} geeignet">${BABY}${label ? `<span>${on ? (kidName() ? esc(kidName()) + "-geeignet" : "Kindgerecht") : `Für ${esc(kidFor())} geeignet?`}</span>` : ""}</button>`; };
   function setStar(slug, patch) {
     const T = stars(), cur = { ...(T.r[slug] || {}) }, at = new Date().toISOString(), m = starMeta[slug] || {};
     Object.assign(cur, patch, { at });
-    if (!cur.anton) delete cur.anton;
+    if (!cur.kind) delete cur.kind;
     T.r[slug] = cur;
-    T.ops.push({ slug, s: cur.s || 0, anton: !!cur.anton, at, t: m.t || cur.t || "", tags: m.tags || [] });
+    T.ops.push({ slug, s: cur.s || 0, kind: !!cur.kind, at, t: m.t || cur.t || "", tags: m.tags || [] });
     if (m.t) cur.t = m.t;
     save(); scheduleStarsPush();
-    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(patch.anton ? [10, 40, 10] : 10);
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(patch.kind ? [10, 40, 10] : 10);
   }
   /* Essens-Log: was wann auf dem Plan stand (Schlüssel Tag|Mahlzeit) */
   function logMeals(w) {
@@ -1522,7 +1526,7 @@
   const rateRow = (x, skip) => { const r = { slug: x.slug, title: x.title, tags: x.tags }, done = !!rating(x.slug).s;
     return `<li class="rrow${done ? " done" : ""}"><div class="rr-t"><b>${esc(x.title)}</b><small>${esc(dayShort(x.iso))} · ${esc(x.slot)}</small></div><div class="rr-a">${starsHtml(r)}${babyBtn(r)}${skip && !done ? `<button type="button" class="btn small ghost skip" data-starskip="${esc(x.slug)}|${esc(x.wk || "")}">Gab's nicht</button>` : ""}</div></li>`; };
   /* Wochen-Check: ab Samstag nach der Planwoche, bevor es weitergeht */
-  let reviewList = null;
+  let reviewList = null, starsReady = false;
   function reviewDue() {
     if (embedded && !S.settings.reviewDemo) return [];
     return unrated(true);
@@ -1530,6 +1534,7 @@
   function maybeReview() {
     if (inCooking || !$("#alarm").hidden || (!$("#sheet").hidden && !$("#sheet").dataset.review) || (S.block[weekId] && S.block[weekId].start && !S.block[weekId].end && location.hash.startsWith("#/vorkochen"))) return;
     if (!S.settings.toured && !embedded) return;
+    if (!starsReady && !embedded) return;
     const list = reviewDue();
     if (!list.length) { if ($("#sheet").dataset.review) closeSheet(); reviewList = null; return; }
     if (!reviewList) reviewList = list;
@@ -1539,7 +1544,7 @@
   function drawReview() {
     const T = stars(), left = reviewList.filter((x) => !(T.r[x.slug] || {}).s && !T.skip[x.slug + "|" + x.wk]).length;
     openSheet(`<div class="review"><div class="rv-art">${ART.plate}</div><span class="eyebrow">Wochen-Check</span><h2>Wie hat's euch geschmeckt?</h2>
-      <p class="muted" style="margin:6px 0 4px">Bevor es weitergeht: kurz Sterne für die Gerichte der letzten Woche vergeben. Das Baby antippen, wenn es auch für Anton gepasst hat.</p>
+      <p class="muted" style="margin:6px 0 4px">Bevor es weitergeht: kurz Sterne für die Gerichte der letzten Woche vergeben. Das Baby antippen, wenn es auch für ${esc(kidFor())} gepasst hat.</p>
       <ul class="rate-rows">${reviewList.map((x) => rateRow(x, true)).join("")}</ul>
       <button class="btn primary big" data-act="review-done"${left ? " disabled" : ""}>${left ? `Noch ${left} ${left === 1 ? "Gericht" : "Gerichte"} offen` : "Fertig – weiter geht's"}</button>
       ${starsSyncLine() ? `<p class="small muted" style="margin:12px 0 0">${starsSyncLine()}</p>` : ""}</div>`, { review: 1 });
@@ -1552,7 +1557,7 @@
     for (const [slug, x] of Object.entries(items || {})) {
       if (!x) continue;
       const loc = T.r[slug];
-      if ((!loc || (x.at || "") > (loc.at || "")) && !T.ops.some((o) => o.slug === slug)) { T.r[slug] = { s: x.s || 0, at: x.at, t: x.t, ...(x.anton ? { anton: true } : {}) }; ch = true; }
+      if ((!loc || (x.at || "") > (loc.at || "")) && !T.ops.some((o) => o.slug === slug)) { T.r[slug] = { s: x.s || 0, at: x.at, t: x.t, ...(x.kind || x["an" + "ton"] ? { kind: true } : {}) }; ch = true; }
     }
     if (ch) save();
     return ch;
@@ -1571,7 +1576,8 @@
             const ops = T.ops.slice();
             for (const o of ops) {
               const it = { ...(data.items[o.slug] || {}), s: o.s, at: o.at, t: o.t || (data.items[o.slug] || {}).t || "", tags: o.tags && o.tags.length ? o.tags : (data.items[o.slug] || {}).tags || [] };
-              if (o.anton) it.anton = true; else delete it.anton;
+              if (o.kind) it.kind = true; else delete it.kind;
+              delete it["an" + "ton"];
               data.items[o.slug] = it;
             }
             data.updated = new Date().toISOString();
@@ -1601,111 +1607,159 @@
     if (!r.slug) return "";
     const x = rating(r.slug);
     return `<div class="card rate-big"><div class="spread"><h3>${esc(title)}</h3>${x.s ? `<span class="rate-word">${RATE_WORD[x.s]}</span>` : ""}</div>${starsHtml(r, "big")}
-      <p class="small muted" style="margin:6px 0 10px">${x.s ? "Jederzeit änderbar – einfach einen anderen Stern antippen." : "Nach dem Essen antippen. Der Buddy plant künftig danach."}</p>${babyBtn(r, true)}</div>`;
+      <p class="small muted" style="margin:6px 0 10px">${x.s ? "Jederzeit änderbar – einfach einen anderen Stern antippen." : "Nach dem Essen antippen. Der Buddy plant künftig danach."}</p>${babyBtn(r, true)}${x.kind && !embedded ? ` <a href="#" class="small" data-act="kidname">${kidName() ? "Name ändern" : "Namen auf den Stempel"}</a>` : ""}</div>`;
   }
-  const stampHtml = (r) => (r.slug && rating(r.slug).anton ? `<div class="astamp-wrap${justStamped === r.slug ? " fresh" : ""}">${stampSvg()}</div>` : "");
-  const miniRating = (slug) => { const x = rating(slug); return x.s || x.anton ? `<span class="mini-rate">${x.s ? `<span class="ms" aria-label="${x.s} Sterne">${"★".repeat(x.s)}<i>${"★".repeat(5 - x.s)}</i></span>` : ""}${x.anton ? `<span class="mb-baby" title="Für Anton geeignet">${BABY}</span>` : ""}</span>` : ""; };
+  const stampHtml = (r) => (r.slug && rating(r.slug).kind ? `<div class="astamp-wrap${justStamped === r.slug ? " fresh" : ""}">${stampSvg()}</div>` : "");
+  const miniRating = (slug) => { const x = rating(slug); return x.s || x.kind ? `<span class="mini-rate">${x.s ? `<span class="ms" aria-label="${x.s} Sterne">${"★".repeat(x.s)}<i>${"★".repeat(5 - x.s)}</i></span>` : ""}${x.kind ? `<span class="mb-baby" title="Für ${esc(kidFor())} geeignet">${BABY}</span>` : ""}</span>` : ""; };
 
-  /* ---------- Alle Rezepte ----------
-     Sortieren: zuletzt im Plan, A–Z (mit Buchstabenleiste am rechten Rand zum Springen und Durchwischen) oder nach Sternen. */
+  /* ---------- Name des Kindes: nur auf dem Gerät ----------
+     Das Repo ist öffentlich, deshalb steht der Name nirgends im Code. Beim ersten Stempeln fragt die App einmal danach. */
+  const kidName = () => { const n = (S.settings.kidName || "").trim(); return n === "-" ? "" : n; };
+  const kidFor = () => kidName() || "das Kind";
+  let pendingKid = null;
+  function kidNameSheet(slug) {
+    pendingKid = slug || null;
+    openSheet(`<h2>Wer isst mit?</h2><p class="muted" style="margin:6px 0 12px">Der Name kommt auf den Stempel „Für … geeignet“. Er bleibt nur auf diesem Gerät und landet nicht im Rezept-Repo.</p>
+      <input class="txt-in" data-kidname type="text" maxlength="14" autocomplete="off" placeholder="Vorname" value="${esc(kidName())}">
+      <div class="act-btns" style="margin-top:14px"><button class="btn primary" data-act="kidname-save">Speichern</button><button class="btn ghost" data-act="kidname-skip">Ohne Namen</button></div>`);
+    setTimeout(() => { const i = $("[data-kidname]"); if (i) i.focus(); }, 250);
+  }
+  function kidNameDone(name) {
+    S.settings.kidName = name || "-"; save();
+    const slug = pendingKid; pendingKid = null;
+    if (slug && !rating(slug).kind) { setStar(slug, { kind: true }); justStamped = slug; setTimeout(() => { justStamped = null; }, 900); toast(`Gestempelt: für ${kidFor()} geeignet`); }
+    if (reviewList) drawReview(); else { closeSheet(); rerenderSoft(); }
+  }
+
+  /* ---------- Notizen am Rezept ----------
+     Freitext fürs nächste Mal („Beim nächsten Mal Paprika dazu“) – auf der Rezeptseite und mitten im Kochmodus.
+     Notizen stehen danach oben im Rezept und im Kochmodus, auf allen Geräten. Mit GitHub-Schlüssel gespeichert in
+     geschmack/notizen.json; die Aufgaben können sie beim nächsten Einplanen ins Rezept übernehmen.
+     Das Repo ist öffentlich: der Name des Kindes wird beim Speichern durch „das Kind“ ersetzt. */
+  const NOTES_PATH = "/contents/geschmack/notizen.json";
+  const NOTES_INFO = "Notizen aus dem Kochbuddy zu Rezepten (Freitext für das nächste Mal). Schlüssel = Rezept-Slug aus rezepte/. notes: [{id, text, at}].";
+  const PEN = '<svg class="ico" viewBox="0 0 24 24"><path d="M4.5 19.5h4l10.2-10.2a2.1 2.1 0 0 0-4-4L4.5 15.5z"/><path d="M13.3 6.7l4 4"/></svg>';
+  const notesSt = () => { const N = (S.notes = S.notes || {}); N.r = N.r || {}; N.ops = N.ops || []; return N; };
+  const notesOf = (slug) => notesSt().r[slug] || [];
+  const noteDraft = {}, noteEdit = {};
+  const noteDate = (at) => { const d = new Date(at); return isNaN(d) ? "" : `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`; };
+  const anonKid = (t) => { const n = kidName(); return n ? t.replace(new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}s?\\b`, "gi"), "das Kind") : t; };
+  function putNote(slug, id, text) {
+    const N = notesSt(), at = new Date().toISOString(), list = (N.r[slug] = N.r[slug] || []), m = starMeta[slug] || {};
+    if (!text) { N.r[slug] = list.filter((n) => n.id !== id); N.ops.push({ op: "del", slug, id }); }
+    else {
+      const n = list.find((x) => x.id === id);
+      if (n) { n.text = text; n.at = at; } else list.push({ id, text, at });
+      N.ops.push({ op: "set", slug, id, text, at, t: m.t || "" });
+    }
+    if (!N.r[slug].length) delete N.r[slug];
+    save(); scheduleNotesPush();
+  }
+  /* Kasten zum Lesen und Schreiben – auf der Rezeptseite, am Kochende und in der Schublade im Kochmodus */
+  function notesBox(r, opts = {}) {
+    if (!r.slug) return "";
+    starMeta[r.slug] = starMeta[r.slug] || { t: r.title, tags: r.tags || [] };
+    const list = notesOf(r.slug), ed = noteEdit[r.slug];
+    const val = noteDraft[r.slug] != null ? noteDraft[r.slug] : ed ? (list.find((n) => n.id === ed) || {}).text || "" : "";
+    let h = `<div class="notes-box${opts.card === false ? "" : " card"}">`;
+    if (opts.title !== false) h += `<h3 class="nb-h">${PEN}${esc(opts.title || "Eure Notizen")}</h3>`;
+    if (list.length) h += `<ul class="note-list">${list.map((n) => `<li class="${ed === n.id ? "editing" : ""}"><p>${esc(n.text)}</p><div class="nl-f"><small>${noteDate(n.at)}</small><button type="button" class="lnk" data-noteedit="${esc(r.slug)}|${n.id}">Ändern</button><button type="button" class="lnk del" data-notedel="${esc(r.slug)}|${n.id}">Löschen</button></div></li>`).join("")}</ul>`;
+    else if (opts.empty !== false) h += `<p class="small muted" style="margin:4px 0 8px">Was soll beim nächsten Mal anders sein? Zum Beispiel „Paprika dazu“ oder „10 Min. länger schmoren“.</p>`;
+    h += `<textarea class="note-in" rows="${opts.rows || 2}" data-notein="${esc(r.slug)}" placeholder="${ed ? "Notiz ändern" : "Neue Notiz, z. B. Beim nächsten Mal Paprika dazu"}">${esc(val)}</textarea>
+      <div class="nb-btns"><button type="button" class="btn small primary" data-notesave="${esc(r.slug)}">${ed ? "Änderung speichern" : "Notiz speichern"}</button>${ed ? `<button type="button" class="btn small ghost" data-noteedit="${esc(r.slug)}|">Abbrechen</button>` : ""}</div>`;
+    const line = notesSyncLine(); if (line) h += `<p class="small muted" style="margin:10px 0 0">${line}</p>`;
+    return h + `</div>`;
+  }
+  /* oben im Rezept bzw. im ersten Kochschritt: was beim letzten Mal notiert wurde */
+  const notesTip = (slug) => { const list = notesOf(slug); return list.length ? `<div class="tip note-tip"><span class="tip-ico">${PEN}</span><div><h3>Vom letzten Mal</h3>${list.map((n) => `<p>${esc(n.text)}</p>`).join("")}</div></div>` : ""; };
+  function cookNoteSheet(r) { openSheet(`<h2>Notiz zum Rezept</h2><p class="muted small" style="margin:4px 0 10px">${esc(r.title)} – steht danach im Rezept, auf allen Geräten.</p>${notesBox(r, { card: false, title: false, empty: false, rows: 4 })}`, { note: r.slug }); setTimeout(() => { const t = $("#sheet [data-notein]"); if (t) t.focus(); }, 280); }
+  function saveNote(btn) {
+    const slug = btn.dataset.notesave, box = btn.closest(".notes-box"), ta = box && box.querySelector("[data-notein]");
+    const text = ((ta && ta.value) || "").trim().slice(0, 600);
+    if (!text) { toast("Erst etwas eintippen"); if (ta) ta.focus(); return; }
+    const id = noteEdit[slug] || Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    putNote(slug, id, text);
+    delete noteDraft[slug]; delete noteEdit[slug];
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(10);
+    toast("Notiz gespeichert – steht jetzt im Rezept");
+    if ($("#sheet").dataset.note) closeSheet();
+    rerenderSoft();
+  }
+  let notesTimer = null, notesSyncing = null;
+  const scheduleNotesPush = (ms = 3000) => { clearTimeout(notesTimer); notesTimer = setTimeout(() => syncNotes(true).then((ch) => { if (ch) softIfIdle(); }), ms); };
+  const notesSyncLine = () => (embedded ? "" : !ghToken() ? `Notizen bleiben erst einmal auf diesem Gerät. Damit sie überall und beim Buddy ankommen: <a href="#" data-act="gh-setup">einmalig Speichern einrichten</a>` : notesSt().ops.length ? "Wird gleich gespeichert …" : "");
+  function setNotesFrom(items) {
+    const N = notesSt(), next = {};
+    for (const [slug, x] of Object.entries(items || {})) if (x && x.notes && x.notes.length) next[slug] = x.notes.map((n) => ({ id: n.id, text: n.text, at: n.at }));
+    const ch = JSON.stringify(next) !== JSON.stringify(N.r);
+    if (ch) { N.r = next; save(); }
+    return ch;
+  }
+  function syncNotes(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (notesSyncing) return notesSyncing;
+    notesSyncing = (async () => {
+      const N = notesSt();
+      try {
+        if (ghToken() && N.ops.length) {
+          for (let k = 0; k < 3; k++) {
+            const r = await gh("GET", NOTES_PATH);
+            const data = r ? JSON.parse(b64d(r.content)) : {};
+            data.info = NOTES_INFO; data.items = data.items || {};
+            const ops = N.ops.slice();
+            for (const o of ops) {
+              const it = (data.items[o.slug] = data.items[o.slug] || { t: "", notes: [] });
+              it.notes = (it.notes || []).filter((n) => n.id !== o.id);
+              if (o.op === "set") { it.notes.push({ id: o.id, text: anonKid(o.text), at: o.at }); if (o.t) it.t = o.t; }
+              it.notes.sort((a, b) => (a.at < b.at ? -1 : 1));
+              if (!it.notes.length) delete data.items[o.slug];
+            }
+            data.updated = new Date().toISOString();
+            const names = [...new Set(ops.map((o) => shortTitle((data.items[o.slug] || {}).t || o.t || o.slug)))];
+            try {
+              await gh("PUT", NOTES_PATH, { message: `Koch-App: Notiz zu ${names.slice(0, 3).join(", ")}`.slice(0, 180), content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+              N.ops = N.ops.slice(ops.length); save();
+              if (!N.ops.length) setNotesFrom(data.items);
+              return true;
+            } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+          }
+        } else if (!N.ops.length) {
+          let items = null;
+          if (ghToken()) { const r = await gh("GET", NOTES_PATH); items = r ? JSON.parse(b64d(r.content)).items : {}; }
+          else { const res = await fetch("../geschmack/notizen.json", { cache: "no-cache" }); if (res.ok) items = (await res.json()).items; else if (res.status === 404) items = null; }
+          return items ? setNotesFrom(items) : false;
+        }
+      } catch (e) {
+        if (!quiet && e.code === "auth") { toast(`Notiz nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
+      }
+      return false;
+    })().finally(() => { notesSyncing = null; });
+    return notesSyncing;
+  }
+  /* neu zeichnen nur, wenn gerade niemand tippt oder eine Schublade offen hat */
+  const softIfIdle = () => { const a = document.activeElement; if (!inCooking && $("#sheet").hidden && !(a && /TEXTAREA|INPUT/.test(a.tagName))) rerenderSoft(); };
+
+  /* ---------- Alle Rezepte ---------- */
   let filter = { q: "", tag: "Alle" };
-  let listSort = S.settings.listSort || "zuletzt";
-  const SORTS = [["zuletzt", "Zuletzt im Plan"], ["az", "A–Z"], ["sterne", "Sterne"]];
-  const AZ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const firstLetter = (t) => { const c = (t || "").trim().charAt(0).normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase(); return AZ.includes(c) ? c : "#"; };
-  const kwNum = (x) => { const m = String(x || "").match(/KW\s*(\d+)\/(\d{4})/); return m ? +m[2] * 100 + +m[1] : 0; };
   async function renderAll(view) {
     let list;
     try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
     const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
-    if (!SORTS.some(([k]) => k === listSort)) listSort = "zuletzt";
     let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>`;
     h += `<label class="searchbox"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="search" type="search" aria-label="Rezepte durchsuchen" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search></label>`;
-    h += `<div class="sortbar" role="group" aria-label="Sortieren"><span class="sb-l">Sortieren</span>${SORTS.map(([k, l]) => `<button data-sort="${k}" aria-pressed="${listSort === k}">${k === "az" ? `<b>A</b><i>→</i><b>Z</b>` : esc(l)}</button>`).join("")}</div>`;
     h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
-    h += `<ul class="r-list${listSort === "az" ? " az-on" : ""}" id="rlist"></ul>`;
-    if (listSort === "az") h += `<nav class="az" id="az" aria-label="Zum Buchstaben springen"></nav><div class="az-bubble" id="az-bubble" hidden></div>`;
+    h += `<ul class="r-list" id="rlist"></ul>`;
     view.innerHTML = h;
-    view.classList.toggle("az-page", listSort === "az");
     view._list = list;
     drawList(view);
   }
   function drawList(view) {
     const q = filter.q.toLowerCase().trim();
-    let items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
+    const items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
       (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
-    const byTitle = (a, b) => a.title.localeCompare(b.title, "de", { sensitivity: "base" });
-    if (listSort === "az") items = items.slice().sort(byTitle);
-    else if (listSort === "sterne") items = items.slice().sort((a, b) => ((rating(b.slug).s || 0) - (rating(a.slug).s || 0)) || (!!rating(b.slug).anton - !!rating(a.slug).anton) || byTitle(a, b));
-    else items = items.slice().sort((a, b) => (kwNum(b.last) - kwNum(a.last)) || byTitle(a, b));
-    const row = (m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`;
-    let html = "", have = new Set();
-    if (listSort === "az") {
-      let cur = null;
-      for (const m of items) { const L = firstLetter(m.title); if (L !== cur) { cur = L; have.add(L); html += `<li class="az-h" id="az-${L === "#" ? "x" : L}" data-l="${L}"><span>${L}</span></li>`; } html += row(m); }
-    } else if (listSort === "sterne" && items.some((m) => rating(m.slug).s)) {
-      let cur = null;
-      for (const m of items) { const s = rating(m.slug).s || 0; if (s !== cur) { cur = s; html += `<li class="az-h st-h"><span>${s ? `${"★".repeat(s)} <small>${RATE_WORD[s]}</small>` : "Noch ohne Sterne"}</span></li>`; } html += row(m); }
-    } else html = items.map(row).join("");
-    $("#rlist", view).innerHTML = html || `<li class="empty">Nichts gefunden.</li>`;
-    const az = $("#az", view);
-    if (az) {
-      const letters = have.has("#") ? [...AZ, "#"] : AZ;
-      az.innerHTML = letters.map((L) => `<button type="button" data-letter="${L}"${have.has(L) ? "" : ' class="off" tabindex="-1"'} aria-label="${L === "#" ? "Sonstige" : L}">${L}</button>`).join("");
-      az.hidden = !items.length;
-      markLetter();
-    }
+    $("#rlist", view).innerHTML = items.map((m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span></span></a></li>`).join("") ||
+      `<li class="empty">Nichts gefunden.</li>`;
   }
-  /* Buchstabenleiste: antippen springt, darüberwischen scrollt mit – fehlende Buchstaben springen zum nächsten vorhandenen */
-  function jumpLetter(L, smooth = true) {
-    const az = $("#az"); if (!az) return;
-    const letters = [...az.querySelectorAll("[data-letter]")].map((b) => b.dataset.letter);
-    let i = letters.indexOf(L), head = null;
-    for (; i >= 0 && i < letters.length && !head; i++) head = $(`#az-${letters[i] === "#" ? "x" : letters[i]}`);
-    if (!head) for (i = letters.indexOf(L) - 1; i >= 0 && !head; i--) head = $(`#az-${letters[i] === "#" ? "x" : letters[i]}`);
-    if (!head) return;
-    const y = head.getBoundingClientRect().top + window.scrollY - 8;
-    window.scrollTo({ top: y, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "auto" });
-  }
-  let azDrag = null, azLast = "";
-  function letterAt(y) {
-    const az = $("#az"); if (!az) return null;
-    const bs = [...az.querySelectorAll("[data-letter]")];
-    for (const b of bs) { const r = b.getBoundingClientRect(); if (y >= r.top && y <= r.bottom) return b.dataset.letter; }
-    const r0 = bs[0].getBoundingClientRect(), r1 = bs[bs.length - 1].getBoundingClientRect();
-    return y < r0.top ? bs[0].dataset.letter : y > r1.bottom ? bs[bs.length - 1].dataset.letter : null;
-  }
-  function azShow(L) {
-    const bub = $("#az-bubble"); if (!bub || !L) return;
-    if (L !== azLast) { azLast = L; jumpLetter(L, false); if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(4); }
-    bub.textContent = L; bub.hidden = false;
-    $$("#az [data-letter]").forEach((b) => b.classList.toggle("hot", b.dataset.letter === L));
-  }
-  document.addEventListener("pointerdown", (e) => {
-    const az = e.target.closest("#az"); if (!az) return;
-    e.preventDefault(); azDrag = e.pointerId; azLast = ""; az.classList.add("drag");
-    try { az.setPointerCapture(e.pointerId); } catch (er) { /* egal */ }
-    azShow(letterAt(e.clientY));
-  });
-  document.addEventListener("pointermove", (e) => { if (azDrag === e.pointerId) { e.preventDefault(); azShow(letterAt(e.clientY)); } }, { passive: false });
-  const azEnd = (e) => {
-    if (azDrag !== e.pointerId) return;
-    azDrag = null; const az = $("#az"); if (az) az.classList.remove("drag");
-    const bub = $("#az-bubble"); if (bub) setTimeout(() => (bub.hidden = true), 380);
-    $$("#az [data-letter]").forEach((b) => b.classList.remove("hot"));
-    markLetter();
-  };
-  document.addEventListener("pointerup", azEnd);
-  document.addEventListener("pointercancel", azEnd);
-  /* aktuellen Buchstaben in der Leiste hervorheben */
-  function markLetter() {
-    const heads = $$("#rlist .az-h[data-l]"); if (!heads.length) return;
-    let cur = heads[0].dataset.l;
-    for (const h of heads) { if (h.getBoundingClientRect().top <= 90) cur = h.dataset.l; else break; }
-    $$("#az [data-letter]").forEach((b) => b.classList.toggle("cur", b.dataset.letter === cur));
-  }
-  let azRaf = 0;
-  window.addEventListener("scroll", () => { if (!$("#az") || azRaf) return; azRaf = requestAnimationFrame(() => { azRaf = 0; markLetter(); }); }, { passive: true });
 
   /* ---------- Timer ---------- */
   const clock = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
@@ -1863,9 +1917,10 @@
     s.dataset.tour = data.tour || "";
     s.dataset.bring = data.bring || "";
     s.dataset.review = data.review || "";
+    s.dataset.note = data.note || "";
     s.hidden = false;
   }
-  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; };
+  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; $("#sheet").dataset.note = ""; };
   let toastT = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2200); }
   function rerenderSoft() { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); }
@@ -1875,9 +1930,9 @@
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-anton],[data-starskip],[data-sort],[data-letter]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd")) el = null; // nie den Seitenrahmen als Knopf werten
-    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else closeSheet(); } return; }
+    if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
     if (d.start) { e.preventDefault(); startFromChip(JSON.parse(d.start)); return; }
     if (d.timerOpen) { e.preventDefault(); timerSheet(d.timerOpen); return; }
@@ -1932,17 +1987,19 @@
       if ($("#sheet").dataset.review) drawReview(); else rerenderSoft();
       return;
     }
-    if (d.anton) {
-      const on = !rating(d.anton).anton;
-      setStar(d.anton, { anton: on }); justStamped = on ? d.anton : null;
-      if (on) toast("Gestempelt: für Anton geeignet");
+    if (d.kid) {
+      if (!rating(d.kid).kind && S.settings.kidName == null && !embedded) { kidNameSheet(d.kid); return; }
+      const on = !rating(d.kid).kind;
+      setStar(d.kid, { kind: on }); justStamped = on ? d.kid : null;
+      if (on) toast(`Gestempelt: für ${kidFor()} geeignet`);
       if ($("#sheet").dataset.review) drawReview(); else rerenderSoft();
       setTimeout(() => { justStamped = null; }, 900);
       return;
     }
+    if (d.notesave) { saveNote(el); return; }
+    if (d.noteedit != null) { const [slug, id] = d.noteedit.split("|"); delete noteDraft[slug]; if (id) noteEdit[slug] = id; else delete noteEdit[slug]; if ($("#sheet").dataset.note) cookNoteSheet(await getRecipe(cookRef)); else rerenderSoft(); setTimeout(() => { const t = $(`[data-notein="${slug}"]`); if (t && id) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 60); return; }
+    if (d.notedel) { const [slug, id] = d.notedel.split("|"); const n = notesOf(slug).find((x) => x.id === id); putNote(slug, id, ""); lastDeleted = n ? { slug, n } : null; toast("Notiz gelöscht"); if ($("#sheet").dataset.note) cookNoteSheet(await getRecipe(cookRef)); else rerenderSoft(); return; }
     if (d.starskip) { const T = stars(); T.skip[d.starskip] = 1; save(); drawReview(); return; }
-    if (d.sort) { listSort = d.sort; S.settings.listSort = d.sort; save(); rerenderSoft(); return; }
-    if (d.letter) { if (e.detail === 0) jumpLetter(d.letter); return; }
     if (d.swapopen) { swapSheet(d.swapopen); return; }
     if (d.swapto) { const id = $("#sheet").dataset.swap; closeSheet(); const [iso, slot] = d.swapto.split("|"); performSwap(id, iso, slot); return; }
     if (d.unswap) { unswap(d.unswap); return; }
@@ -1989,6 +2046,10 @@
       case "nohint": S.settings.installHint = false; save(); rerenderSoft(); break;
       case "reload": e.preventDefault(); { const r = await checkUpdates(true); toast(r === "offline" ? "Gerade kein Netz – du siehst den letzten Stand" : r === "changed" ? "Plan aktualisiert" : "Alles aktuell"); rerenderSoft(); } break;
       case "apply-update": location.reload(); break;
+      case "cook-note": cookNoteSheet(await getRecipe(cookRef)); break;
+      case "kidname": e.preventDefault(); kidNameSheet(null); break;
+      case "kidname-save": kidNameDone((($("[data-kidname]") || {}).value || "").trim().slice(0, 14)); break;
+      case "kidname-skip": kidNameDone(""); break;
       case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); break;
       case "review-demo": {
         e.preventDefault();
@@ -2004,7 +2065,7 @@
     if (el.dataset.eat) { S.eat[el.dataset.eat] = el.value; save(); getRecipe(el.dataset.eat).then((r) => ($("#plan-out").innerHTML = planText(r, el.value))); }
     if (el.dataset.act === "block-beep") { S.block[weekId].beep = el.checked; save(); unlockAudio(); askNotify(); blockTimers(el.checked); }
   });
-  document.addEventListener("input", (e) => { if (e.target.dataset.search != null) { filter.q = e.target.value; drawList($("#view")); } });
+  document.addEventListener("input", (e) => { if (e.target.dataset.search != null) { filter.q = e.target.value; drawList($("#view")); } if (e.target.dataset.notein) noteDraft[e.target.dataset.notein] = e.target.value; });
 
   /* ---------- Einstellungen anwenden, Installation ---------- */
   function applySettings() {
@@ -2064,14 +2125,15 @@
       try { if (await refreshData()) result = "changed"; } catch (e) { result = "offline"; }
       if (v && (await syncSwaps(true))) result = "changed";
       if (v) syncTaste(true);
-      if (v) syncStars(true);
+      if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
+      if (v) syncNotes(true);
       if (!v) result = result === "changed" ? "changed" : "offline";
       if (swReg && v) swReg.update().catch(() => {});
       if (v && codeTag && v !== codeTag) markUpdate();
       if (v && !codeTag) codeTag = v;
       const dayChanged = renderedDay && renderedDay !== today();
       if ((result === "changed" || dayChanged) && !manual) {
-        if (!inCooking && $("#sheet").hidden) { rerenderSoft(); if (result === "changed") toast("Neuer Stand vom Speiseplan geladen"); }
+        if (!inCooking && $("#sheet").hidden && !(document.activeElement && /TEXTAREA|INPUT/.test(document.activeElement.tagName))) { rerenderSoft(); if (result === "changed") toast("Neuer Stand vom Speiseplan geladen"); }
       }
       return result;
     })().finally(() => { checking = null; });
@@ -2091,7 +2153,10 @@
   save();
   syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
   syncTaste(true).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); });
-  syncStars(true).then((ch) => { if (ch && !inCooking && $("#sheet").hidden) rerenderSoft(); });
+  const starsFirst = () => { if (starsReady) return; starsReady = true; reviewList = null; maybeReview(); };
+  syncStars(true).then((ch) => { if (ch) softIfIdle(); starsFirst(); }, starsFirst);
+  setTimeout(starsFirst, 6000);
+  syncNotes(true).then((ch) => { if (ch) softIfIdle(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen

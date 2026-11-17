@@ -1,5 +1,5 @@
 {
- "info": "Sterne aus dem Kochbuddy. Schlüssel = Rezept-Slug aus rezepte/. s: 1–5 Sterne, anton: true = für Anton geeignet, t: Titel, at: Zeitpunkt.",
+ "info": "Sterne aus dem Kochbuddy. Schlüssel = Rezept-Slug aus rezepte/. s: 1–5 Sterne, kind: true = fürs Kind geeignet, t: Titel, at: Zeitpunkt.",
  "items": {
   "rindergulasch-mit-karotten-und-spaetzle": {
    "s": 5,
@@ -13,7 +13,7 @@
     "Vorkochen",
     "Einfrieren"
    ],
-   "anton": true
+   "kind": true
   }
  },
  "updated": "2026-11-17T17:45:19.549Z"
