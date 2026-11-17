@@ -1494,12 +1494,14 @@
     for (const k of Object.keys(T.log)) if (k < old) { delete T.log[k]; ch = true; }
     if (ch) save();
   }
+  const slotRank = (x) => (/mittag/i.test(x) ? 0 : 1);
+  const logKeys = (T) => Object.keys(T.log).sort((a, b) => { const [ia, sa] = a.split("|"), [ib, sb] = b.split("|"); return ia < ib ? -1 : ia > ib ? 1 : slotRank(sa) - slotRank(sb); });
   const eatenAt = (iso, slot) => { const [H, M] = (S.settings.eat[slot] || (/mittag/i.test(slot) ? "12:00" : "18:00")).split(":").map(Number); const d = new Date(iso + "T00:00"); d.setHours(H, M + 30, 0, 0); return d.getTime(); };
   const fridayOf = (iso) => { const dow = new Date(iso + "T12:00").getDay(); return addDays(iso, ((5 - dow) + 7) % 7); };
   /* Gegessene Gerichte ohne Sterne; due = nur die, deren Planwoche schon vorbei ist (ab Samstag) */
   function unrated(due) {
     const T = stars(), now = Date.now(), t = today(), seen = new Map();
-    for (const k of Object.keys(T.log).sort()) {
+    for (const k of logKeys(T)) {
       const [iso, slot] = k.split("|"), x = T.log[k];
       if (eatenAt(iso, slot) > now) continue;
       if (due && fridayOf(iso) >= t) continue;
@@ -1991,7 +1993,7 @@
       case "review-demo": {
         e.preventDefault();
         const T = stars(), seen = new Map();
-        for (const k of Object.keys(T.log).sort()) { const x = T.log[k], [iso, slot] = k.split("|"); if (x.wk === weekId && !seen.has(x.slug)) seen.set(x.slug, { slug: x.slug, title: x.t, tags: x.tags, iso, slot, wk: x.wk }); }
+        for (const k of logKeys(T)) { const x = T.log[k], [iso, slot] = k.split("|"); if (x.wk === weekId && !seen.has(x.slug)) seen.set(x.slug, { slug: x.slug, title: x.t, tags: x.tags, iso, slot, wk: x.wk }); }
         reviewList = [...seen.values()]; if (reviewList.length) drawReview(); break;
       }
     }
