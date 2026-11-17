@@ -444,13 +444,15 @@
     }
     if (embedded) html += `<div class="banner dark"><p style="font-weight:400">Vorschau im Claude-Fenster. Als installierte App auf dem Handy laufen Alarmton, Benachrichtigung und „Bildschirm bleibt an“ zuverlässig.</p></div>`;
     html += `<div class="wk-grid"><div class="wk-now">`;
-    if (isPrepDay && w.prep && w.prep.timeline) {
+    if (isPrepDay && w.prep && w.prep.timeline && prepDone(w)) {
+      html += `<a class="card today prepcard done" href="#/vorkochen"><span class="kick"><i></i>Vorkochen erledigt</span><h2>${esc(w.prep.title || "Vorkoch-Block")}</h2><p>Alles fertig – hier steht, was wohin kommt.</p></a>`;
+    } else if (isPrepDay && w.prep && w.prep.timeline) {
       html += `<a class="card today prepcard" href="#/vorkochen"><span class="kick"><i></i>Heute ist Vorkoch-Sonntag</span><h2>${esc(w.prep.title || "Vorkoch-Block")}</h2><p>${esc(w.prep.when || "")}</p><span class="btn light">${PLAY}Vorkochen starten</span></a>`;
     }
     const ordered = todayDay ? [todayDay, ...w.days.filter((d) => d !== todayDay && d.iso > t), ...w.days.filter((d) => d !== todayDay && d.iso < t)] : w.days;
     if (todayDay) html += dayCard(w, todayDay, true);
     const ev = currentEvening(w);
-    if (ev && t >= addDays(w.week.start, -1) && t <= addDays(w.week.start, 5)) {
+    if (ev && !todayDay && t >= addDays(w.week.start, -1) && t <= addDays(w.week.start, 5)) {
       const done = Object.keys(bag("check", `${weekId}:${ev.i}`)).length, n = ev.e.items.length, tIso = eveTarget(w, ev.e, ev.i), tFe = ironDays(w)(tIso);
       html += `<a class="card evening${done >= n ? " full" : ""}" href="#/checkliste" style="--p:${n ? (done / n).toFixed(3) : 0}"><span class="ev-ring">${ring()}<b>${done}/${n}</b></span><span class="ev-t"><small>Heute Abend vorbereiten</small><b>${esc(ev.e.for ? ev.e.for.charAt(0).toUpperCase() + ev.e.for.slice(1) : "Für morgen")}</b>${tFe ? `<span class="fe-chip">${FE}${esc(DAY_LONG(tIso))} ist Eisen-Tag</span>` : ev.e.tag ? `<span class="chip pump">${esc(ev.e.tag)}</span>` : ""}</span><span class="chev">${NEXT}</span></a>`;
     }
@@ -495,6 +497,24 @@
     const plan = bt && !isNaN(bt) ? `Plan vom ${DAYS[bt.getDay()].slice(0, 2)} ${pad(bt.getDate())}.${pad(bt.getMonth() + 1)}., ${hm(bt)}` : "Plan";
     return `${plan} · ${lastOnline ? `zuletzt geprüft ${hm(lastOnline)}` : "noch nicht online geprüft"} · <a href="#" data-act="reload">jetzt aktualisieren</a>`;
   }
+  /* Eine Mahlzeit (Karte) – für die Tageskarten und den Tagesablauf von heute */
+  function mealHtml(w, d, m, open, timeInfo) {
+    const r = w.recipes[m.recipe];
+    if (!r) return "";
+    const ref = `w:${weekId}:${m.recipe}`;
+    const prog = progress(ref, r), c = tone(r.tags);
+    let h = `<div class="meal${c ? " t-" + c : ""}"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? "<em>Hauptmahlzeit</em>" : ""}</span>
+        ${fotoThumb(r.slug, "meal-th")}<div class="mb"><a class="mt" href="#/r/${ref}"><b>${esc(r.title)}</b></a>
+        <span class="chips">${timeInfo ? `<span class="chip pump">${CLOCK}${esc(timeInfo)}</span>` : ""}${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost undo" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min., davon ${r.time.active} aktiv</span>`}${prog ? `<span class="chip ok">${prog}</span>` : ""}</span>`;
+    if (r.slug && eatenAt(d.iso, m.slot) <= Date.now()) h += `<div class="meal-rate">${starsHtml(r)}${babyBtn(r)}</div>`;
+    if (open) {
+      if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
+      const nts = m.mode === "aufwaermen" ? noteTimers(m.note) : [];
+      h += `<div class="go">${nts.map((x, i) => timerChip({ min: x.min, max: x.max, text: x.text, label: x.label, title: shortTitle(r.title), sub: "Aufwärmen", ctx: `${ref}:n${i}` }, `${ref}:n${i}`)).join("")}
+          <a class="btn${m.mode === "aufwaermen" ? " small" : " primary"}" href="#/${m.mode === "aufwaermen" ? "r" : "k"}/${ref}">${m.mode === "aufwaermen" ? "Rezept ansehen" : `${PLAY}${prog ? "Weiterkochen" : "Kochen"}`}</a></div>`;
+    }
+    return h + `</div></div>`;
+  }
   function dayCard(w, d, open, past) {
     const isToday = d.iso === today();
     const rem = bag("rem", `${weekId}:${d.id}`);
@@ -502,28 +522,89 @@
     let h = `<section class="card day${isToday ? " today hero" : ""}${open ? " open" : " compact"}${past && !open ? " past" : ""}" id="day-${d.id}">`;
     if (isToday) h += `<div class="day-h" data-expand="${d.id}"><div class="hd"><span class="kick"><i></i>Heute${fe ? `<span class="kick-fe">${FE}Eisen-Tag fürs Kind</span>` : ""}</span><h2>${esc(d.name)}</h2></div><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span></div>`;
     else h += `<div class="day-h" data-expand="${d.id}"><span class="date"><small>${MONTHS[mo - 1]}</small><b>${dd}</b></span><h2>${esc(d.name)}${fe ? ` <span class="fe-chip">${FE}Eisen-Tag</span>` : ""}</h2><span class="chev" aria-hidden="true">${NEXT}</span></div>`;
+    if (isToday) return h + agendaHtml(w, d, rem) + `</section>`;
     if (open && d.reminders && d.reminders.length) {
       h += `<ul class="checks rems">${d.reminders.map((x, i) => checkRow(rem[i], esc(x), `data-rem="${d.id}:${i}"`)).join("")}</ul>`;
     }
-    h += `<div class="meals">`;
+    h += `<div class="meals">${d.meals.map((m) => mealHtml(w, d, m, open)).join("")}</div>`;
+    return h + `</section>`;
+  }
+
+  /* ---------- Heute: Tagesablauf nach Zeitfenstern, danach „Für morgen vorbereiten“ ----------
+     Erinnerungen werden nach Stichworten einsortiert (morgens, vormittags/einkaufen, mittags, nachmittags, abends);
+     ohne Stichwort zum passenden Gericht, sonst unter „Heute“. Was abends schon für morgen ist, kommt in den Vorbereiten-Block. */
+  const toMin = (hhmm) => { const [a, b] = String(hhmm || "0:0").split(":").map(Number); return a * 60 + (b || 0); };
+  const fromMin = (m) => `${pad(Math.floor(((m % 1440) + 1440) % 1440 / 60))}:${pad(((m % 60) + 60) % 60)}`;
+  function remWindow(t) {
+    const s = t.toLowerCase();
+    if (/nachmittag|vor dem essengehen/.test(s)) return "nachm";
+    if (/^\s*abends?\b|\babends\b|heute abend/.test(s)) return "abend";
+    if (/^\s*mittags?\b|\bmittags\b/.test(s)) return "mittag";
+    if (/vormittag|einkauf|kaufen|ladenöffnung|wochenmarkt|\bmarkt\b/.test(s)) return "vorm";
+    if (/morgens|\bfrüh\b|frühstück|gleich nach dem aufstehen/.test(s)) return "frueh";
+    return "";
+  }
+  function agendaHtml(w, d, rem) {
+    const eatM = toMin(S.settings.eat.Mittag || "12:00"), eatA = toMin(S.settings.eat.Abend || "18:00");
+    const tmr = addDays(d.iso, 1), tmrName = DAY_LONG(tmr);
+    const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
+    const win = {
+      heute: { label: "Heute", time: "den ganzen Tag", end: 1440, items: [], meals: [] },
+      frueh: { label: "Morgens", time: "bis 9 Uhr", end: 9 * 60, items: [], meals: [] },
+      vorm: { label: "Vormittags", time: "9–12 Uhr", end: 12 * 60, items: [], meals: [] },
+      mittag: { label: "Mittags", time: `Essen ${fromMin(eatM)} Uhr`, end: eatM + 90, items: [], meals: [] },
+      nachm: { label: "Nachmittags", time: "14–17 Uhr", end: 17 * 60, items: [], meals: [] },
+      abend: { label: "Abends", time: `Essen ${fromMin(eatA)} Uhr`, end: eatA + 90, items: [], meals: [] },
+    };
+    const prepRems = [];
+    (d.reminders || []).forEach((x, i) => {
+      let k = remWindow(x);
+      const forTmr = new RegExp(`\\b${tmrName}\\b|für morgen`, "i").test(x);
+      if (k === "abend" && forTmr && !/aufwärm|essen|backen|kochen/i.test(x.split(":")[0] || "")) { prepRems.push({ x, i }); return; }
+      if (!k) { const m = recipeFor(x, w, d.meals.map((mm) => mm.recipe)); const meal = m && d.meals.find((mm) => mm.recipe === m.id); k = meal ? (/mittag/i.test(meal.slot) ? "mittag" : "abend") : "heute"; }
+      win[k].items.push({ x, i, tag: forTmr ? `für ${tmrName.slice(0, 2)}` : "" });
+    });
     for (const m of d.meals) {
-      const r = w.recipes[m.recipe];
-      if (!r) continue;
-      const ref = `w:${weekId}:${m.recipe}`;
-      const prog = progress(ref, r), c = tone(r.tags);
-      h += `<div class="meal${c ? " t-" + c : ""}"${!embedded && slotOpen(d.iso, m.slot) ? ` data-drop="${d.iso}|${esc(m.slot)}"` : ""}><span class="slot">${esc(m.slot)}${m.kind === "haupt" ? "<em>Hauptmahlzeit</em>" : ""}</span>
-        ${fotoThumb(r.slug, "meal-th")}<div class="mb"><a class="mt" href="#/r/${ref}"><b>${esc(r.title)}</b></a>
-        <span class="chips">${m._swap ? `<span class="chip pump">${m._swap.status === "offen" ? "Getauscht · Übernahme 21 Uhr" : "Getauscht"}</span>${m._swap.status === "offen" ? `<button class="btn small ghost undo" data-unswap="${m._swap.id}">Rückgängig</button>` : ""}` : ""}${m.badge ? `<span class="chip pump">${esc(m.badge)}</span>` : ""}${m.mode === "aufwaermen" ? "" : `<span class="chip plain">${r.time.total} Min., davon ${r.time.active} aktiv</span>`}${prog ? `<span class="chip ok">${prog}</span>` : ""}</span>`;
-      if (r.slug && eatenAt(d.iso, m.slot) <= Date.now()) h += `<div class="meal-rate">${starsHtml(r)}${babyBtn(r)}</div>`;
-      if (open) {
-        if (m.note) h += `<p class="note">${esc(m.note)}</p>`;
-        const nts = m.mode === "aufwaermen" ? noteTimers(m.note) : [];
-        h += `<div class="go">${nts.map((x, i) => timerChip({ min: x.min, max: x.max, text: x.text, label: x.label, title: shortTitle(r.title), sub: "Aufwärmen", ctx: `${ref}:n${i}` }, `${ref}:n${i}`)).join("")}
-          <a class="btn${m.mode === "aufwaermen" ? " small" : " primary"}" href="#/${m.mode === "aufwaermen" ? "r" : "k"}/${ref}">${m.mode === "aufwaermen" ? "Rezept ansehen" : `${PLAY}${prog ? "Weiterkochen" : "Kochen"}`}</a></div>`;
-      }
-      h += `</div></div>`;
+      const r = w.recipes[m.recipe]; if (!r) continue;
+      const k = /mittag/i.test(m.slot) ? "mittag" : "abend", eat = k === "mittag" ? eatM : eatA;
+      // Vorgekochtes, nur noch heiß machen oder fertig backen: Dauer aus der Notiz statt der ganzen Rezeptzeit
+      const quick = m.mode === "aufwaermen" || /nur noch|heiß machen|aufwärm|erhitzen|aufgetaut|direkt in den ofen|vorgekocht|vorbereitet/i.test(m.note || "");
+      const mins = [...String(m.note || "").matchAll(/(\d+)(?:\s*[–-]\s*(\d+))?\s*Min/g)].map((x) => +(x[2] || x[1]));
+      const dur = quick ? (mins.length ? Math.max(...mins) : 10) + 5 : Math.ceil((r.time.total || 30) / 5) * 5;
+      const start = eat - dur;
+      win[k].meals.push({ m, info: quick ? `ab ${fromMin(start)} heiß machen · essen ${fromMin(eat)}` : `anfangen ${fromMin(start)} · essen ${fromMin(eat)}` });
+      if (!quick && start < 9 * 60 + 30 && k === "mittag") win.vorm.items.push({ x: `${shortTitle(r.title)} ansetzen (ca. ${r.time.total} Min.)`, i: null, tag: "" });
     }
-    return h + `</div></section>`;
+    if (!win.mittag.meals.length) win.mittag.time = "12–14 Uhr";
+    if (!win.abend.meals.length) win.abend.time = "ab 17 Uhr";
+    const order = ["heute", "frueh", "vorm", "mittag", "nachm", "abend"];
+    let curK = order.slice(1).find((k) => nowM < win[k].end) || "abend";
+    let h = `<div class="agenda">`;
+    for (const k of order) {
+      const x = win[k];
+      if (!x.items.length && !x.meals.length) continue;
+      const past = k !== "heute" && nowM >= x.end, isNow = k === curK;
+      h += `<section class="ag${past ? " ag-past" : ""}${isNow ? " ag-now" : ""}"><div class="ag-h"><b>${x.label}</b><small>${esc(x.time)}</small>${isNow ? `<span class="ag-badge">jetzt</span>` : ""}</div>`;
+      if (x.items.length) h += `<ul class="checks rems">${x.items.map((it) => it.i == null ? `<li class="check info"><span class="txt">${esc(it.x)}</span></li>` : checkRow(rem[it.i], esc(it.x) + (it.tag ? ` <span class="ag-tag">${esc(it.tag)}</span>` : ""), `data-rem="${d.id}:${it.i}"`)).join("")}</ul>`;
+      if (x.meals.length) h += `<div class="meals">${x.meals.map((mm) => mealHtml(w, d, mm.m, true, mm.info)).join("")}</div>`;
+      h += `</section>`;
+    }
+    h += `</div>`;
+    // Für morgen vorbereiten: Abend-Checkliste (zielt auf morgen) + Erinnerungen von heute Abend für morgen
+    const ev = currentEvening(w);
+    const evItems = ev ? ev.e.items : [], tFe = ironDays(w)(tmr);
+    // doppelte Punkte vermeiden: steht dasselbe Thema schon in der Abend-Checkliste, die Erinnerung weglassen
+    const evText = evItems.join(" ").toLowerCase();
+    for (let q = prepRems.length - 1; q >= 0; q--) { const words = (prepRems[q].x.toLowerCase().match(/[a-zäöüß]{5,}/g) || []).filter((x) => !["abends", "morgen", "heute"].includes(x)); if (words.length && words.filter((x) => evText.includes(x)).length / words.length >= 0.5) prepRems.splice(q, 1); }
+    if (evItems.length || prepRems.length) {
+      const ck = ev ? bag("check", `${weekId}:${ev.i}`) : {}, doneN = Object.keys(ck).length + prepRems.filter((p) => rem[p.i]).length, n = evItems.length + prepRems.length;
+      const [, tm, td] = tmr.split("-").map(Number);
+      h += `<section class="ag-prep${doneN >= n ? " full" : ""}"><div class="agp-h"><div><span class="agp-k">Heute Abend · ab ca. ${fromMin(eatA + 90)} Uhr</span><b>Für morgen vorbereiten</b><small>${esc(tmrName)}, ${td}.${tm}.${tFe ? ` · <span class="fe-chip">${FE}Eisen-Tag</span>` : ""}</small></div><span class="ev-ring" style="--p:${n ? (doneN / n).toFixed(3) : 0}">${ring()}<b>${doneN}/${n}</b></span></div>`;
+      h += `<ul class="checks">${evItems.map((it, j) => checkRow(ck[j], esc(it), `data-cl="${ev.i}:${j}"`)).join("")}${prepRems.map((p) => checkRow(rem[p.i], esc(p.x), `data-rem="${d.id}:${p.i}"`)).join("")}</ul>`;
+      if (ev && ev.e.note) h += `<p class="small agp-note">${esc(ev.e.note)}</p>`;
+      h += `<a class="agp-link" href="#/checkliste">Ganze Abend-Checkliste${NEXT}</a></section>`;
+    }
+    return h;
   }
   function progress(ref, r) {
     const n = Object.keys(S.steps[ref] || {}).length;
@@ -705,6 +786,14 @@
   }, { passive: true });
 
   /* ---------- Vorkochen (Sonntag) ---------- */
+  /* Vorkoch-Block fertig: alles abgehakt, „Fertig“ getippt oder der Vorkoch-Tag ist vorbei */
+  function prepDone(w, wid = weekId) {
+    const p = w.prep || {}, B = S.block[wid] || {}, n = (p.timeline || []).length;
+    if (!n) return false;
+    if (B.end) return true;
+    if (Object.keys(B.done || {}).length >= n) return true;
+    return today() >= w.week.start;
+  }
   async function renderPrep(view) {
     const w = await week();
     const p = w.prep || {};
@@ -731,14 +820,24 @@
       return ann.html + (ex ? `<span class="tl-more">Dazu: ${ex}</span>` : "");
     };
     if (p.when) h += `<p class="muted" style="margin:0 0 6px;font-weight:700">${esc(p.when)}</p>`;
-    if (p.intro) h += `<p>${esc(p.intro)}</p>`;
-    if (!B.start) h += `<div class="card prep-go"><button class="btn primary big" data-act="block-start">${PLAY}Jetzt mit dem Vorkochen starten</button><p class="small muted" style="margin:10px 0 0">Die Zeitleiste bekommt dann echte Uhrzeiten, der aktuelle Schritt wird markiert. Erledigtes antippen zum Abhaken.</p></div>`;
+    const done = prepDone(w), n = p.timeline.length, nDone = Object.keys(B.done || {}).length;
+    const storage = p.storage && p.storage.length ? `<div class="section-title">Was wohin kommt</div><div class="card"><table class="storage">${p.storage.map((s) => `<tr><td>${esc(s.what)}</td><td>${esc(s.where)}<div class="small muted">${esc(s.until || "")}</div></td></tr>`).join("")}</table></div>` : "";
+    const tl = `<ul class="tl">${p.timeline.map((x, i) => `<li class="${!done && i === cur ? "now" : ""}${!done && i < cur ? " past" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : `${esc(x.t)}${i === 0 ? "<small>Start</small>" : ""}`}</span><span class="node">${CHECK}</span><span class="tx">${prepText(x.text)}</span></li>`).join("")}</ul>`;
+    if (done) {
+      // Fertig: oben die Bestätigung, gleich darunter „Was wohin kommt“, die Zeitleiste zugeklappt ganz unten
+      const when = B.end ? `um ${hm(B.end)} Uhr` : B.start ? `gestartet um ${hm(B.start)} Uhr` : "";
+      h += `<div class="card prep-done"><span class="pd-ico"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><b>Vorkochen erledigt</b><p>${nDone >= n ? `Alle ${n} Schritte abgehakt` : nDone ? `${nDone} von ${n} Schritten abgehakt` : "Der Vorkoch-Tag ist vorbei"}${when ? ` · ${esc(when)}` : ""}. Jetzt zählt nur noch, was wohin kommt.</p></div></div>`;
+      h += storage;
+    } else if (p.intro) h += `<p>${esc(p.intro)}</p>`;
+    if (done) { /* kein Start- oder Live-Block mehr */ }
+    else if (!B.start) h += `<div class="card prep-go"><button class="btn primary big" data-act="block-start">${PLAY}Jetzt mit dem Vorkochen starten</button><p class="small muted" style="margin:10px 0 0">Die Zeitleiste bekommt dann echte Uhrzeiten, der aktuelle Schritt wird markiert. Erledigtes antippen zum Abhaken.</p></div>`;
     else {
       const nx = nextI >= 0 ? B.start + off(p.timeline[nextI].t) : 0;
       h += `<div class="card today live"><div class="spread"><div><span class="kick"><i></i>Gestartet um ${hm(B.start)}</span><b class="nexttime">${nextI >= 0 ? `Als Nächstes um ${hm(nx)}` : "Letzter Schritt erreicht"}</b>${nextI >= 0 ? `<p>in ${Math.max(0, Math.ceil((nx - Date.now()) / 60000))} Min.: ${esc(excerpt(p.timeline[nextI].text, 80))}</p>` : ""}</div><button class="btn small light" data-act="block-reset">Neu starten</button></div>`;
-      h += `<div class="set-row"><span>Bei jedem Zeitpunkt mit Ton erinnern</span><label class="switch"><input type="checkbox" data-act="block-beep" ${B.beep ? "checked" : ""}><span></span></label></div></div>`;
+      h += `<div class="set-row"><span>Bei jedem Zeitpunkt mit Ton erinnern</span><label class="switch"><input type="checkbox" data-act="block-beep" ${B.beep ? "checked" : ""}><span></span></label></div>`;
+      h += `<button class="btn small" style="margin-top:10px" data-act="block-finish"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Vorkochen ist fertig</button></div>`;
     }
-    h += `<ul class="tl">${p.timeline.map((x, i) => `<li class="${i === cur ? "now" : ""}${i < cur ? " past" : ""}${B.done && B.done[i] ? " on" : ""}" data-tl="${i}"><span class="at">${B.start ? hm(B.start + off(x.t)) + `<small>+${esc(x.t)}</small>` : `${esc(x.t)}${i === 0 ? "<small>Start</small>" : ""}`}</span><span class="node">${CHECK}</span><span class="tx">${prepText(x.text)}</span></li>`).join("")}</ul>`;
+    if (!done) h += tl;
     // Auch Rezepte, die nur in der Zeitleiste vorkommen (z. B. „Kartoffeln fürs Gratin“), hier verlinken
     const blockIds = [...new Set([...(p.recipes || []), ...p.timeline.map((x) => (recipeFor(x.text, w, p.recipes || []) || {}).id).filter(Boolean)])];
     if (blockIds.length) {
@@ -746,8 +845,9 @@
         const r = w.recipes[id]; return r ? `<li class="${tone(r.tags) ? "t-" + tone(r.tags) : ""}"><a href="#/r/w:${weekId}:${id}"><b>${esc(r.title)}</b><span class="small muted">${(p.recipes || []).includes(id) ? esc(p.recipeNote || "") : "Rezept mit allen Mengen öffnen"}</span></a></li>` : "";
       }).join("")}</ul>`;
     }
-    if (p.storage && p.storage.length) {
-      h += `<div class="section-title">Was wohin kommt</div><div class="card"><table class="storage">${p.storage.map((s) => `<tr><td>${esc(s.what)}</td><td>${esc(s.where)}<div class="small muted">${esc(s.until || "")}</div></td></tr>`).join("")}</table></div>`;
+    if (!done) h += storage;
+    else {
+      h += `<details class="card tl-fold"><summary><b>Zeitleiste ansehen</b><span class="small muted">${n} Schritte${nDone ? `, ${nDone} abgehakt` : ""}</span></summary>${p.intro ? `<p class="small muted">${esc(p.intro)}</p>` : ""}${tl}${B.start || B.end ? `<button class="btn small ghost" data-act="block-reset">Block neu starten</button>` : ""}</details>`;
     }
     view.innerHTML = h;
   }
@@ -964,10 +1064,10 @@
      im privaten Repo Einkaufsbuddy-Daten. Der Schlüssel des Geräts braucht dann Zugriff auf beide Repos.
      Ohne Zugriff speichert die App nur auf dem Gerät weiter (nichts geht verloren) und zeigt oben einen Hinweis. */
   const DATA_REPO = "Padderico/Einkaufsbuddy-Daten";
-  let ablage = { privat: false }, privOk = null;
+  let ablage = { privat: false }, privOk = null, privAt = 0;
   async function loadAblage() {
     try { const a = await getJSON("daten/ablage.json", true); ablage = a && a.privat ? a : { privat: false }; } catch (e) { ablage = { privat: false }; }
-    if (ablage.privat && ghToken()) { try { privOk = !!(await gh("GET", "", null, DATA_REPO)); } catch (e) { privOk = e.code === "offline" ? privOk : false; } }
+    if (ablage.privat && ghToken() && (privOk !== true || Date.now() - privAt > 6 * 3600000)) { try { privOk = !!(await gh("GET", "", null, DATA_REPO)); privAt = Date.now(); } catch (e) { privOk = e.code === "offline" ? privOk : false; } }
     return ablage;
   }
   const dataReady = () => !ablage.privat || privOk === true;
@@ -1326,11 +1426,27 @@
     return "gemuese";
   };
   const taste = () => { S.taste = S.taste || { r: {}, ops: [], hist: [] }; S.taste.r = S.taste.r || {}; S.taste.ops = S.taste.ops || []; S.taste.hist = S.taste.hist || []; return S.taste; };
+  /* „Eingeplant“ (schreibt die Wochenaufgabe): im Speicher halten, im Hintergrund höchstens alle 10 Min. auffrischen –
+     die Ansicht wartet nie aufs Netz */
+  let einCache = null, einAt = 0, einLoading = null;
+  function loadEingeplant() {
+    if (einLoading) return einLoading;
+    einLoading = (ablage.privat ? (dataReady() && ghToken() ? dgh("GET", "/contents/geschmack/eingeplant.json").then((r) => (r ? JSON.parse(b64d(r.content)) : {})) : Promise.resolve({})) : fetch("../geschmack/eingeplant.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {})))
+      .catch(() => einCache || {}).then((d) => { einCache = d || {}; einAt = Date.now(); S.einCache = einCache; save(); return einCache; }).finally(() => { einLoading = null; });
+    return einLoading;
+  }
+  function eingeplant() {
+    if (!einCache && S.einCache) einCache = S.einCache;
+    if (embedded) return Promise.resolve({});
+    if (!einCache) return loadEingeplant();
+    if (Date.now() - einAt > 10 * 60000) loadEingeplant();
+    return Promise.resolve(einCache);
+  }
   async function tastePool() {
     const [idea, recs, plan] = await Promise.all([
       getJSON("daten/ideen.json").catch(() => ({ ideas: [], days: {} })),
       getJSON("../rezepte/rezepte.json").catch(() => (embedded && embedded.files["../rezepte/rezepte.json"]) || []),
-      (ablage.privat ? (dataReady() && ghToken() ? dgh("GET", "/contents/geschmack/eingeplant.json").then((r) => (r ? JSON.parse(b64d(r.content)) : {})) : Promise.resolve({})) : fetch("../geschmack/eingeplant.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : {}))).catch(() => ({})),
+      eingeplant(),
     ]);
     const ideas = (idea.ideas || []).filter((x) => x && x.id && x.t).map((x) => ({ id: "i:" + x.id, t: x.t, d: x.d || "", tags: x.tags || [], min: x.min, art: FOOD[x.art] ? x.art : artFor(x.t), src: "idee" }));
     const recipes = (recs || []).filter((r) => !SKIP_SLUGS.has(r.slug) && !(r.tags || []).includes("Vorrat")).map((r) => ({ id: "a:" + r.slug, t: r.title, d: r.last ? `Gab es bei euch zuletzt in ${r.last}. Wieder einplanen?` : "", tags: r.tags || [], min: r.total, art: artFor(r.title), src: "rezept", slug: r.slug }));
@@ -1865,15 +1981,27 @@
     return notesSyncing;
   }
   /* neu zeichnen nur, wenn gerade niemand tippt oder eine Schublade offen hat */
-  const softIfIdle = () => { const a = document.activeElement; if (!inCooking && $("#sheet").hidden && !(a && /TEXTAREA|INPUT/.test(a.tagName))) rerenderSoft(); };
+  // Mehrere Abgleiche kurz hintereinander → nur ein Neuaufbau, und nie während getippt, gewischt oder gekocht wird
+  let softT = null, lastTouch = 0;
+  ["pointerdown", "keydown", "scroll"].forEach((ev) => window.addEventListener(ev, () => { lastTouch = Date.now(); }, { passive: true }));
+  function softIfIdle() {
+    clearTimeout(softT);
+    softT = setTimeout(() => {
+      const a = document.activeElement;
+      if (inCooking || !$("#sheet").hidden || (a && /TEXTAREA|INPUT/.test(a.tagName)) || swDrag || drag) return;
+      if (Date.now() - lastTouch < 1500) { softIfIdle(); return; }
+      rerenderSoft();
+    }, 900);
+  }
 
   /* ---------- Beispielfotos (Unsplash, freie Lizenz) ----------
      app/daten/fotos.json: items[slug] = {id, by, page}. Lädt das Bild nicht, bleibt die Illustration bzw. nichts. */
   let fotos = null;
   async function loadFotos() { if (fotos) return fotos; try { fotos = (await getJSON("daten/fotos.json")).items || {}; } catch (e) { fotos = {}; } return fotos; }
   const fotoOf = (slug) => (fotos && slug && fotos[slug]) || null;
-  const fotoUrl = (f, w) => `https://images.unsplash.com/${encodeURIComponent(f.id)}?w=${w}&q=70&auto=format&fit=crop`;
-  const fotoImg = (f, w, cls = "") => `<img class="ph ${cls}" src="${fotoUrl(f, w)}" srcset="${fotoUrl(f, w)} 1x, ${fotoUrl(f, w * 2)} 2x" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('noimg')">`;
+  // Feste Bildbreiten (immer dieselben Adressen → einmal geladen, dann aus dem Speicher): Vorschau 160 px, groß 800 px
+  const fotoUrl = (f, w) => `https://images.unsplash.com/${encodeURIComponent(f.id)}?w=${w}&q=${w > 300 ? 62 : 55}&auto=format&fit=crop`;
+  const fotoImg = (f, w, cls = "") => { const big = w > 300, ww = big ? 800 : 160; return `<img class="ph ${cls}" src="${fotoUrl(f, ww)}" width="${ww}" height="${big ? 500 : ww}" alt="" loading="${big ? "eager" : "lazy"}" fetchpriority="${big ? "high" : "low"}" decoding="async" onerror="this.parentNode.classList.add('noimg')">`; };
   function fotoHero(r) {
     const f = fotoOf(r.slug); if (!f) return "";
     return `<figure class="r-photo">${fotoImg(f, 900)}<figcaption>Beispielfoto · <a href="${esc(f.page)}?utm_source=kochbuddy&amp;utm_medium=referral" target="_blank" rel="noopener">${esc(f.by)}</a> / <a href="https://unsplash.com/?utm_source=kochbuddy&amp;utm_medium=referral" target="_blank" rel="noopener">Unsplash</a></figcaption></figure>`;
@@ -2110,7 +2238,7 @@
   let wakeLock = null;
   async function updateWake() {
     const B = S.block[weekId];
-    const want = inCooking || S.timers.some((t) => t.state === "run" || t.state === "done") || (B && B.start && Date.now() - B.start < 4 * 3600000 && location.hash.startsWith("#/vorkochen"));
+    const want = inCooking || S.timers.some((t) => t.state === "run" || t.state === "done") || (B && B.start && !B.end && Date.now() - B.start < 4 * 3600000 && location.hash.startsWith("#/vorkochen"));
     if (want && !wakeLock && "wakeLock" in navigator && document.visibilityState === "visible") {
       try {
         wakeLock = await navigator.wakeLock.request("screen");
@@ -2161,9 +2289,14 @@
       return;
     }
     if (d.prep != null) { el.classList.toggle("on", toggle("prep", inCooking ? cookRef : view.dataset.ref, d.prep)); return; }
-    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); return; }
+    if (d.rem) { const [day, i] = d.rem.split(":"); el.classList.toggle("on", toggle("rem", `${weekId}:${day}`, i)); if (el.closest(".ag-prep")) rerenderSoft(); return; }
     if (d.cl) { const [i, j] = d.cl.split(":"); toggle("check", `${weekId}:${i}`, j); rerenderSoft(); return; }
-    if (d.tl != null) { const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on"); return; }
+    if (d.tl != null) {
+      const B = (S.block[weekId] = S.block[weekId] || {}); B.done = B.done || {}; if (B.done[d.tl]) delete B.done[d.tl]; else B.done[d.tl] = 1; save(); el.classList.toggle("on");
+      const w = await week();
+      if (!B.end && w.prep && Object.keys(B.done).length >= (w.prep.timeline || []).length) { B.end = Date.now(); blockTimers(false); save(); updateWake(); toast("Vorkochen fertig – super!"); window.scrollTo(0, 0); rerenderSoft(); }
+      return;
+    }
     if (d.go != null) { const ref = view.dataset.ref; S.cook[ref] = { ...(S.cook[ref] || { start: Date.now() }), step: +d.go }; cookRef = null; save(); navTo(`#/k/${ref}`, "push"); return; }
     if (d.jump != null) { cookStep = +d.jump; showList = false; S.cook[cookRef].step = cookStep; save(); drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); return; }
     if (d.expand) { if (!view.querySelector(`.today [data-expand="${d.expand}"]`)) { expanded[d.expand] = !expanded[d.expand]; rerenderSoft(); } return; }
@@ -2255,6 +2388,7 @@
       case "cook-restart": delete S.steps[cookRef]; delete S.ing[cookRef]; S.cook[cookRef] = { start: Date.now(), step: 0 }; cookStep = 0; save(); drawCook(view, await getRecipe(cookRef), cookRef); break;
       case "reset-recipe": { const ref = view.dataset.ref; ["steps", "ing", "prep", "cook"].forEach((k) => delete S[k][ref]); if (cookRef === ref) cookRef = null; save(); rerenderSoft(); toast("Zurückgesetzt"); break; }
       case "block-start": S.block[weekId] = { start: Date.now(), done: {}, beep: false }; save(); updateWake(); rerenderSoft(); break;
+      case "block-finish": { const B = (S.block[weekId] = S.block[weekId] || {}); B.end = Date.now(); blockTimers(false); save(); updateWake(); toast("Vorkochen fertig – super!"); window.scrollTo(0, 0); rerenderSoft(); break; }
       case "block-reset": blockTimers(false); delete S.block[weekId]; save(); rerenderSoft(); break;
       case "new-timer": newTimerSheet(); break;
       case "quick-go": { const m = parseFloat(($("[data-qmin]") || {}).value); if (m > 0) { askNotify(); addTimer({ min: m * 60, title: ($("[data-qlabel]").value || "Timer").trim(), label: `${fmt(m)} Min.` }); closeSheet(); } break; }
@@ -2374,7 +2508,7 @@
   for (const t of S.timers) if (t.state === "run" && Date.now() >= t.end) { t.state = "done"; t.firedAt = Date.now(); }
   save();
   const ablageP = loadAblage();
-  ablageP.then(() => syncSwaps(true)).then((ch) => { if (ch && !inCooking) rerenderSoft(); });
+  ablageP.then(() => syncSwaps(true)).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => syncTaste(true)).then((ch) => { if (ch && location.hash.startsWith("#/entdecken") && !swAnim) rerenderSoft(); });
   const starsFirst = () => { if (starsReady) return; starsReady = true; reviewList = null; maybeReview(); };
   ablageP.then(() => syncStars(true)).then((ch) => { if (ch) softIfIdle(); starsFirst(); }, starsFirst);
@@ -2382,9 +2516,9 @@
   ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => setTimeout(syncLog, 5000));
   ablageP.then(() => syncVerlauf()).then((ch) => { if (ch) softIfIdle(); });
-  ablageP.then(() => { if (ablage.privat && !inCooking && $("#sheet").hidden) rerenderSoft(); });
+  ablageP.then(() => { if (ablage.privat) softIfIdle(); });
   route().then(() => {
     if (!S.settings.toured && !embedded && $("#alarm").hidden) setTimeout(() => { if ($("#sheet").hidden) showTour(0); }, 500); if (S.timers.length) { scheduleTimers(); if (S.timers.some((t) => t.state === "done")) showAlarm(); } });
   // Live-Anzeige im Vorkoch-Block jede halbe Minute auffrischen
-  setInterval(() => { if (location.hash.startsWith("#/vorkochen") && S.block[weekId] && $("#sheet").hidden) rerenderSoft(); }, 30000);
+  setInterval(() => { if (location.hash.startsWith("#/vorkochen") && S.block[weekId] && !S.block[weekId].end && !$("details.tl-fold") && $("#sheet").hidden) rerenderSoft(); }, 30000);
 })();

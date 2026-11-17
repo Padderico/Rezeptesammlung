@@ -1,7 +1,7 @@
 /* Kochbuddy – Service Worker.
    Alles kommt frisch vom GitHub-Repo (Plan, Rezepte und der App-Code selbst). Der Speicher auf dem Handy ist nur
    der Rückfall ohne Netz bzw. bei sehr langsamem WLAN. Schriften und Icons ändern sich nie und kommen aus dem Speicher. */
-const VERSION = "kochbuddy-10";
+const VERSION = "kochbuddy-12";
 const SHELL = [
   "./", "index.html", "app.css", "app.js", "manifest.webmanifest", "favicon.svg",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/badge-96.png",
@@ -9,6 +9,7 @@ const SHELL = [
   "fonts/bricolage-grotesque-latin-var.woff2",
   "fonts/ibm-plex-mono-latin-600-normal.woff2",
 ];
+const FOTO_CACHE = "kochbuddy-fotos-1"; // bleibt über App-Updates hinweg bestehen
 const SLOW_MS = 4000; // so lange wird aufs Netz gewartet, wenn schon eine gespeicherte Fassung da ist
 
 self.addEventListener("install", (e) => {
@@ -22,7 +23,7 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("kochbuddy-") && k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("kochbuddy-") && k !== VERSION && k !== FOTO_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -46,6 +47,7 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  if (url.hostname === "images.unsplash.com") { e.respondWith(fotoCache(req)); return; }
   if (url.origin !== self.location.origin) return;
   if (/\/(fonts|icons)\//.test(url.pathname)) {
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
@@ -64,3 +66,16 @@ self.addEventListener("notificationclick", (e) => {
     })
   );
 });
+
+/* Beispielfotos: zuerst aus dem Speicher, sonst laden und merken (höchstens 200 Bilder) */
+async function fotoCache(req) {
+  const c = await caches.open(FOTO_CACHE);
+  const hit = await c.match(req);
+  if (hit) return hit;
+  const res = await fetch(req);
+  if (res.ok || res.type === "opaque") {
+    c.put(req, res.clone());
+    c.keys().then((ks) => { if (ks.length > 200) ks.slice(0, ks.length - 200).forEach((k) => c.delete(k)); });
+  }
+  return res;
+}

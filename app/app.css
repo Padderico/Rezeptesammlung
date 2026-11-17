@@ -841,3 +841,53 @@ h2 .fe-chip { margin-left: 4px; font-size: .74rem; }
 .vl-list li i { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .vl-list li:not(:last-child)::after { content: ""; position: absolute; left: 4.5px; top: 20px; bottom: -6px; width: 1px; background: var(--line-2); }
 .sw-art.noimg .sw-ph { display: none; }
+
+/* ---------- Vorkoch-Block erledigt ---------- */
+.prep-done { display: flex; gap: 14px; align-items: center; background: var(--accent); color: var(--accent-ink); border: 0; }
+.prep-done b { font: 800 1.3rem/1.15 var(--font-display); }
+.prep-done p { margin: 4px 0 0; opacity: .92; }
+.pd-ico { flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--accent-ink); color: var(--accent); display: grid; place-items: center; }
+.pd-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.tl-fold { padding: 0; overflow: hidden; }
+.tl-fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px; }
+.tl-fold > summary::-webkit-details-marker { display: none; }
+.tl-fold > summary::after { content: "▾"; color: var(--muted); transition: transform .2s var(--ease); }
+.tl-fold[open] > summary::after { transform: rotate(180deg); }
+.tl-fold > :not(summary) { margin-left: 16px; margin-right: 16px; }
+.tl-fold > .btn { margin-bottom: 16px; }
+.prepcard.done .kick i { background: var(--accent-2); }
+
+/* ---------- Heute: Tagesablauf ---------- */
+.agenda { margin-top: 12px; }
+.ag { position: relative; padding: 8px 0 12px 20px; margin-left: 6px; border-left: 2px solid rgba(255, 255, 255, .16); }
+.ag:last-child { border-left-color: transparent; }
+.ag::before { content: ""; position: absolute; left: -7px; top: 13px; width: 12px; height: 12px; border-radius: 50%; background: var(--on-tanne-dim); }
+.ag-now::before { background: var(--pumpkin-hi); box-shadow: 0 0 0 5px rgba(255, 143, 58, .22); }
+.ag-past > :not(.ag-h) { opacity: .6; }
+.ag-past .ag-h { opacity: .6; }
+.ag-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ag-h b { font: 800 1.08rem/1.2 var(--font-display); color: var(--on-tanne); }
+.ag-h small { color: var(--on-tanne-dim); font-weight: 700; font-size: .82rem; }
+.ag-badge { font: 800 .66rem/1 var(--font-body); background: var(--pumpkin); color: #fff; padding: 4px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .08em; }
+.today .ag .rems { margin: 4px 0 0; }
+.ag .meals { margin-top: 8px; }
+.ag-tag { display: inline-block; font: 800 .7rem/1 var(--font-body); background: rgba(255, 255, 255, .14); padding: 3px 7px; border-radius: 999px; white-space: nowrap; vertical-align: 1px; }
+.check.info { padding-left: 0; }
+.check.info .txt { color: var(--on-tanne); font-weight: 700; }
+.check.info .txt::before { content: "→ "; color: var(--pumpkin-hi); }
+.ag-prep { margin-top: 10px; background: var(--hero-card); color: var(--ink); border-radius: 22px; padding: 14px 16px 12px; box-shadow: 0 10px 28px -16px rgba(0, 0, 0, .55); }
+.ag-prep.full { box-shadow: 0 0 0 2px var(--veg), 0 10px 28px -16px rgba(0, 0, 0, .55); }
+.agp-h { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.agp-k { display: block; font-size: .76rem; font-weight: 800; color: var(--pumpkin-ink); text-transform: uppercase; letter-spacing: .06em; }
+.agp-h b { display: block; font: 800 1.3rem/1.15 var(--font-display); margin: 2px 0; }
+.agp-h small { color: var(--muted); font-weight: 700; }
+.ag-prep .checks { margin: 8px 0 0; }
+.today .ag-prep .check { border-bottom-color: var(--line); }
+.today .ag-prep .check .txt { color: var(--ink); }
+.today .ag-prep .check.on .txt { color: var(--muted); text-decoration-color: var(--line-2); }
+.today .ag-prep .ev-ring .ring .trk { stroke: var(--line); }
+.agp-note { color: var(--muted); margin: 8px 0 0; }
+.agp-link { display: inline-flex; align-items: center; gap: 2px; margin-top: 8px; font-weight: 700; color: var(--accent); text-decoration: none; }
+.agp-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+.today .ag-prep .box { border-color: var(--line-2); }
+.ag-prep .fe-chip { color: var(--ink); }
