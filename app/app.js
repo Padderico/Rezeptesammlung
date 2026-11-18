@@ -658,7 +658,7 @@
     const fromWeek = ref.startsWith("w:");
     const slot = fromWeek ? mealSlot(ref) : null;
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
-    let h = `<div class="r-topbar"><a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>${embedded ? "" : `<button type="button" class="freeze-btn" data-freeze="${esc(ref)}" aria-label="Einfrieren: in den Vorrat und Etikett drucken">${SNOW}<span>Einfrieren</span></button>`}</div>`;
+    let h = `<div class="r-topbar"><a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>${embedded ? "" : `<button type="button" class="freeze-btn" data-freeze="${esc(ref)}" aria-label="Einfrieren: in den Vorrat und Etikett drucken" title="${esc(freezeName(r))} einfrieren">${SNOW}<span>Einfrieren</span></button>`}</div>`;
     if (canBT()) loadNiim().catch(() => {});
     const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
     h += fotoHero(r);
@@ -680,7 +680,7 @@
       return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${annotate(r, ph.text, k).html}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">${CLOCK}${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
     }).join("")}</ol></div>`;
     if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
-    if (r.store || !embedded) h += `<div class="card"><h3>Aufbewahren & Varianten</h3>${r.store ? `<p style="margin:6px 0 0">${esc(r.store)}</p>` : ""}${embedded ? "" : `<div class="freeze-line"><button type="button" class="btn small" data-freeze="${esc(ref)}">${SNOW} Einfrieren & Etikett drucken</button><span class="small muted">Haltbar bis ${dmy(addMonthsIso(today(), freezeMonths(r)))} · ${vrCount(r.slug)}</span></div>`}</div>`;
+    if (r.store || !embedded) h += `<div class="card"><h3>Aufbewahren & Varianten</h3>${r.store ? `<p style="margin:6px 0 0">${esc(r.store)}</p>` : ""}${embedded ? "" : `<div class="freeze-line"><button type="button" class="btn small" data-freeze="${esc(ref)}">${SNOW} ${esc(freezeName(r))} einfrieren</button><span class="small muted">Etikett wird gedruckt · haltbar bis ${dmy(addMonthsIso(today(), freezeMonths(r)))} · ${vrCount(r.slug)}</span></div>`}</div>`;
     h += notesBox(r);
     h += rateBlock(r);
     h += verlaufCard(r);
@@ -2743,11 +2743,22 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
   }
   /* Haltbarkeit aus dem Rezepttext, sonst 3 Monate; nie länger als 3 Monate */
   function freezeMonths(r) {
+    const fz = r && r.einfrieren;
+    if (fz && +fz.monate > 0) return Math.max(1, Math.min(3, Math.round(+fz.monate)));
     const txt = [r && r.store, r && r.servingsNote].filter(Boolean).join(" ");
     const m = txt.match(/(?:eingefroren|einfrieren|gefrierschrank|gefrierfach|tiefkühl\w*)[^.]{0,30}?(\d+)\s*(Monat|Woche)/i) || txt.match(/(\d+)\s*(Monat|Woche)\w*\s+(?:im\s+|in\s+der\s+)?(?:Gefrier|Tiefkühl|eingefroren)/i);
     let n = 3;
     if (m) n = /woche/i.test(m[2]) ? Math.max(1, Math.round(+m[1] / 4)) : +m[1];
     return Math.max(1, Math.min(3, n || 3));
+  }
+  /* Eingefroren wird nur der Hauptteil, frische Beilagen nicht: „Rindergulasch mit Karotten & Spätzle“ → „Rindergulasch“,
+     Suppen und Aufläufe ganz. Steht im Rezept einfrieren.name (schreibt der Buddy), gilt das. */
+  function freezeName(r) {
+    if (r && r.einfrieren && r.einfrieren.name) return String(r.einfrieren.name).trim().slice(0, 60);
+    let t = String((r && r.title) || "").trim();
+    if (!/one-pot/i.test(t)) t = t.split(/\s+mit\s+/i)[0]; // One-Pot: alles ist zusammen gekocht
+    t = t.replace(/\s+(aus der Heißluftfritteuse|aus dem Varoma|aus dem Ofen|vom Blech|aus dem Gefrierschrank)$/i, "");
+    return t.trim().slice(0, 60) || String((r && r.title) || "").slice(0, 60);
   }
   function addMonthsIso(iso, n) {
     const [y, mo, d] = iso.split("-").map(Number), last = new Date(y, mo - 1 + n + 1, 0).getDate();
@@ -2883,10 +2894,10 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     const r = await getRecipe(ref);
     const m = freezeMonths(r), am = today();
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    vrOp({ op: "add", id, it: { t: r.title, slug: r.slug || "", am, bis: addMonthsIso(am, m), m } });
-    $$(".freeze-line .muted").forEach((x) => (x.textContent = `Haltbar bis ${dmy(addMonthsIso(am, m))} · ${vrCount(r.slug)}`));
+    vrOp({ op: "add", id, it: { t: freezeName(r), rt: r.title, slug: r.slug || "", am, bis: addMonthsIso(am, m), m } });
+    $$(".freeze-line .muted").forEach((x) => (x.textContent = `Etikett wird gedruckt · haltbar bis ${dmy(addMonthsIso(am, m))} · ${vrCount(r.slug)}`));
     if (/nicht\s+(?:zum\s+)?einfrieren|nicht\s+einfrierbar/i.test(r.store || "")) toast("Hinweis: Laut Rezept eignet es sich nicht gut zum Einfrieren");
-    else if (!canBT()) toast(`${shortTitle(r.title)} ist im Vorrat (bis ${dmy(addMonthsIso(am, m))})`);
+    else if (!canBT()) toast(`${freezeName(r)} ist im Vorrat (bis ${dmy(addMonthsIso(am, m))})`);
     else toast("Im Vorrat – Etikett wird gedruckt …");
     buzz(10);
     await doPrint(id);
@@ -2914,7 +2925,9 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     openSheet(`<h2>${esc(it.t)}</h2><p class="small muted" style="margin:4px 0 12px">Eingefroren am ${dmy(it.am)} · verbrauchen bis ${dmy(it.bis)}${left < 0 ? " – abgelaufen" : left <= 14 ? ` – noch ${left} ${left === 1 ? "Tag" : "Tage"}` : ""}</p>
       <div class="label-prev"><img alt="Etikett" src="${cv.toDataURL()}"></div>
       <div class="act-btns"><button class="btn primary" data-vtake="${esc(id)}">Entnommen</button><button class="btn" data-vprint="${esc(id)}">${SNOW} Etikett nochmal drucken</button></div>
-      ${it.slug ? `<p class="small" style="margin:12px 0 0"><a href="#/r/a:${esc(it.slug)}" data-act="sheet-close">Zum Rezept</a></p>` : ""}`, { ek: "vorrat", ekid: id });
+      <form class="vr-rename" data-vrename="${esc(id)}" autocomplete="off"><label class="small" for="vrn"><b>Was ist in der Dose?</b></label>
+        <div class="ek-add" style="margin:6px 0 0"><input class="field" id="vrn" enterkeyhint="done" value="${esc(it.t)}" data-vrname><button class="btn">Ändern</button></div></form>
+      ${it.slug ? `<p class="small" style="margin:12px 0 0">${it.rt && it.rt !== it.t ? `Aus dem Rezept „${esc(it.rt)}“ · ` : ""}<a href="#/r/a:${esc(it.slug)}" data-act="sheet-close">Zum Rezept</a></p>` : ""}`, { ek: "vorrat", ekid: id });
   }
   const recSwitch = (on) => {
     const n = Object.keys(vrItems()).length;
@@ -2959,6 +2972,12 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
   document.addEventListener("submit", (e) => {
     const f = e.target;
     if (f.matches("[data-vrform]")) { e.preventDefault(); const i = $("[data-vradd]", f), v = i.value; i.value = ""; freezeOwn(v); }
+    else if (f.matches("[data-vrename]")) {
+      e.preventDefault();
+      const id = f.dataset.vrename, it = vrItems()[id], t = (($("[data-vrname]", f) || {}).value || "").trim().slice(0, 60);
+      if (!it || !t || t === it.t) return;
+      vrOp({ op: "set", id, it: { t } }); vrRefresh(); vrSheet(id).then(() => toast("Geändert – „Etikett nochmal drucken“ druckt den neuen Namen"));
+    }
   });
 
   /* ---------- Timer ---------- */
@@ -3255,7 +3274,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       case "prn-connect": try { if (!canBT()) break; await printerConnect(true); toast(`Drucker verbunden${prnName ? ": " + prnName : ""}`); } catch (er) { toast(printErrText(er)); } break;
       case "prn-test": {
         if (!canBT()) break;
-        const am = today(), it = { t: "Testetikett: Rindergulasch mit Karotten & Spätzle", am, bis: addMonthsIso(am, 3), m: 3 };
+        const am = today(), it = { t: "Testetikett Rindergulasch", am, bis: addMonthsIso(am, 3), m: 3 };
         try { await printLabel(it); toast("Testetikett gedruckt"); } catch (er) { toast(printErrText(er)); }
         break;
       }

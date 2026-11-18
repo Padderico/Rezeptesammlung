@@ -323,6 +323,8 @@ def app_recipe(rid, r, weeks=None):
         "kid": r.get("anton", ""), "store": r.get("store", ""),
         "page": SITE + "rezepte/" + slug + ".html", "bring": bring.deeplink(short, r.get("base", 3)),
     }
+    if isinstance(r.get("einfrieren"), dict) and r["einfrieren"].get("name"):
+        rec["einfrieren"] = _pick(r["einfrieren"], ("name", "monate"))  # Gefrier-Etikett der Koch-App
     if weeks:
         rec["weeks"] = weeks
     return _anon_deep(rec)

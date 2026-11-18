@@ -1016,3 +1016,5 @@ a.agp-go:active { transform: scale(.98); }
 .prn-more summary { cursor: pointer; color: var(--muted); margin-top: 12px; font-weight: 700; }
 .label-prev { background: var(--surface-2); border-radius: 16px; padding: 16px; display: grid; place-items: center; }
 .label-prev img { width: 100%; max-width: 330px; aspect-ratio: 384 / 240; border-radius: 10px; box-shadow: 0 3px 14px rgba(0, 0, 0, .18); background: #fff; }
+.vr-rename { margin-top: 16px; }
+.vr-rename .ek-add .btn { font-size: 1rem; min-width: 0; padding: 0 18px; border-radius: 14px; min-height: 50px; }
