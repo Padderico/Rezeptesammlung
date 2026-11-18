@@ -67,6 +67,28 @@
    "i:sellerieschnitzel-mit-kartoffelsalat",
    "i:polenta-schnitten-mit-tomaten-paprika-sosse",
    "i:bratkartoffeln-mit-fruehlingsquark-und-gurkensalat"
+  ],
+  "2026-11-18": [
+   "i:haehnchen-mango-pfanne-mit-kokos-reis",
+   "i:rinderhack-stroganoff-mit-bandnudeln",
+   "i:chicken-pot-pie-mit-blaetterteigdeckel",
+   "i:rindfleisch-brokkoli-pfanne-mit-reis",
+   "i:putenschnitzel-in-parmesan-panade-mit-tomaten-spaghetti",
+   "i:haehnchen-fajita-pfanne-mit-paprika-und-reis",
+   "i:rahmschnitzel-mit-spaetzle-und-erbsen",
+   "i:lachs-gnocchi-pfanne-mit-spinat-und-sahne",
+   "i:seelachs-nuggets-mit-kartoffel-erbsen-stampf",
+   "i:lachs-bratreis-mit-erbsen-und-mais",
+   "i:pasta-alfredo-mit-brokkoli-und-erbsen",
+   "i:gnocchi-pfanne-mit-paprika-und-frischkaese",
+   "i:spaghetti-in-zucchini-zitronen-sahne",
+   "i:gemuese-udon-in-milder-sojasosse",
+   "i:apfel-pfannkuchen-vom-blech",
+   "i:spinat-feta-boerek-schnecken-mit-joghurt-dip",
+   "i:suesskartoffel-erdnuss-topf-mit-reis",
+   "i:butternudeln-mit-rahmkarotten-und-parmesan",
+   "i:japanisches-gemuese-curry-mit-kartoffeln-und-reis",
+   "i:spaetzle-gemuese-pfanne-mit-champignons-und-bergkaese"
   ]
  },
  "ideas": [
@@ -2555,6 +2577,262 @@
    ],
    "min": 40,
    "art": "kartoffel"
+  },
+  {
+   "id": "haehnchen-mango-pfanne-mit-kokos-reis",
+   "t": "Hähnchen-Mango-Pfanne mit Kokos-Reis",
+   "d": "Zarte Hähnchenstreifen mit reifer Mango und Paprika, mild und fruchtig auf Kokosreis.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 30,
+   "art": "huhn"
+  },
+  {
+   "id": "rinderhack-stroganoff-mit-bandnudeln",
+   "t": "Rinderhack-Stroganoff mit Bandnudeln",
+   "d": "Hack mit Champignons in milder Paprika-Sahne, schnell gemacht und herrlich cremig.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Russisch",
+    "Eisen"
+   ],
+   "min": 30,
+   "art": "rind"
+  },
+  {
+   "id": "chicken-pot-pie-mit-blaetterteigdeckel",
+   "t": "Hähnchen-Gemüse-Pie mit Blätterteigdeckel",
+   "d": "Hähnchen, Erbsen und Karotten in Rahmsoße unter knusprigem Blätterteig.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Britisch"
+   ],
+   "min": 55,
+   "art": "huhn"
+  },
+  {
+   "id": "rindfleisch-brokkoli-pfanne-mit-reis",
+   "t": "Rindfleisch-Brokkoli-Pfanne mit Reis",
+   "d": "Feine Rinderstreifen in milder Soja-Honig-Soße, Brokkoli schonend im Varoma gedämpft.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch",
+    "Eisen"
+   ],
+   "min": 35,
+   "art": "rind"
+  },
+  {
+   "id": "putenschnitzel-in-parmesan-panade-mit-tomaten-spaghetti",
+   "t": "Putenschnitzel mit Parmesankruste und Tomaten-Spaghetti",
+   "d": "Knusprige Putenschnitzel mit Parmesan, dazu Spaghetti in fruchtiger Mutti-Tomatensoße.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Italienisch",
+    "Kinderliebling"
+   ],
+   "min": 35,
+   "art": "huhn"
+  },
+  {
+   "id": "haehnchen-fajita-pfanne-mit-paprika-und-reis",
+   "t": "Milde Hähnchen-Fajita-Pfanne mit Paprika und Reis",
+   "d": "Bunte Paprika, Mais und Hähnchen mit mildem Paprikagewürz, dazu Reis und Frühlingsquark.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "One-Pot",
+    "Mexikanisch"
+   ],
+   "min": 30,
+   "art": "huhn"
+  },
+  {
+   "id": "rahmschnitzel-mit-spaetzle-und-erbsen",
+   "t": "Rahmschnitzel mit Spätzle und Erbsen",
+   "d": "Zarte Schweineschnitzel in heller Rahmsoße, dazu Spätzle und Buttererbsen.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Deutsch"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "lachs-gnocchi-pfanne-mit-spinat-und-sahne",
+   "t": "Lachs-Gnocchi-Pfanne mit Spinat und Sahne",
+   "d": "Goldbraune Gnocchi mit Lachswürfeln und Blattspinat in leichter Sahnesoße.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "One-Pot",
+    "Italienisch",
+    "Eisen"
+   ],
+   "min": 25,
+   "art": "fisch"
+  },
+  {
+   "id": "seelachs-nuggets-mit-kartoffel-erbsen-stampf",
+   "t": "Seelachs-Nuggets mit Kartoffel-Erbsen-Stampf",
+   "d": "Knusprig panierte Seelachshappen aus der Heißluftfritteuse, dazu grüner Stampf.",
+   "tags": [
+    "Fisch",
+    "Heißluftfritteuse",
+    "Kinderliebling"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "lachs-bratreis-mit-erbsen-und-mais",
+   "t": "Lachs-Bratreis mit Erbsen und Mais",
+   "d": "Gebratener Reis mit zarten Lachsstückchen, Erbsen, Mais und einem Hauch Sojasoße.",
+   "tags": [
+    "Fisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 30,
+   "art": "reis"
+  },
+  {
+   "id": "pasta-alfredo-mit-brokkoli-und-erbsen",
+   "t": "Pasta Alfredo mit Brokkoli und Erbsen",
+   "d": "Bandnudeln in samtiger Parmesan-Sahne mit Brokkoli und Erbsen aus dem Varoma.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "Varoma",
+    "Italienisch"
+   ],
+   "min": 30,
+   "art": "nudel"
+  },
+  {
+   "id": "gnocchi-pfanne-mit-paprika-und-frischkaese",
+   "t": "Gnocchi-Pfanne mit Paprika und Frischkäse",
+   "d": "Knusprige Gnocchi in cremiger Paprika-Frischkäse-Soße, fertig in zwanzig Minuten.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "One-Pot"
+   ],
+   "min": 20,
+   "art": "kartoffel"
+  },
+  {
+   "id": "spaghetti-in-zucchini-zitronen-sahne",
+   "t": "Spaghetti in Zucchini-Zitronen-Sahne",
+   "d": "Feine Zucchiniwürfel in frischer Zitronen-Sahne mit Parmesan, leicht und cremig.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Pfanne",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "gemuese-udon-in-milder-sojasosse",
+   "t": "Gemüse-Udon in milder Sojasoße",
+   "d": "Dicke Udon-Nudeln mit Karotten, Paprika und Brokkoli in süß-milder Soße.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Varoma",
+    "Asiatisch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "apfel-pfannkuchen-vom-blech",
+   "t": "Apfel-Pfannkuchen vom Blech mit Zimt",
+   "d": "Fluffiger Pfannkuchenteig mit Apfelscheiben im Ofen gebacken, ganz ohne Wenden.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Süß",
+    "Kinderliebling"
+   ],
+   "min": 40,
+   "art": "suess"
+  },
+  {
+   "id": "spinat-feta-boerek-schnecken-mit-joghurt-dip",
+   "t": "Spinat-Feta-Schnecken mit Joghurt-Dip",
+   "d": "Knusprige Teigschnecken mit Blattspinat und mildem Feta, dazu ein frischer Joghurt-Dip.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Türkisch",
+    "Eisen"
+   ],
+   "min": 45,
+   "art": "blatt"
+  },
+  {
+   "id": "suesskartoffel-erdnuss-topf-mit-reis",
+   "t": "Süßkartoffel-Erdnuss-Topf mit Reis",
+   "d": "Cremiger Eintopf mit Süßkartoffel, Tomaten und Erdnussmus, mild und wärmend.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Thermomix",
+    "Westafrikanisch"
+   ],
+   "min": 40,
+   "art": "kuerbis"
+  },
+  {
+   "id": "butternudeln-mit-rahmkarotten-und-parmesan",
+   "t": "Butternudeln mit Rahmkarotten und Parmesan",
+   "d": "Einfach und gut: Nudeln in Butter, dazu süße Karotten in Rahm und frischer Parmesan.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Varoma",
+    "Deutsch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "japanisches-gemuese-curry-mit-kartoffeln-und-reis",
+   "t": "Japanisches Gemüse-Curry mit Kartoffeln und Reis",
+   "d": "Mildes, leicht süßes Curry mit Kartoffeln, Karotten und Apfel, sämig eingekocht.",
+   "tags": [
+    "Vegetarisch",
+    "Thermomix",
+    "One-Pot",
+    "Japanisch"
+   ],
+   "min": 45,
+   "art": "reis"
+  },
+  {
+   "id": "spaetzle-gemuese-pfanne-mit-champignons-und-bergkaese",
+   "t": "Spätzle-Gemüse-Pfanne mit Champignons und Bergkäse",
+   "d": "Spätzle mit Champignons, Lauch und Karotten angebraten, mit würzigem Bergkäse überzogen.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 30,
+   "art": "pilz"
   }
  ]
 }
