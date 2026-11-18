@@ -356,8 +356,8 @@
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
       navTo("#/", "replace"); return;
     }
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte" }[parts[0] || ""] ?? "";
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte", "vorrat"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -371,6 +371,7 @@
       else if (parts[0] === "angebote") await renderDeals(view);
       else if (parts[0] === "einkauf") await renderEinkauf(view);
       else if (parts[0] === "rezepte") await renderAll(view);
+      else if (parts[0] === "vorrat") await renderVorrat(view);
       else if (parts[0] === "entdecken") await renderDiscover(view);
       else await renderWeek(view);
     } catch (e) {
@@ -387,7 +388,7 @@
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
      Tabs stapeln sich nicht: Woche -> Checkliste -> Vorkochen, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/angebote", "#/einkauf", "#/entdecken", "#/rezepte"];
+  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/angebote", "#/einkauf", "#/entdecken", "#/rezepte", "#/vorrat"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -657,7 +658,8 @@
     const fromWeek = ref.startsWith("w:");
     const slot = fromWeek ? mealSlot(ref) : null;
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
-    let h = `<a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>`;
+    let h = `<div class="r-topbar"><a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>${embedded ? "" : `<button type="button" class="freeze-btn" data-freeze="${esc(ref)}" aria-label="Einfrieren: in den Vorrat und Etikett drucken">${SNOW}<span>Einfrieren</span></button>`}</div>`;
+    if (canBT()) loadNiim().catch(() => {});
     const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
     h += fotoHero(r);
     h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).kind ? " stamped" : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
@@ -678,7 +680,7 @@
       return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${annotate(r, ph.text, k).html}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">${CLOCK}${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
     }).join("")}</ol></div>`;
     if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
-    if (r.store) h += `<div class="card"><h3>Aufbewahren & Varianten</h3><p style="margin:6px 0 0">${esc(r.store)}</p></div>`;
+    if (r.store || !embedded) h += `<div class="card"><h3>Aufbewahren & Varianten</h3>${r.store ? `<p style="margin:6px 0 0">${esc(r.store)}</p>` : ""}${embedded ? "" : `<div class="freeze-line"><button type="button" class="btn small" data-freeze="${esc(ref)}">${SNOW} Einfrieren & Etikett drucken</button><span class="small muted">Haltbar bis ${dmy(addMonthsIso(today(), freezeMonths(r)))} · ${vrCount(r.slug)}</span></div>`}</div>`;
     h += notesBox(r);
     h += rateBlock(r);
     h += verlaufCard(r);
@@ -945,7 +947,7 @@
   function pendingInfo() {
     const ats = [];
     const add = (ops) => (ops || []).forEach((o) => { const a = o.at || (o.swap && o.swap.at); if (a) ats.push(new Date(a).getTime()); else ats.push(Date.now()); });
-    add(stars().ops); add(notesSt().ops); add(taste().ops); add(ek().ops);
+    add(stars().ops); add(notesSt().ops); add(taste().ops); add(ek().ops); add(vr().ops);
     for (const k of Object.keys(S.swaps || {})) add((S.swaps[k] || {}).ops);
     return { n: ats.length, since: ats.length ? Math.min(...ats) : 0 };
   }
@@ -999,7 +1001,7 @@
     const [, m, d] = nextMon.split("-").map(Number);
     return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">Noch nicht da</span><b>Der Plan ab Montag, ${d}.${m}., fehlt</b><div class="small">Normalerweise kommt er donnerstags gegen 6 Uhr. Der Buddy prüft das stündlich, startet die Planung bei Bedarf neu und gibt Bescheid. <a href="#" data-act="reload">Jetzt nachsehen</a></div></div></div></section>`;
   }
-  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet), syncEinkauf(quiet)]).then((r) => r.some(Boolean)); }
+  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet), syncEinkauf(quiet), syncVorrat(quiet)]).then((r) => r.some(Boolean)); }
 
   /* ---------- Hinweise: Was ist noch zu tun? (oben in der Woche, orange) ---------- */
   async function bringUpdates() {
@@ -2234,7 +2236,7 @@
     let list;
     try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
     const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
-    let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>`;
+    let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>${recSwitch("rezepte")}`;
     h += `<label class="searchbox"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="search" type="search" aria-label="Rezepte durchsuchen" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search></label>`;
     h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
     h += `<ul class="r-list" id="rlist"></ul>`;
@@ -2693,6 +2695,272 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     else if (f.matches("[data-ekcode]")) { e.preventDefault(); const v = ($("[data-ekcodein]", f) || {}).value || ""; if (!normCode(v)) { toast("Die Ziffern passen nicht zu einem Strichcode – bitte prüfen"); return; } closeSheet(); onScan(v, "hand"); }
   });
 
+  /* ---------- Vorrat: was im Gefrierschrank liegt ----------
+     Schneeflocke am Rezept: Gericht kommt mit Datum in den Vorrat und ein Etikett (50 × 30 mm) wird gedruckt.
+     Haltbarkeit: was das Rezept nennt („eingefroren 3 Monate“), höchstens 3 Monate – die Faustregel für selbst
+     gekochte Gerichte (BZfE, Verbraucherzentrale). Entnommenes wird im Reiter Rezepte → Vorrat ausgetragen.
+     Gespeichert nur im privaten Repo: vorrat/gefrierschrank.json. */
+  const VR_PATH = "/contents/vorrat/gefrierschrank.json";
+  const VR_INFO = "Gefrierschrank aus dem Kochbuddy: items: id → {t: Gericht, slug: Rezept (leer bei Eigenem), am: eingefroren (JJJJ-MM-TT), bis: verbrauchen bis, m: Monate, at}. Schreibt die App (Schneeflocke am Rezept, „Entnommen“ im Vorrat) – nicht von Hand ändern und nicht für Einkaufslisten verwenden.";
+  const SNOW = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5"/><path d="M9.3 4.2L12 6.4l2.7-2.2M9.3 19.8l2.7-2.2 2.7 2.2M4.4 10.6l3.2-.9-1-3.2M19.6 13.4l-3.2.9 1 3.2M4.4 13.4l3.2.9-1 3.2M19.6 10.6l-3.2-.9 1-3.2"/></svg>';
+  const vr = () => { const V = (S.vorrat = S.vorrat || {}); V.items = V.items || {}; V.ops = V.ops || []; return V; };
+  function vrApply(items, ops) {
+    const I = {};
+    for (const [k, v] of Object.entries(items || {})) I[k] = { ...v };
+    for (const o of ops) { if (o.op === "add") I[o.id] = { ...o.it, at: o.at }; else if (o.op === "del") delete I[o.id]; else if (o.op === "set" && I[o.id]) Object.assign(I[o.id], o.it); }
+    return I;
+  }
+  const vrItems = () => { const V = vr(); return vrApply(V.items, V.ops); };
+  let vrTimer = null, vrSyncing = null;
+  function vrOp(o) { o.at = o.at || new Date().toISOString(); vr().ops.push(o); save(); if (!embedded) { clearTimeout(vrTimer); vrTimer = setTimeout(() => syncVorrat(true).then((ch) => { if (ch) vrRefresh(); }), 3000); } }
+  function syncVorrat(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (vrSyncing) return vrSyncing;
+    vrSyncing = (async () => {
+      const V = vr();
+      if (!ablage.privat || !dataReady() || !ghToken()) return false;
+      try {
+        for (let k = 0; k < 3; k++) {
+          const r = await gh("GET", VR_PATH, null, DATA_REPO);
+          const data = r ? JSON.parse(b64d(r.content)) : {};
+          const ops = V.ops.slice();
+          if (!ops.length) { const before = JSON.stringify(V.items); V.items = data.items || {}; save(); return before !== JSON.stringify(V.items); }
+          const items = vrApply(data.items, ops);
+          const msg = ops.map((o) => (o.op === "add" ? `eingefroren: ${o.it.t}` : o.op === "del" ? `entnommen: ${(o.it && o.it.t) || "Gericht"}` : "geändert")).join("; ");
+          try {
+            await gh("PUT", VR_PATH, { message: `Koch-App: Vorrat – ${msg}`.slice(0, 180), content: b64e(JSON.stringify({ info: VR_INFO, items, updated: new Date().toISOString() }, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) }, DATA_REPO);
+            V.ops = V.ops.slice(ops.length); V.items = items; save(); syncMark(true);
+            return true;
+          } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+        }
+      } catch (e) {
+        syncMark(false, e);
+        if (!quiet && e.code === "auth") { toast(`Vorrat nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
+      }
+      return false;
+    })().finally(() => { vrSyncing = null; });
+    return vrSyncing;
+  }
+  /* Haltbarkeit aus dem Rezepttext, sonst 3 Monate; nie länger als 3 Monate */
+  function freezeMonths(r) {
+    const txt = [r && r.store, r && r.servingsNote].filter(Boolean).join(" ");
+    const m = txt.match(/(?:eingefroren|einfrieren|gefrierschrank|gefrierfach|tiefkühl\w*)[^.]{0,30}?(\d+)\s*(Monat|Woche)/i) || txt.match(/(\d+)\s*(Monat|Woche)\w*\s+(?:im\s+|in\s+der\s+)?(?:Gefrier|Tiefkühl|eingefroren)/i);
+    let n = 3;
+    if (m) n = /woche/i.test(m[2]) ? Math.max(1, Math.round(+m[1] / 4)) : +m[1];
+    return Math.max(1, Math.min(3, n || 3));
+  }
+  function addMonthsIso(iso, n) {
+    const [y, mo, d] = iso.split("-").map(Number), last = new Date(y, mo - 1 + n + 1, 0).getDate();
+    return toIso(new Date(y, mo - 1 + n, Math.min(d, last)));
+  }
+  const vrCount = (slug) => { const n = slug ? Object.values(vrItems()).filter((x) => x.slug === slug).length : 0; return n ? `${n} im Vorrat` : "noch nichts im Vorrat"; };
+  const dmy = (iso, short) => { const [y, m, d] = iso.split("-"); return `${d}.${m}.${short ? y.slice(2) : y}`; };
+  const daysLeft = (iso) => Math.round((new Date(iso + "T12:00") - new Date(today() + "T12:00")) / 86400000);
+
+  /* Etikett zeichnen: 48 × 30 mm Druckbereich (B1: 384 × 240 Punkte bei 203 dpi), schwarz auf weiß */
+  function labelSize(meta) {
+    const dpmm = ((meta && meta.dpi) || 203) / 25.4;
+    return { w: Math.min((meta && meta.printheadPixels) || 384, Math.round(48 * dpmm)), h: Math.round(30 * dpmm) };
+  }
+  async function labelCanvas(it, meta) {
+    const { w, h } = labelSize(meta), s = w / 384;
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    const g = cv.getContext("2d");
+    try { await Promise.all([document.fonts.load(`800 ${30 * s}px "Bricolage Grotesque"`), document.fonts.load(`700 ${20 * s}px "Atkinson Hyperlegible"`)]); } catch (e) { /* Systemschrift */ }
+    const HEAD = '"Bricolage Grotesque", "Segoe UI", sans-serif', BODY = '"Atkinson Hyperlegible", "Segoe UI", sans-serif';
+    g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#000"; g.strokeStyle = "#000"; g.textBaseline = "alphabetic";
+    const pad = 14 * s;
+    // Kopfzeile: Schneeflocke, „EINGEFROREN“, Datum
+    const sx = pad + 11 * s, sy = pad + 11 * s, sr = 10 * s;
+    g.lineWidth = 2.6 * s; g.lineCap = "round";
+    for (let a = 0; a < 6; a++) {
+      const an = (a * Math.PI) / 3 + Math.PI / 2, ux = Math.cos(an), uy = Math.sin(an), bx = sx + ux * sr * 0.62, by = sy + uy * sr * 0.62, br = sr * 0.36;
+      g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + ux * sr, sy + uy * sr); g.stroke();
+      for (const k of [-1, 1]) { const ak = an + k * 0.75; g.beginPath(); g.moveTo(bx, by); g.lineTo(bx + Math.cos(ak) * br, by + Math.sin(ak) * br); g.stroke(); }
+    }
+    g.font = `700 ${17 * s}px ${BODY}`;
+    g.fillText("EINGEFROREN", pad + 28 * s, pad + 17 * s);
+    g.font = `800 ${21 * s}px ${BODY}`; g.textAlign = "right";
+    g.fillText(dmy(it.am), w - pad, pad + 18 * s); g.textAlign = "left";
+    // Gericht: so groß wie möglich, höchstens 3 Zeilen
+    const title = String(it.t || "").trim(), top = pad + 32 * s, bottom = h - 68 * s, maxW = w - 2 * pad;
+    let size = 40 * s, lines = [];
+    const wrap = (sz) => {
+      g.font = `800 ${sz}px ${HEAD}`;
+      const out = []; let cur = "";
+      for (const word of title.split(/\s+/)) {
+        const t = cur ? cur + " " + word : word;
+        if (g.measureText(t).width <= maxW || !cur) cur = t; else { out.push(cur); cur = word; }
+      }
+      if (cur) out.push(cur);
+      return out;
+    };
+    for (; size >= 18 * s; size -= 2 * s) { lines = wrap(size); if (lines.length * size * 1.02 <= bottom - top && lines.length <= 3 && lines.every((l) => g.measureText(l).width <= maxW)) break; }
+    if (lines.length > 3) { lines = lines.slice(0, 3); lines[2] = lines[2].replace(/\s*\S*$/, "") + " …"; }
+    g.font = `800 ${size}px ${HEAD}`;
+    const blockH = lines.length * size * 1.02, y0 = top + (bottom - top - blockH) / 2 + size * 0.86;
+    lines.forEach((l, i) => g.fillText(l, pad, y0 + i * size * 1.02, maxW));
+    // Fuß: Linie, „VERBRAUCHEN BIS“, großes Datum
+    g.lineWidth = 2.5 * s; g.beginPath(); g.moveTo(pad, h - 60 * s); g.lineTo(w - pad, h - 60 * s); g.stroke();
+    g.font = `700 ${16 * s}px ${BODY}`; g.fillText("VERBRAUCHEN BIS", pad, h - 34 * s);
+    g.fillText(`${it.m || 3} ${(it.m || 3) === 1 ? "MONAT" : "MONATE"}`, pad, h - 14 * s);
+    g.font = `800 ${38 * s}px ${HEAD}`; g.textAlign = "right"; g.fillText(dmy(it.bis), w - pad, h - 16 * s); g.textAlign = "left";
+    // reines Schwarz-Weiß wie beim Thermodruck
+    const img = g.getImageData(0, 0, w, h), px = img.data;
+    for (let i = 0; i < px.length; i += 4) { const v = px[i] * 0.3 + px[i + 1] * 0.59 + px[i + 2] * 0.11 < 150 ? 0 : 255; px[i] = px[i + 1] = px[i + 2] = v; px[i + 3] = 255; }
+    g.putImageData(img, 0, 0);
+    return cv;
+  }
+
+  /* Niimbot-Drucker über Web Bluetooth (Chrome auf Android). Bibliothek: niimbluelib (MIT), wird erst bei Bedarf geladen. */
+  let niimP = null, prn = null, prnName = "", printQ = Promise.resolve();
+  const canBT = () => !embedded && !!navigator.bluetooth;
+  function loadNiim() {
+    if (window.niimbluelib) return Promise.resolve(window.niimbluelib);
+    if (!niimP) niimP = new Promise((res, rej) => {
+      const sc = document.createElement("script"); sc.src = "vendor/niimbluelib.min.js";
+      sc.onload = () => (window.niimbluelib ? res(window.niimbluelib) : rej(new Error("Druck-Baustein fehlt")));
+      sc.onerror = () => { niimP = null; rej(new Error("Druck-Baustein nicht ladbar – Internet da?")); };
+      document.head.appendChild(sc);
+    });
+    return niimP;
+  }
+  const prnOn = () => !!(prn && prn.isConnected());
+  async function printerConnect(pick) {
+    const lib = await loadNiim();
+    if (prnOn() && !pick) return prn;
+    if (!prn) { prn = lib.instantiateClient("bluetooth"); prn.on("disconnect", () => vrRefresh()); }
+    let dev = null;
+    if (!pick && navigator.bluetooth.getDevices) {
+      try { const list = await navigator.bluetooth.getDevices(); dev = list.find((d) => d.name && d.name === S.settings.printer) || list.find((d) => /^B1/i.test(d.name || "")) || null; } catch (e) { dev = null; }
+    }
+    let info;
+    if (dev) { try { info = await prn.connect({ authorizedDevice: dev }); } catch (e) { dev = null; } }
+    if (!dev) info = await prn.connect(); // Chrome zeigt einmal die Auswahl „B1-…“
+    prnName = (info && info.deviceName) || "";
+    if (prnName) { S.settings.printer = prnName; save(); }
+    vrRefresh();
+    return prn;
+  }
+  function printLabel(it, pick) {
+    const job = printQ.then(async () => {
+      const lib = await loadNiim(), c = await printerConnect(pick);
+      const meta = c.getModelMetadata(), cv = await labelCanvas(it, meta);
+      const color = lib.PageColorType.SingleColor;
+      const task = c.protocol.newPrintTask(c.getPrintTaskType() || "B1", { totalPages: 1, statusPollIntervalMs: 100, statusTimeoutMs: 8000, pageColor: color,
+        density: S.settings.printDensity || (meta && meta.densityDefault) || 3, labelType: lib.LabelType.WithGaps });
+      try {
+        await task.printInit();
+        await task.printPage(lib.ImageEncoder.encodeCanvas(cv, color, (meta && meta.printDirection) || "top"), 1);
+        await task.waitForPageFinished();
+        await task.waitForFinished();
+      } finally { try { await task.printEnd(); } catch (e) { /* schon fertig */ } }
+    });
+    printQ = job.catch(() => {});
+    return job;
+  }
+  function printErrText(e) {
+    const n = (e && e.name) || "", m = String((e && e.message) || e || "");
+    if (n === "NotFoundError" || /cancel/i.test(m)) return "Kein Drucker ausgewählt.";
+    if (n === "SecurityError" || /gesture|activation/i.test(m)) return "Chrome braucht dafür einen frischen Tipp – bitte nochmal antippen.";
+    if (n === "NotSupportedError") return "Dieses Gerät kann sich nicht per Bluetooth mit dem Drucker verbinden.";
+    return `Der Drucker antwortet nicht. Ist er eingeschaltet, nah genug und die Niimbot-App geschlossen? (${m.slice(0, 80)})`;
+  }
+  function printFailSheet(e, id) {
+    openSheet(`<h2>Etikett nicht gedruckt</h2><p style="margin:6px 0 10px">${esc(printErrText(e))}</p>
+      <p class="small muted" style="margin:0 0 12px">Das Gericht steht trotzdem im Vorrat.</p>
+      <div class="act-btns"><button class="btn primary" data-vprint="${esc(id)}">Nochmal drucken</button><button class="btn" data-vprint="${esc(id)}|pick">Anderen Drucker wählen</button><button class="btn ghost" data-act="sheet-close">Ohne Etikett</button></div>`, { ek: "vprint" });
+  }
+  async function doPrint(id, pick) {
+    const it = vrItems()[id];
+    if (!it) return;
+    if (!canBT()) { toast("Drucken geht nur in Chrome auf dem Android-Tablet – das Gericht steht im Vorrat"); return; }
+    try { await printLabel(it, pick); buzz(15); toast(`Etikett gedruckt – verbrauchen bis ${dmy(it.bis)}`); }
+    catch (e) { printFailSheet(e, id); }
+  }
+  /* Schneeflocke: in den Vorrat legen und gleich das Etikett drucken (ein Tipp = eine Dose) */
+  async function freezeRecipe(ref) {
+    const r = await getRecipe(ref);
+    const m = freezeMonths(r), am = today();
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    vrOp({ op: "add", id, it: { t: r.title, slug: r.slug || "", am, bis: addMonthsIso(am, m), m } });
+    $$(".freeze-line .muted").forEach((x) => (x.textContent = `Haltbar bis ${dmy(addMonthsIso(am, m))} · ${vrCount(r.slug)}`));
+    if (/nicht\s+(?:zum\s+)?einfrieren|nicht\s+einfrierbar/i.test(r.store || "")) toast("Hinweis: Laut Rezept eignet es sich nicht gut zum Einfrieren");
+    else if (!canBT()) toast(`${shortTitle(r.title)} ist im Vorrat (bis ${dmy(addMonthsIso(am, m))})`);
+    else toast("Im Vorrat – Etikett wird gedruckt …");
+    buzz(10);
+    await doPrint(id);
+  }
+  async function freezeOwn(name) {
+    const t = String(name || "").trim().slice(0, 60);
+    if (!t) return;
+    const am = today(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    vrOp({ op: "add", id, it: { t, slug: "", am, bis: addMonthsIso(am, 3), m: 3 } });
+    vrRefresh(); toast(canBT() ? "Im Vorrat – Etikett wird gedruckt …" : `${t} ist im Vorrat`);
+    await doPrint(id);
+  }
+  function vrTake(id) {
+    const it = vrItems()[id];
+    if (!it) return;
+    vrOp({ op: "del", id, it: { t: it.t } });
+    S.vrUndo = { id, it, at: Date.now() }; save();
+    vrRefresh(); toast(`${shortTitle(it.t)} entnommen`);
+  }
+  function vrUndo() { const u = S.vrUndo; if (!u) return; vrOp({ op: "add", id: u.id, it: u.it }); S.vrUndo = null; save(); vrRefresh(); toast("Zurückgelegt"); }
+  async function vrSheet(id) {
+    const it = vrItems()[id];
+    if (!it) return;
+    const cv = await labelCanvas(it, null), left = daysLeft(it.bis);
+    openSheet(`<h2>${esc(it.t)}</h2><p class="small muted" style="margin:4px 0 12px">Eingefroren am ${dmy(it.am)} · verbrauchen bis ${dmy(it.bis)}${left < 0 ? " – abgelaufen" : left <= 14 ? ` – noch ${left} ${left === 1 ? "Tag" : "Tage"}` : ""}</p>
+      <div class="label-prev"><img alt="Etikett" src="${cv.toDataURL()}"></div>
+      <div class="act-btns"><button class="btn primary" data-vtake="${esc(id)}">Entnommen</button><button class="btn" data-vprint="${esc(id)}">${SNOW} Etikett nochmal drucken</button></div>
+      ${it.slug ? `<p class="small" style="margin:12px 0 0"><a href="#/r/a:${esc(it.slug)}" data-act="sheet-close">Zum Rezept</a></p>` : ""}`, { ek: "vorrat", ekid: id });
+  }
+  const recSwitch = (on) => {
+    const n = Object.keys(vrItems()).length;
+    return `<div class="seg rec-switch" role="tablist"><a href="#/rezepte" role="tab" aria-selected="${on === "rezepte"}" class="${on === "rezepte" ? "on" : ""}">Rezepte</a><a href="#/vorrat" role="tab" aria-selected="${on === "vorrat"}" class="${on === "vorrat" ? "on" : ""}">${SNOW}Vorrat${n ? ` <b>${n}</b>` : ""}</a></div>`;
+  };
+  function vrRow(id, it) {
+    const left = daysLeft(it.bis), st = left < 0 ? "over" : left <= 14 ? "soon" : "";
+    return `<li class="vr-row ${st}"><button type="button" class="vr-main" data-vopen="${esc(id)}"><b>${esc(it.t)}</b>
+      <small>eingefroren ${dmy(it.am, true)} · <span class="vr-bis">${left < 0 ? "abgelaufen seit" : "bis"} ${dmy(it.bis, true)}</span>${st === "soon" ? ` · noch ${left} ${left === 1 ? "Tag" : "Tage"}` : ""}</small></button>
+      <button type="button" class="btn small" data-vtake="${esc(id)}">Entnommen</button></li>`;
+  }
+  function drawVorrat(view) {
+    const items = Object.entries(vrItems()).sort((a, b) => (a[1].bis < b[1].bis ? -1 : a[1].bis > b[1].bis ? 1 : a[1].t < b[1].t ? -1 : 1));
+    const ul = $("#vorrat-list", view);
+    if (ul) ul.innerHTML = items.map(([id, it]) => vrRow(id, it)).join("") || `<li class="empty">Noch nichts im Gefrierschrank. Beim Einfrieren im Rezept auf die Schneeflocke tippen – das druckt das Etikett und trägt das Gericht hier ein.</li>`;
+    const cnt = $("#vr-count", view); if (cnt) cnt.textContent = items.length ? `${items.length} ${items.length === 1 ? "Dose" : "Dosen"} im Gefrierschrank` : "Gefrierschrank";
+    const pr = $("#vr-printer", view); if (pr) pr.innerHTML = printerCard();
+    const u = S.vrUndo, ub = $("#vr-undo", view);
+    if (ub) ub.innerHTML = u && Date.now() - u.at < 120000 ? `<button class="btn small ghost" data-act="vr-undo">„${esc(shortTitle(u.it.t))}“ zurücklegen</button>` : "";
+    const sw = $(".rec-switch", view); if (sw) sw.outerHTML = recSwitch("vorrat");
+  }
+  function printerCard() {
+    if (!canBT()) return `<p class="small muted" style="margin:0">Etiketten druckt die App in Chrome auf dem Android-Tablet mit dem Niimbot B1 (50 × 30 mm). Auf diesem Gerät geht das nicht – der Vorrat funktioniert trotzdem.</p>`;
+    const on = prnOn(), dens = S.settings.printDensity || 3;
+    return `<div class="spread"><div><b>Etikettendrucker</b><div class="small muted">${on ? `Verbunden${prnName ? ` · ${esc(prnName)}` : ""}` : S.settings.printer ? `${esc(S.settings.printer)} · verbindet sich beim Drucken` : "Niimbot B1 · noch nicht verbunden"}</div></div><span class="prn-dot${on ? " on" : ""}" aria-hidden="true"></span></div>
+      <div class="act-btns"><button class="btn small" data-act="prn-connect">${on ? "Neu verbinden" : "Drucker verbinden"}</button><button class="btn small" data-act="prn-test">Testetikett</button></div>
+      <details class="prn-more"><summary class="small">Druckstärke: ${dens}</summary><div class="seg" style="margin-top:8px">${[1, 2, 3, 4, 5].map((n) => `<button data-density="${n}" aria-pressed="${n === dens}">${n}</button>`).join("")}</div>
+      <p class="small muted" style="margin:6px 0 0">Zu blass: höher. Verschmiert: niedriger. Normal ist 3.</p></details>`;
+  }
+  function vrRefresh() { if (location.hash.startsWith("#/vorrat")) drawVorrat($("#view")); }
+  async function renderVorrat(view) {
+    view.innerHTML = `<header class="top"><div><div class="eyebrow" id="vr-count"></div><h1>Vorrat</h1></div></header>
+      ${recSwitch("vorrat")}
+      ${syncBanner()}
+      <ul class="vr-list" id="vorrat-list"></ul><div id="vr-undo"></div>
+      <form class="ek-add vr-add" data-vrform autocomplete="off"><input class="search" type="text" enterkeyhint="done" aria-label="Etwas anderes einfrieren" placeholder="Anderes einfrieren, z. B. Brot" data-vradd><button class="btn primary" aria-label="Einfrieren und Etikett drucken">${SNOW}</button></form>
+      <p class="small muted" style="margin:2px 2px 0">Rezepte friert ihr am besten über die Schneeflocke im Rezept ein. Haltbarkeit: was das Rezept sagt, höchstens 3 Monate.</p>
+      <section class="card prn-card" id="vr-printer"></section>`;
+    drawVorrat(view);
+    if (canBT()) loadNiim().catch(() => {});
+  }
+  document.addEventListener("submit", (e) => {
+    const f = e.target;
+    if (f.matches("[data-vrform]")) { e.preventDefault(); const i = $("[data-vradd]", f), v = i.value; i.value = ""; freezeOwn(v); }
+  });
+
   /* ---------- Timer ---------- */
   const clock = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
   const remaining = (t) => (t.state === "pause" ? t.rem : t.state === "done" ? 0 : Math.max(0, (t.end - Date.now()) / 1000));
@@ -2873,7 +3141,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -2945,6 +3213,11 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       setTimeout(() => { justStamped = null; }, 900);
       return;
     }
+    if (d.freeze) { e.preventDefault(); freezeRecipe(d.freeze); return; }
+    if (d.vprint) { const [id, pick] = d.vprint.split("|"); if ($("#sheet").dataset.ek === "vprint") closeSheet(); doPrint(id, !!pick); return; }
+    if (d.vtake) { if ($("#sheet").dataset.ek === "vorrat") closeSheet(); vrTake(d.vtake); return; }
+    if (d.vopen) { vrSheet(d.vopen); return; }
+    if (d.density) { S.settings.printDensity = +d.density; save(); vrRefresh(); toast(`Druckstärke ${d.density}`); return; }
     if (d.ekedit) { ekEditSheet(d.ekedit); return; }
     if (d.ekinc) { const [id, by] = d.ekinc.split("|"), it = ekView().items[id]; if (it) { ekOp({ op: "inc", id, by: +by, it: { n: it.n, key: it.key, d: it.d, ean: it.ean } }); buzz(8); ekRefresh(); if (+by < 0 && it.c <= 1) toast(`${it.n || "Artikel"} von der Liste genommen`); } return; }
     if (d.ekopen != null) { const B = ek().bring; if (B) { B.opened = 1; save(); setTimeout(ekRefresh, 1200); } return; }
@@ -2978,6 +3251,14 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       case "bringshare": { const u = curBring(); if (u && navigator.share) navigator.share({ title: u.subject, text: u.text }).catch(() => {}); break; }
       case "bringcopy": { const u = curBring(); if (u) { try { await navigator.clipboard.writeText(u.link); toast("Link kopiert"); } catch (er) { toast("Kopieren ging nicht – bitte „Mail-App öffnen“ nutzen"); } } break; }
       case "ek-cam": ekCamSheet(); break;
+      case "vr-undo": vrUndo(); break;
+      case "prn-connect": try { if (!canBT()) break; await printerConnect(true); toast(`Drucker verbunden${prnName ? ": " + prnName : ""}`); } catch (er) { toast(printErrText(er)); } break;
+      case "prn-test": {
+        if (!canBT()) break;
+        const am = today(), it = { t: "Testetikett: Rindergulasch mit Karotten & Spätzle", am, bis: addMonthsIso(am, 3), m: 3 };
+        try { await printLabel(it); toast("Testetikett gedruckt"); } catch (er) { toast(printErrText(er)); }
+        break;
+      }
       case "ek-code": ekCodeSheet(); break;
       case "ek-ok": ekConfirm(); break;
       case "ek-save": ekSave(); break;
@@ -3111,6 +3392,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
       if (v) syncNotes(true);
       if (v) syncEinkauf(true).then((ch) => { if (ch) ekRefresh(); });
+      if (v) syncVorrat(true).then((ch) => { if (ch) vrRefresh(); });
       if (v) syncLog();
       if (v) syncVerlauf();
       if (!v) result = result === "changed" ? "changed" : "offline";
@@ -3145,6 +3427,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
   setTimeout(starsFirst, 6000);
   ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => syncEinkauf(true)).then((ch) => { if (ch) ekRefresh(); });
+  ablageP.then(() => syncVorrat(true)).then((ch) => { if (ch) vrRefresh(); });
   if (S.einkauf && S.einkauf.bring && S.einkauf.bring.status === "wait") setTimeout(ekPoll, 3000);
   ablageP.then(() => setTimeout(syncLog, 5000));
   ablageP.then(() => syncVerlauf()).then((ch) => { if (ch) softIfIdle(); });

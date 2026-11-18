@@ -984,3 +984,35 @@ a.agp-go:active { transform: scale(.98); }
 .ek-help summary { cursor: pointer; font-weight: 700; color: var(--muted); padding: 6px 2px; }
 .ek-help ul { padding-left: 20px; margin: 6px 0; }
 .ek-help li { margin: 6px 0; }
+
+/* ---------- Vorrat (Gefrierschrank) und Etiketten ---------- */
+.r-topbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.freeze-btn { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 15px 0 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--fish) 35%, transparent); background: var(--fish-soft); color: var(--fish); font: 700 .95rem/1 var(--font-body); cursor: pointer; transition: transform .12s var(--ease); }
+.freeze-btn:active { transform: scale(.95); }
+.freeze-btn .ico { width: 21px; height: 21px; }
+.freeze-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.freeze-line .btn { color: var(--fish); }
+.freeze-line .btn .ico { width: 18px; height: 18px; }
+.rec-switch { margin: -4px 0 14px; }
+.rec-switch a { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: 9px 16px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.rec-switch a.on { background: var(--tanne); color: var(--on-tanne); border-color: var(--tanne); }
+.rec-switch a .ico { width: 18px; height: 18px; }
+.rec-switch a b { background: var(--fish-soft); color: var(--fish); border-radius: 999px; padding: 2px 8px; font-size: .8rem; line-height: 1.2; }
+.rec-switch a.on b { background: rgba(255, 255, 255, .22); color: inherit; }
+:root[data-scheme="dark"] .rec-switch a.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.vr-list { list-style: none; margin: 12px 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.vr-row { display: flex; align-items: center; gap: 8px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--fish); border-radius: 18px; padding: 6px 10px 6px 4px; }
+.vr-row.soon { border-left-color: var(--pumpkin); }
+.vr-row.over { border-left-color: var(--meat); background: var(--pumpkin-soft); }
+.vr-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 8px 10px; color: var(--ink); cursor: pointer; font: inherit; }
+.vr-main b { display: block; font: 700 1.06rem/1.2 var(--font-display); font-stretch: 92%; }
+.vr-main small { display: block; color: var(--muted); margin-top: 3px; }
+.vr-row.soon .vr-bis, .vr-row.over .vr-bis { color: var(--pumpkin-ink); font-weight: 700; }
+#vr-undo:not(:empty) { margin: -2px 0 8px; }
+.vr-add .btn .ico { width: 26px; height: 26px; }
+.prn-card { margin-top: 18px; }
+.prn-dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--line-2); }
+.prn-dot.on { background: var(--veg); box-shadow: 0 0 0 4px var(--veg-soft); }
+.prn-more summary { cursor: pointer; color: var(--muted); margin-top: 12px; font-weight: 700; }
+.label-prev { background: var(--surface-2); border-radius: 16px; padding: 16px; display: grid; place-items: center; }
+.label-prev img { width: 100%; max-width: 330px; aspect-ratio: 384 / 240; border-radius: 10px; box-shadow: 0 3px 14px rgba(0, 0, 0, .18); background: #fff; }
