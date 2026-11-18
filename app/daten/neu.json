@@ -2,6 +2,17 @@
  "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
  "items": [
   {
+   "id": "2026-11-18",
+   "datum": "18.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "cart", "t": "Neu: die Einkaufsliste", "x": "Unten gibt es jetzt den Reiter „Einkauf“. Was leer ist, kommt hier drauf – mit dem Scanner, der Kamera oder einfach dazugeschrieben.", "ziel": "#/einkauf", "zeige": "#ek-scan" },
+    { "ico": "cart", "t": "Scannen wie an der Kasse", "x": "Ist der Scanner verbunden, einfach den Strichcode der leeren Packung scannen – egal, welcher Reiter gerade offen ist. Nochmal scannen zählt hoch, mit − und + lässt sich die Anzahl ändern.", "ziel": "#/einkauf", "zeige": "#ek-list" },
+    { "ico": "swap", "t": "Neue Produkte einmal bestätigen", "x": "Beim ersten Scan schlägt die App vor, wie der Artikel in Bring heißt, zum Beispiel „Dosentomaten“. Einmal „Passt“ tippen – ab dann kennt sie den Code auf allen Geräten. Theke und loses Obst einfach dazuschreiben." },
+    { "ico": "cart", "t": "Ab in Bring", "x": "„In Bring übernehmen“ antippen, 1–2 Minuten warten, dann „In Bring öffnen“ und dort bestätigen. Nach „Erledigt“ ist die Liste wieder leer.", "ziel": "#/einkauf", "zeige": "#ek-bring" }
+   ]
+  },
+  {
    "id": "2026-11-17",
    "datum": "17.11.2026",
    "titel": "Neu im Kochbuddy",

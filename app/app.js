@@ -356,8 +356,8 @@
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
       navTo("#/", "replace"); return;
     }
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "entdecken", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", entdecken: "entdecken", rezepte: "rezepte" }[parts[0] || ""] ?? "";
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -369,6 +369,7 @@
       else if (parts[0] === "vorkochen") await renderPrep(view);
       else if (parts[0] === "checkliste") await renderChecklist(view);
       else if (parts[0] === "angebote") await renderDeals(view);
+      else if (parts[0] === "einkauf") await renderEinkauf(view);
       else if (parts[0] === "rezepte") await renderAll(view);
       else if (parts[0] === "entdecken") await renderDiscover(view);
       else await renderWeek(view);
@@ -386,7 +387,7 @@
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
      Tabs stapeln sich nicht: Woche -> Checkliste -> Vorkochen, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/angebote", "#/entdecken", "#/rezepte"];
+  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/angebote", "#/einkauf", "#/entdecken", "#/rezepte"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -944,7 +945,7 @@
   function pendingInfo() {
     const ats = [];
     const add = (ops) => (ops || []).forEach((o) => { const a = o.at || (o.swap && o.swap.at); if (a) ats.push(new Date(a).getTime()); else ats.push(Date.now()); });
-    add(stars().ops); add(notesSt().ops); add(taste().ops);
+    add(stars().ops); add(notesSt().ops); add(taste().ops); add(ek().ops);
     for (const k of Object.keys(S.swaps || {})) add((S.swaps[k] || {}).ops);
     return { n: ats.length, since: ats.length ? Math.min(...ats) : 0 };
   }
@@ -998,7 +999,7 @@
     const [, m, d] = nextMon.split("-").map(Number);
     return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">Noch nicht da</span><b>Der Plan ab Montag, ${d}.${m}., fehlt</b><div class="small">Normalerweise kommt er donnerstags gegen 6 Uhr. Der Buddy prüft das stündlich, startet die Planung bei Bedarf neu und gibt Bescheid. <a href="#" data-act="reload">Jetzt nachsehen</a></div></div></div></section>`;
   }
-  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet)]).then((r) => r.some(Boolean)); }
+  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet), syncEinkauf(quiet)]).then((r) => r.some(Boolean)); }
 
   /* ---------- Hinweise: Was ist noch zu tun? (oben in der Woche, orange) ---------- */
   async function bringUpdates() {
@@ -1065,6 +1066,13 @@
       ${navigator.share ? `<button class="btn big" style="margin-top:8px" data-act="bringshare">Anders schicken, z. B. per WhatsApp</button>` : ""}
       <button class="btn ghost" style="margin-top:8px" data-act="bringcopy">Nur den Link kopieren</button>`, { bring: key });
   }
+  /* Mail/Teilen/Kopieren: für den Hinweis in der Woche oder für die Einkaufsliste */
+  function curBring() {
+    const k = $("#sheet").dataset.bring;
+    if (k === "ek") { const B = ek().bring; return B ? { subject: "Bring: Einkaufsliste", text: ekMailText(B), link: ekDeeplink(B.url) } : null; }
+    const u = shownUpdates.find((x) => x.key === k);
+    return u ? { subject: "Bring: neue Zutaten für den Wochenplan", text: bringText(u), link: u.bring } : null;
+  }
   function bringText(u) {
     const lines = ["Hallo,", "", "nach der Änderung im Wochenplan kommen diese Zutaten dazu:", ...(u.add || []).map((x) => `- ${x.n}${x.q ? ` (${x.q})` : ""}`)];
     if ((u.remove || []).length) lines.push("", "Wird nicht mehr gebraucht: " + u.remove.map((x) => x.n).join(", "));
@@ -1079,6 +1087,7 @@
     { ico: "timer", t: "Kochen mit Timer", x: "„Kochen“ führt dich Schritt für Schritt durchs Rezept. Eine Zeitangabe antippen startet den Timer, der Bildschirm bleibt dabei an. Zutaten abhaken, sobald sie im Topf sind." },
     { ico: "swap", t: "Gericht tauschen", x: "Lust auf etwas anderes? Unter „Ersatzgerichte“ das Gericht am Griff (sechs Punkte) auf einen Tag ziehen oder „Tauschen“ antippen. Abends passt der Buddy Plan und Einkaufsliste an." },
     { ico: "cart", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Unter „Angebote“ stehen die besten Angebote der Woche samt Einkaufszettel zum Abhaken." },
+    { ico: "cart", t: "Leer? Einfach scannen", x: "Unter „Einkauf“ sammelt die App, was nachgekauft werden muss – Strichcode der leeren Packung scannen (Scanner oder Kamera) oder dazuschreiben. Mit einem Tipp geht alles in Bring." },
   ];
   let tourStep = 0;
   function showTour(step = 0) {
@@ -2241,6 +2250,449 @@
       `<li class="empty">Nichts gefunden.</li>`;
   }
 
+  /* ---------- Einkaufsliste mit Strichcode-Scanner ----------
+     Ein Bluetooth-Handscanner meldet sich am Tablet wie eine Tastatur und „tippt“ den Strichcode samt Enter. Die App hört
+     in jedem Reiter mit – ohne Eingabefeld. Alternativ Kamera (BarcodeDetector) oder Code bzw. Artikel eintippen.
+     Produktnamen kommen aus Open Food Facts (danach Open Beauty/Products/Pet Food Facts). Beim ersten Scan eines Codes
+     schlägt die App die passende Bring-Kachel vor (Namen aus tools/bring_namen.json); einmal bestätigt, gilt das auf allen
+     Geräten. Gespeichert wird nur im privaten Repo: einkauf/liste.json {items, katalog}.
+     Für Bring legt die App eine versteckte Importseite liste/<zufall>.html im Rezept-Repo an (nur Artikelnamen und Marken,
+     keine Namen, keine Preise; nicht unter b/, das räumt bring.py auf) und löscht sie nach „Erledigt“ wieder. */
+  const EK_PATH = "/contents/einkauf/liste.json";
+  const EK_INFO = "Einkaufsliste aus dem Kochbuddy (Strichcode-Scanner, Kamera oder von Hand). items: id → {n: Bring-Kachel wie in der App, key: Name für den Bring-Import, d: Details wie Marke und Größe, c: Anzahl, ean: Strichcode, at}. katalog: Strichcode → {key, n, d, ok: vom Menschen bestätigt, at} – gilt auf allen Geräten. Die Datei gehört der App: nicht von Hand ändern.";
+  const SITE_URL = "https://padderico.github.io/Rezeptesammlung/";
+  const BARCODE = '<svg class="ico" viewBox="0 0 24 24"><path d="M3.5 8V5.5a2 2 0 0 1 2-2H8M16 3.5h2.5a2 2 0 0 1 2 2V8M20.5 16v2.5a2 2 0 0 1-2 2H16M8 20.5H5.5a2 2 0 0 1-2-2V16"/><path d="M7.5 8v8M10.5 8v8M13 8v8M16.5 8v8"/></svg>';
+  const CAMERA = '<svg class="ico" viewBox="0 0 24 24"><path d="M4 8.5h3l1.8-2.5h6.4L17 8.5h3v10.5H4z"/><circle cx="12" cy="13.5" r="3.4"/></svg>';
+  const FAM = new RegExp("\\b(" + ["An" + "ton", "An" + "ja", "Pad" + "de"].join("|") + ")\\b", "gi");
+  const ekClean = (s) => String(s || "").replace(FAM, "").replace(/[()[\]{}<>"]/g, " ").replace(/\s+/g, " ").trim();
+  const buzz = (p) => { if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(p); };
+  const ek = () => { const E = (S.einkauf = S.einkauf || {}); E.items = E.items || {}; E.kat = E.kat || {}; E.ops = E.ops || []; return E; };
+  /* Änderungen als Schritte (wie bei den Sternen): mehrere Geräte zählen sauber zusammen */
+  function ekApply(items, kat, ops) {
+    const I = {}, K = { ...(kat || {}) };
+    for (const [k, v] of Object.entries(items || {})) I[k] = { ...v };
+    for (const o of ops) {
+      const cur = I[o.id];
+      if (o.op === "inc") { const it = cur || { ...(o.it || {}), c: 0 }; it.c = (it.c || 0) + o.by; it.at = o.at; if (it.c > 0) I[o.id] = it; else delete I[o.id]; }
+      else if (o.op === "set" && cur) Object.assign(cur, o.it);
+      else if (o.op === "del") delete I[o.id];
+      else if (o.op === "take" && cur) { cur.c -= o.c; if (cur.c <= 0) delete I[o.id]; }
+      else if (o.op === "kat") K[o.ean] = { ...o.k, at: o.at };
+    }
+    return { items: I, kat: K };
+  }
+  const ekView = () => { const E = ek(); return ekApply(E.items, E.kat, E.ops); };
+  function ekOp(o) { o.at = o.at || new Date().toISOString(); ek().ops.push(o); save(); scheduleEkPush(); }
+  let ekTimer = null, ekSyncing = null;
+  function scheduleEkPush(ms = 4000) { if (embedded) return; clearTimeout(ekTimer); ekTimer = setTimeout(() => syncEinkauf(true).then((ch) => { if (ch) ekRefresh(); }), ms); }
+  function syncEinkauf(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (ekSyncing) return ekSyncing;
+    ekSyncing = (async () => {
+      const E = ek();
+      if (!ablage.privat || !dataReady() || !ghToken()) return false; // die Liste kommt nie ins öffentliche Repo
+      try {
+        for (let k = 0; k < 3; k++) {
+          const r = await gh("GET", EK_PATH, null, DATA_REPO);
+          const data = r ? JSON.parse(b64d(r.content)) : {};
+          const ops = E.ops.slice();
+          if (!ops.length) {
+            const before = JSON.stringify([E.items, E.kat]);
+            E.items = data.items || {}; E.kat = data.katalog || {}; E.pulled = Date.now(); save();
+            return before !== JSON.stringify([E.items, E.kat]);
+          }
+          const res = ekApply(data.items, data.katalog, ops);
+          const names = [...new Set(ops.filter((o) => o.it && o.it.n).map((o) => o.it.n))];
+          const out = { info: EK_INFO, items: res.items, katalog: res.kat, updated: new Date().toISOString() };
+          try {
+            await gh("PUT", EK_PATH, { message: `Koch-App: Einkaufsliste${names.length ? " – " + names.slice(0, 4).join(", ") + (names.length > 4 ? " …" : "") : ""}`.slice(0, 180), content: b64e(JSON.stringify(out, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) }, DATA_REPO);
+            E.ops = E.ops.slice(ops.length); E.items = res.items; E.kat = res.kat; E.pulled = Date.now(); save(); syncMark(true);
+            return true;
+          } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+        }
+      } catch (e) {
+        syncMark(false, e);
+        if (!quiet && e.code === "auth") { toast(`Einkaufsliste nicht gespeichert: ${e.message}`); tokenSheet(e.message); }
+      }
+      return false;
+    })().finally(() => { ekSyncing = null; });
+    return ekSyncing;
+  }
+
+  /* Bring-Namen: dieselbe Liste wie für die Rezepte (ein Produkt = eine Kachel) */
+  let bnP = null;
+  function bringNames() {
+    if (!bnP) bnP = getJSON("../tools/bring_namen.json").then((cfg) => {
+      const arts = (cfg.artikel || []).map((a) => ({ key: a.key, n: a.anzeige, vs: [...new Set([a.key, a.anzeige, ...(a.varianten || [])].map((x) => x.toLowerCase()))] }));
+      const any = new Map();
+      for (const a of arts) for (const v of a.vs) if (!any.has(v)) any.set(v, a);
+      return { arts, any, byKey: new Map(arts.map((a) => [a.key, a])) };
+    }).catch(() => { bnP = null; return { arts: [], any: new Map(), byKey: new Map() }; });
+    return bnP;
+  }
+  /* Kategorien von Open Food Facts → Bring-Kachel (nur eindeutige; der Rest geht über den Produktnamen) */
+  const OFF_CAT = {
+    "en:milks": "Milch", "en:uht-milks": "Milch", "en:whole-milks": "Milch", "en:semi-skimmed-milks": "Milch", "en:skimmed-milks": "Milch",
+    "en:butters": "Butter", "en:eggs": "Eier", "en:chicken-eggs": "Eier", "en:yogurts": "Joghurt", "en:plain-yogurts": "Joghurt",
+    "en:cream-cheeses": "Frischkäse", "en:creams": "Rahm", "en:whipping-creams": "Rahm", "en:cooking-creams": "Rahm", "en:sour-creams": "Sauerrahm",
+    "en:creme-fraiche": "Creme fraiche", "en:quark": "Quark", "en:mozzarella": "Mozzarella", "en:feta": "Feta", "en:parmigiano-reggiano": "Parmesan",
+    "en:grated-cheeses": "Reibkäse", "en:mascarpone": "Mascarpone", "en:ricotta": "Ricotta", "en:cheeses": "Käse",
+    "en:peeled-tomatoes": "Pelati", "en:canned-tomatoes": "Pelati", "en:chopped-tomatoes": "Pelati", "en:tomato-pastes": "Tomatenmark",
+    "en:pastas": "Nudeln", "en:dry-pastas": "Nudeln", "en:spaghetti": "Spaghetti", "en:gnocchi": "Gnocchi", "en:rices": "Reis", "en:basmati-rices": "Basmatireis",
+    "en:wheat-flours": "Mehl", "en:flours": "Mehl", "en:sugars": "Zucker", "en:white-sugars": "Zucker", "en:salts": "Salz", "en:table-salts": "Salz",
+    "en:extra-virgin-olive-oils": "Olivenöl", "en:olive-oils": "Olivenöl", "en:rapeseed-oils": "Öl", "en:sunflower-oils": "Öl", "en:vegetable-oils": "Öl",
+    "en:vinegars": "Essig", "en:honeys": "Honig", "en:mustards": "Senf", "en:soy-sauces": "Sojasauce", "en:breads": "Brot", "en:baguettes": "Baguette",
+    "en:tortillas": "Wraps", "en:coconut-milks": "Kokosmilch", "en:hams": "Schinken", "en:cooked-hams": "Schinken", "en:bacons": "Speck",
+    "en:salmons": "Lachs", "en:fish-sticks": "Fischstäbli", "en:lentils": "Linsen", "en:rolled-oats": "Haferflocken", "en:oat-flakes": "Haferflocken",
+    "en:baking-powders": "Backpulver", "en:corn-starches": "Speisestärke", "en:breadcrumbs": "Paniermehl", "en:semolinas": "Griess", "en:millets": "Hirse",
+    "en:applesauces": "Apfelmus", "en:apple-compotes": "Apfelmus", "en:pickled-cucumbers": "Essiggurken", "en:gherkins": "Essiggurken",
+  };
+  function textMatch(bn, text) {
+    const s = " " + String(text || "").toLowerCase().replace(/[^a-zäöüß0-9-]+/g, " ") + " ", words = s.trim().split(/\s+/);
+    let best = null, bl = 0;
+    for (const a of bn.arts) for (const v of a.vs) {
+      if (v.length < 3 || v.length <= bl) continue;
+      if (s.includes(" " + v + " ") || (v.length >= 5 && !v.includes(" ") && words.some((w) => w.length > v.length && w.endsWith(v)))) { best = a; bl = v.length; }
+    }
+    return best;
+  }
+  const offInfo = (p) => ({ name: ekClean(p.product_name_de || p.product_name || p.generic_name_de || p.generic_name || ""), brand: ekClean((p.brands || "").split(",")[0]), qty: ekClean(p.quantity || ""), gen: ekClean(p.generic_name_de || ""), cats: p.categories_hierarchy || [] });
+  function detailOf(info, withName) {
+    let t = withName ? info.name : "";
+    if (info.brand && !t.toLowerCase().includes(info.brand.toLowerCase())) t = (info.brand + " " + t).trim();
+    return [t, info.qty].filter(Boolean).join(", ").slice(0, 70);
+  }
+  async function suggestFor(p) {
+    const bn = await bringNames(), info = offInfo(p);
+    let a = null;
+    for (const c of [...info.cats].reverse()) { const k = OFF_CAT[c]; if (k && bn.byKey.has(k)) { a = bn.byKey.get(k); break; } }
+    if (!a) a = textMatch(bn, `${info.name} ${info.gen}`);
+    if (a) return { key: a.key, n: a.n, d: detailOf(info, true) };
+    const nm = (info.name || info.brand).slice(0, 40);
+    return nm ? { key: nm, n: nm, d: detailOf(info, false) } : null;
+  }
+  async function resolveName(txt) {
+    const bn = await bringNames(), t = ekClean(txt).slice(0, 40), a = bn.any.get(t.toLowerCase());
+    return a ? { key: a.key, n: a.n } : { key: t, n: t };
+  }
+  /* Strichcode prüfen: EAN-13, EAN-8, UPC-A (12 Stellen → mit 0 vorne), GTIN-14 mit führender 0 */
+  function normCode(raw) {
+    let c = String(raw || "").replace(/\D/g, "");
+    if (c.length === 12) c = "0" + c;
+    if (c.length === 14 && c[0] === "0") c = c.slice(1);
+    if (c.length !== 8 && c.length !== 13) return "";
+    const d = c.split("").map(Number), chk = d.pop();
+    let s = 0;
+    for (let i = d.length - 1, w = 3; i >= 0; i--, w = 4 - w) s += d[i] * w;
+    return (10 - (s % 10)) % 10 === chk ? c : "";
+  }
+  const OFF_HOSTS = ["world.openfoodfacts.org", "world.openbeautyfacts.org", "world.openproductsfacts.org", "world.openpetfoodfacts.org"];
+  /* undefined = kein Netz, null = unbekannt, sonst das Produkt */
+  async function offFetch(host, code) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
+    try {
+      const res = await fetch(`https://${host}/api/v2/product/${code}.json?lc=de&fields=product_name,product_name_de,generic_name,generic_name_de,brands,quantity,categories_hierarchy`, { signal: ctl.signal, cache: "no-store" });
+      if (!res.ok) return null;
+      const j = await res.json();
+      return j && j.status === 1 && j.product ? j.product : null;
+    } catch (e) { return undefined; } finally { clearTimeout(t); }
+  }
+  async function offLookup(code) {
+    const first = await offFetch(OFF_HOSTS[0], code);
+    const has = (p) => p && (offInfo(p).name || offInfo(p).brand);
+    if (has(first)) return { p: first, net: true };
+    const rest = await Promise.all(OFF_HOSTS.slice(1).map((h) => offFetch(h, code)));
+    const p = rest.find(has);
+    return { p: p || null, net: first !== undefined || rest.some((x) => x !== undefined) };
+  }
+
+  /* Ein Scan: bekannter Code → sofort +1; neuer Code → nachschlagen, gleich auf die Liste, einmal bestätigen */
+  let scanQ = Promise.resolve();
+  function onScan(raw, how) { scanQ = scanQ.then(() => handleScan(raw, how)).catch((e) => logError("Scan", e.message, e.stack)); }
+  const ekCanAsk = () => !inCooking && $("#alarm").hidden && ($("#sheet").hidden || ["cam", "neu", "code"].includes($("#sheet").dataset.ek));
+  async function handleScan(raw, how) {
+    const code = normCode(raw);
+    if (!code) { toast("Code nicht erkannt – bitte nochmal scannen"); buzz([30, 60, 30]); return; }
+    if ($("#sheet").dataset.ek === "neu") await ekConfirm();
+    if ($("#sheet").dataset.ek === "code") closeSheet();
+    const id = "e:" + code, k = ekView().kat[code];
+    if (k && k.n) {
+      ekOp({ op: "inc", id, by: 1, it: { n: k.n, key: k.key || k.n, d: k.d || "", ean: code } });
+      const c = (ekView().items[id] || {}).c || 1;
+      buzz(15); toast(`${k.n} auf der Liste${c > 1 ? ` (jetzt ${c}×)` : ""}`); ekRefresh(true);
+      return;
+    }
+    toast("Neuer Artikel – suche den Namen …");
+    const { p, net } = await offLookup(code);
+    const sug = p ? await suggestFor(p) : null;
+    ekOp({ op: "inc", id, by: 1, it: sug ? { n: sug.n, key: sug.key, d: sug.d, ean: code } : { n: "", key: "", d: "", ean: code } });
+    if (sug) ekOp({ op: "kat", ean: code, k: { key: sug.key, n: sug.n, d: sug.d, ok: false } });
+    buzz(sug ? 15 : [20, 50, 20]);
+    ekRefresh(true);
+    if (ekCanAsk()) await ekNewSheet(code, p ? offInfo(p) : null, sug, net);
+    else toast(sug ? `${sug.n} auf der Liste` : "Unbekannter Artikel – bitte in der Einkaufsliste benennen");
+  }
+  async function ekNames() {
+    const bn = await bringNames(), V = ekView();
+    const set = new Set([...bn.arts.map((a) => a.n), ...Object.values(V.kat).map((k) => k.n), ...Object.values(V.items).map((i) => i.n)].filter(Boolean));
+    return `<datalist id="ek-names">${[...set].sort((a, b) => a.localeCompare(b, "de")).map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`;
+  }
+  const ekFields = (n, d) => `<label class="small" for="ekn"><b>In Bring als</b></label>
+      <input class="field" id="ekn" list="ek-names" autocomplete="off" enterkeyhint="done" value="${esc(n)}" placeholder="z. B. Dosentomaten" data-ekname>
+      <label class="small" for="ekd" style="display:block;margin-top:10px"><b>Details</b> <span class="muted">(Marke, Größe – steht in Bring dabei)</span></label>
+      <input class="field" id="ekd" autocomplete="off" enterkeyhint="done" value="${esc(d)}" placeholder="z. B. Mutti, 400 g" data-ekdetail>`;
+  async function ekNewSheet(code, info, sug, net) {
+    const names = await ekNames();
+    const what = info ? [info.brand, info.name, info.qty].filter(Boolean).join(" · ") : net ? "Dieser Code steht in keiner offenen Produktdatenbank – einmal benennen, dann kennt die App ihn." : "Gerade kein Netz – der Name lässt sich nicht nachschlagen. Einfach selbst eintragen.";
+    openSheet(`<h2>${sug ? "Neu gescannt" : "Was ist das?"}</h2>
+      <p class="small muted" style="margin:4px 0 12px">${esc(what)} <span class="ek-code">${esc(code)}</span></p>
+      ${ekFields(sug ? sug.n : "", sug ? sug.d : "")}${names}
+      <button class="btn primary big" style="margin-top:14px" data-act="ek-ok">${sug ? "Passt – merken" : "Speichern und merken"}</button>
+      <p class="small muted" style="margin:10px 0 0">Steht schon auf der Liste. Ab jetzt landet dieser Code direkt drauf – auf allen Geräten.</p>`, { ek: "neu", ekid: code });
+    if (!sug) setTimeout(() => { const i = $("#ekn"); if (i) i.focus(); }, 250);
+  }
+  async function ekConfirm() {
+    const s = $("#sheet"), code = s.dataset.ekid;
+    const nm = ekClean(($("[data-ekname]") || {}).value), det = ekClean(($("[data-ekdetail]") || {}).value).slice(0, 70);
+    closeSheet();
+    if (!code) return;
+    if (!nm) { toast("Ohne Namen – steht als „Name fehlt“ auf der Liste"); return; }
+    const r = await resolveName(nm);
+    ekOp({ op: "set", id: "e:" + code, it: { n: r.n, key: r.key, d: det } });
+    ekOp({ op: "kat", ean: code, k: { key: r.key, n: r.n, d: det, ok: true } });
+    ekRefresh(); toast(`Gemerkt: ${r.n}`);
+  }
+  async function ekEditSheet(id) {
+    const it = ekView().items[id];
+    if (!it) return;
+    openSheet(`<h2>${esc(it.n || "Name fehlt")}</h2>
+      <p class="small muted" style="margin:4px 0 12px">${it.ean ? `Strichcode <span class="ek-code">${esc(it.ean)}</span> · ` : ""}${it.c}× auf der Liste</p>
+      ${ekFields(it.n, it.d || "")}${await ekNames()}
+      <div class="act-btns"><button class="btn primary" data-act="ek-save">Speichern</button><button class="btn ghost" data-act="ek-del">Von der Liste nehmen</button></div>
+      ${it.ean ? `<p class="small muted" style="margin:10px 0 0">Name und Details gelten ab jetzt für diesen Strichcode – auf allen Geräten.</p>` : ""}`, { ek: "edit", ekid: id });
+    if (!it.n) setTimeout(() => { const i = $("#ekn"); if (i) i.focus(); }, 250);
+  }
+  async function ekSave() {
+    const id = $("#sheet").dataset.ekid, it = ekView().items[id];
+    const nm = ekClean(($("[data-ekname]") || {}).value), det = ekClean(($("[data-ekdetail]") || {}).value).slice(0, 70);
+    closeSheet();
+    if (!it) return;
+    if (!nm) { toast("Bitte einen Namen eintragen"); return; }
+    const r = await resolveName(nm);
+    ekOp({ op: "set", id, it: { n: r.n, key: r.key, d: det } });
+    if (it.ean) ekOp({ op: "kat", ean: it.ean, k: { key: r.key, n: r.n, d: det, ok: true } });
+    ekRefresh(); toast("Gespeichert");
+  }
+  async function ekAddText(txt) {
+    const t = ekClean(txt);
+    if (!t) return;
+    if (/^\d[\d ]{6,16}$/.test(t)) { onScan(t, "hand"); return; }
+    const m = t.match(/^(\d{1,2})\s*[x×]?\s+(.+)$/), c = m ? Math.max(1, +m[1]) : 1;
+    const r = await resolveName(m ? m[2] : t);
+    if (!r.key) return;
+    ekOp({ op: "inc", id: "h:" + r.key.toLowerCase(), by: c, it: { n: r.n, key: r.key, d: "" } });
+    buzz(10); ekRefresh(true); toast(`${r.n} auf der Liste`);
+  }
+  function ekCodeSheet(msg) {
+    openSheet(`<h2>Code eintippen</h2><p class="small muted" style="margin:4px 0 12px">${esc(msg || "Die Ziffern unter dem Strichcode, meist 13 Stück.")}</p>
+      <form data-ekcode autocomplete="off"><input class="field" type="text" inputmode="numeric" pattern="[0-9 ]*" enterkeyhint="done" placeholder="z. B. 4008400401621" data-ekcodein>
+      <button class="btn primary big" style="margin-top:12px">Auf die Liste</button></form>`, { ek: "code" });
+    setTimeout(() => { const i = $("[data-ekcodein]"); if (i) i.focus(); }, 250);
+  }
+
+  /* Kamera: nur wo der Browser Strichcodes lesen kann (Chrome auf Android); bleibt offen für mehrere Scans */
+  let cam = null;
+  function stopCam() { if (!cam) return; clearTimeout(cam.t); try { cam.stream.getTracks().forEach((t) => t.stop()); } catch (e) { /* schon aus */ } cam = null; }
+  async function ekCamSheet() {
+    let det = null;
+    try {
+      const fm = await window.BarcodeDetector.getSupportedFormats();
+      const want = ["ean_13", "ean_8", "upc_a", "upc_e"].filter((f) => fm.includes(f));
+      if (want.length && navigator.mediaDevices) det = new window.BarcodeDetector({ formats: want });
+    } catch (e) { det = null; }
+    if (!det) { ekCodeSheet("Die Kamera kann in diesem Browser keine Strichcodes lesen – die Ziffern einfach eintippen."); return; }
+    openSheet(`<h2>Mit der Kamera scannen</h2><p class="small muted" style="margin:4px 0 10px">Strichcode ruhig ins Bild halten – die App erkennt ihn von selbst. Mehrere nacheinander gehen auch.</p>
+      <div class="ek-cam"><video playsinline muted autoplay></video><i></i></div>
+      <div class="act-btns"><button class="btn" data-act="ek-code">Code eintippen</button><button class="btn primary" data-act="sheet-close">Fertig</button></div>`, { ek: "cam" });
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }); }
+    catch (e) { closeSheet(); ekCodeSheet("Die Kamera ist nicht freigegeben – die Ziffern einfach eintippen."); return; }
+    if ($("#sheet").dataset.ek !== "cam") { stream.getTracks().forEach((t) => t.stop()); return; }
+    const v = $(".ek-cam video");
+    v.srcObject = stream; v.play().catch(() => {});
+    cam = { stream, last: "", at: 0, t: null };
+    const loop = async () => {
+      if (!cam || $("#sheet").dataset.ek !== "cam") { stopCam(); return; }
+      try {
+        const hit = (await det.detect(v))[0], code = hit && normCode(hit.rawValue);
+        if (code && !(code === cam.last && Date.now() - cam.at < 3000)) { cam.last = code; cam.at = Date.now(); onScan(code, "kamera"); }
+      } catch (e) { /* Bild noch nicht bereit */ }
+      if (cam) cam.t = setTimeout(loop, 220);
+    };
+    loop();
+  }
+
+  /* Der Scanner tippt sehr schnell (wenige Millisekunden je Ziffer) und schließt mit Enter oder Tab ab.
+     So unterscheidet die App ihn von einer echten Tastatur – egal, welcher Reiter offen ist. */
+  let scanBuf = "", scanT0 = 0, scanLast = 0;
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey || embedded) return;
+    const now = performance.now();
+    if (now - scanLast > 150) scanBuf = "";
+    scanLast = now;
+    if (e.key === "Enter" || e.key === "Tab") {
+      const buf = scanBuf; scanBuf = "";
+      if (/^\d{8,14}$/.test(buf) && now - scanT0 < buf.length * 55 + 80) {
+        e.preventDefault(); e.stopPropagation();
+        const t = e.target;
+        if (t && /INPUT|TEXTAREA/.test(t.tagName) && typeof t.value === "string" && t.value.endsWith(buf)) { t.value = t.value.slice(0, -buf.length); t.dispatchEvent(new Event("input", { bubbles: true })); }
+        onScan(buf, "scanner");
+      }
+      return;
+    }
+    if (/^\d$/.test(e.key)) { if (!scanBuf) scanT0 = now; scanBuf += e.key; }
+    else if (e.key.length === 1) scanBuf = "";
+  }, true);
+
+  /* Bring: versteckte Importseite anlegen, warten bis sie online ist, dann per Deeplink öffnen */
+  function ekLines(items) {
+    const g = new Map();
+    for (const it of items) { const k = ekClean(it.key || it.n); if (!k) continue; if (!g.has(k)) g.set(k, []); g.get(k).push(it); }
+    return [...g].map(([k, list]) => {
+      const spec = list.map((it) => [it.c > 1 ? `${it.c}×` : "", ekClean(it.d)].filter(Boolean).join(" ")).filter(Boolean).join(" + ");
+      return k + (spec ? ` (${spec})` : "");
+    });
+  }
+  function ekPage(lines, title, url) {
+    const ld = { "@context": "https://schema.org/", "@type": "Recipe", name: title, author: { "@type": "Organization", name: "Rezeptesammlung" }, inLanguage: "de", url,
+      recipeYield: "1", recipeIngredient: lines, recipeInstructions: [{ "@type": "HowToStep", text: "Einkaufsliste aus dem Kochbuddy." }] };
+    return `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${esc(title)}</title>
+<script type="application/ld+json">
+${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
+</script>
+<link rel="stylesheet" href="../rezepte/style.css">
+</head>
+<body>
+<main>
+<h1>${esc(title)}</h1>
+<p class="meta">${lines.length} Artikel für den Bring-Import</p>
+<ul class="ing">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+</main>
+</body>
+</html>
+`;
+  }
+  const ekDeeplink = (url) => `https://api.getbring.com/rest/bringrecipes/deeplink?url=${encodeURIComponent(url)}&source=web&baseQuantity=1&requestedQuantity=1`;
+  async function ekBringStart(btn) {
+    if (!ghToken()) { tokenSheet("Für den Bring-Import braucht dieses Gerät einmalig den GitHub-Schlüssel."); return; }
+    const V = ekView(), ids = Object.keys(V.items).filter((id) => V.items[id].n);
+    if (!ids.length) return;
+    const lines = ekLines(ids.map((id) => V.items[id]));
+    const rid = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => "abcdefghijkmnpqrstuvwxyz23456789"[b % 32]).join("");
+    const path = `liste/${rid}.html`, url = SITE_URL + path, d = new Date();
+    if (btn) btn.disabled = true;
+    try {
+      const r = await gh("PUT", `/contents/${path}`, { message: `Einkaufsliste für Bring (${lines.length} Artikel)`, content: b64e(ekPage(lines, `Einkaufsliste ${pad(d.getDate())}.${pad(d.getMonth() + 1)}. ${hm(d)}`, url)) });
+      ek().bring = { path, url, sha: r && r.content ? r.content.sha : "", at: Date.now(), status: "wait", n: lines.length, snap: Object.fromEntries(ids.map((id) => [id, V.items[id].c])) };
+      save(); ekRefresh(); setTimeout(ekPoll, 20000);
+    } catch (e) {
+      if (btn) btn.disabled = false;
+      if (e.code === "auth") tokenSheet(e.message); else toast(e.code === "offline" ? "Gerade kein Netz – bitte gleich nochmal" : `Hat nicht geklappt: ${e.message}`);
+    }
+  }
+  let ekPollT = null;
+  async function ekPoll() {
+    clearTimeout(ekPollT);
+    const B = ek().bring;
+    if (!B || B.status !== "wait") return;
+    let ok = false;
+    try { ok = (await fetch(new URL(`../${B.path}?t=${Date.now()}`, location.href), { method: "HEAD", cache: "no-store" })).ok; } catch (e) { ok = false; }
+    const B2 = ek().bring;
+    if (!B2 || B2.path !== B.path || B2.status !== "wait") return;
+    if (ok) { B2.status = "ready"; save(); ekRefresh(); buzz([15, 60, 15]); toast("Die Liste ist bereit für Bring"); return; }
+    if (Date.now() - B2.at > 8 * 60000) { B2.status = "slow"; save(); ekRefresh(); return; }
+    ekPollT = setTimeout(ekPoll, 8000);
+  }
+  function ekDropPage(B) { if (B && B.path && B.sha && ghToken()) gh("DELETE", `/contents/${B.path}`, { message: "Einkaufsliste: Importseite entfernt", sha: B.sha }).catch(() => {}); }
+  function ekDone() {
+    const E = ek(), B = E.bring;
+    if (!B) return;
+    for (const [id, c] of Object.entries(B.snap || {})) ekOp({ op: "take", id, c });
+    E.bring = null; save(); ekDropPage(B); ekRefresh();
+    toast(Object.keys(ekView().items).length ? "Prima – der Rest bleibt fürs nächste Mal auf der Liste" : "Prima – die Liste ist wieder leer");
+  }
+  function ekCancel() { const E = ek(), B = E.bring; E.bring = null; save(); ekDropPage(B); ekRefresh(); toast("Abgebrochen – die Liste bleibt, wie sie ist"); }
+  function ekMailText(B) {
+    const V = ekView(), lines = Object.entries(B.snap || {}).map(([id, c]) => V.items[id] && `- ${V.items[id].n}${c > 1 ? ` (${c}×)` : ""}`).filter(Boolean);
+    return ["Hallo,", "", "das steht auf der Einkaufsliste:", ...lines, "", "In Bring übernehmen (antippen):", ekDeeplink(B.url), "", "Dein Kochbuddy"].join("\n");
+  }
+  function ekBringHtml(V) {
+    const B = ek().bring, ids = Object.keys(V.items), named = ids.filter((id) => V.items[id].n).length, miss = ids.length - named;
+    if (B && (B.status === "ready" || B.status === "slow")) {
+      const extra = ids.filter((id) => !(B.snap || {})[id] || V.items[id].c > B.snap[id]).length;
+      return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_CART}</span><div><span class="act-k">${B.status === "slow" ? "Dauert länger als sonst" : "Bereit"}</span><b>${B.n} ${B.n === 1 ? "Artikel" : "Artikel"} für Bring</b>
+        <div class="small">${B.status === "slow" ? "Die Importseite ist noch nicht erreichbar. Meist klappt es trotzdem – sonst kurz warten und nochmal prüfen." : "„In Bring öffnen“ zeigt genau diese Artikel. Dort auswählen und bestätigen, dann hier auf „Erledigt“."}</div></div></div>
+        <div class="act-btns"><a class="btn primary" href="${esc(ekDeeplink(B.url))}" target="_blank" rel="noopener" data-ekopen>In Bring öffnen</a><button class="btn" data-act="ek-mail">Per Mail ans Handy</button>
+        ${B.status === "slow" ? `<button class="btn" data-act="ek-recheck">Nochmal prüfen</button>` : ""}<button class="btn ${B.opened ? "primary" : "ghost"}" data-act="ek-done">${B.opened ? "Erledigt – ist in Bring" : "Erledigt"}</button></div>
+        <p class="small muted" style="margin:10px 0 0">Nach „Erledigt“ verschwinden diese Artikel von der Liste${extra ? `, was seitdem dazukam, bleibt stehen` : ""}. <a href="#" data-act="ek-cancel">Abbrechen</a></p></section>`;
+    }
+    if (B && B.status === "wait") {
+      return `<section class="act info"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">Einen Moment</span><b>Die Liste wird für Bring vorbereitet</b>
+        <div class="small">Meist 1–2 Minuten. Du kannst solange weiterscannen – was jetzt dazukommt, bleibt fürs nächste Mal auf der Liste.</div></div></div>
+        <p class="small muted" style="margin:10px 0 0"><a href="#" data-act="ek-cancel">Abbrechen</a></p></section>`;
+    }
+    if (!named) return "";
+    return `<button class="btn primary big" data-act="ek-bring">${ICON_CART} In Bring übernehmen</button>
+      <p class="small muted" style="margin:8px 2px 0">Die App legt dafür kurz eine versteckte Importseite an – nur Artikel und Marken, sonst nichts. Das dauert 1–2 Minuten.${miss ? ` ${miss === 1 ? "Ein Artikel ohne Namen bleibt" : `${miss} Artikel ohne Namen bleiben`} auf der Liste.` : ""}</p>`;
+  }
+  function ekRow(id, it, fresh) {
+    return `<li class="ek-row${it.n ? "" : " miss"}${fresh ? " fresh" : ""}">
+      <button type="button" class="ek-main" data-ekedit="${esc(id)}"><b>${esc(it.n || "Name fehlt")}</b>${it.d ? `<small>${esc(it.d)}</small>` : it.n ? "" : `<small>Strichcode ${esc(it.ean || "")} – antippen und benennen</small>`}</button>
+      <div class="ek-cnt"><button type="button" data-ekinc="${esc(id)}|-1" aria-label="Eins weniger">−</button><b aria-label="Anzahl">${it.c}</b><button type="button" data-ekinc="${esc(id)}|1" aria-label="Eins mehr">+</button></div></li>`;
+  }
+  let ekFresh = null;
+  function drawEk(view) {
+    const V = ekView(), list = Object.entries(V.items).sort((a, b) => ((a[1].at || "") < (b[1].at || "") ? 1 : -1));
+    const n = list.reduce((s, [, it]) => s + it.c, 0), top = list[0] && list[0][0];
+    const cnt = $("#ek-count", view); if (cnt) cnt.textContent = n ? `${n} ${n === 1 ? "Artikel" : "Artikel"}` : "Leer";
+    const ul = $("#ek-list", view);
+    if (ul) ul.innerHTML = list.map(([id, it]) => ekRow(id, it, ekFresh && id === top)).join("") || `<li class="empty">Noch leer. Leere Packung scannen oder oben etwas dazuschreiben.</li>`;
+    const b = $("#ek-bring", view); if (b) b.innerHTML = ekBringHtml(V);
+    ekFresh = null;
+  }
+  function ekRefresh(fresh) { if (location.hash.startsWith("#/einkauf")) { ekFresh = !!fresh; drawEk($("#view")); } }
+  async function renderEinkauf(view) {
+    const names = await ekNames();
+    view.innerHTML = `<header class="top"><div><div class="eyebrow" id="ek-count"></div><h1>Einkaufsliste</h1></div></header>
+      ${syncBanner()}
+      <section class="card ek-scan" id="ek-scan"><div class="ek-scan-h"><span class="ek-ico">${BARCODE}</span><div><b>Einfach scannen</b>
+        <div class="small muted">Scanner an und den Strichcode der leeren Packung scannen – egal, welcher Reiter offen ist. Nochmal scannen zählt hoch.</div></div></div>
+        <div class="act-btns"><button class="btn" data-act="ek-cam">${CAMERA} Mit Kamera</button><button class="btn ghost" data-act="ek-code">Code eintippen</button></div></section>
+      <form class="ek-add" data-ekform autocomplete="off"><input class="search" type="text" list="ek-names" enterkeyhint="done" aria-label="Artikel dazuschreiben" placeholder="Dazuschreiben, z. B. 2 Milch" data-ekadd><button class="btn primary" aria-label="Auf die Liste">+</button></form>
+      ${names}
+      <ul class="ek-list" id="ek-list"></ul>
+      <div id="ek-bring" class="ek-bring"></div>
+      <details class="ek-help"><summary>Scanner einrichten und Tipps</summary><ul class="small">
+        <li>Den Bluetooth-Scanner im <b>HID- bzw. Tastaturmodus</b> mit dem Tablet koppeln – wie das geht, steht in seiner Anleitung (meist einen Code aus dem Heft scannen). Am Ende jedes Scans sendet er Enter, das ist Standard.</li>
+        <li>Neue Produkte erkennt die App über offene Produktdatenbanken und schlägt die passende Bring-Kachel vor. Einmal bestätigt, kennt sie den Code auf allen Geräten.</li>
+        <li>Solange der Scanner verbunden ist, blendet Android oft die Bildschirmtastatur aus. Dann in den Android-Einstellungen bei der physischen Tastatur „Bildschirmtastatur anzeigen“ einschalten.</li>
+        <li>Theke, Waage und loses Obst haben keinen festen Code – einfach oben dazuschreiben.</li>
+        <li>Die Liste wird privat gespeichert und ist auf allen Geräten gleich.</li></ul></details>`;
+    drawEk(view);
+    const B = ek().bring; if (B && B.status === "wait" && !ekPollT) ekPoll();
+  }
+  document.addEventListener("submit", (e) => {
+    const f = e.target;
+    if (f.matches("[data-ekform]")) { e.preventDefault(); const i = $("[data-ekadd]", f), v = i.value; i.value = ""; ekAddText(v); }
+    else if (f.matches("[data-ekcode]")) { e.preventDefault(); const v = ($("[data-ekcodein]", f) || {}).value || ""; if (!normCode(v)) { toast("Die Ziffern passen nicht zu einem Strichcode – bitte prüfen"); return; } closeSheet(); onScan(v, "hand"); }
+  });
+
   /* ---------- Timer ---------- */
   const clock = (sec) => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
   const remaining = (t) => (t.state === "pause" ? t.rem : t.state === "done" ? 0 : Math.max(0, (t.end - Date.now()) / 1000));
@@ -2399,9 +2851,12 @@
     s.dataset.review = data.review || "";
     s.dataset.note = data.note || "";
     s.dataset.news = data.news || "";
+    s.dataset.ek = data.ek || "";
+    s.dataset.ekid = data.ekid || "";
+    stopCam();
     s.hidden = false;
   }
-  const closeSheet = () => { $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; $("#sheet").dataset.note = ""; $("#sheet").dataset.news = ""; };
+  const closeSheet = () => { stopCam(); $("#sheet").hidden = true; $("#sheet").innerHTML = ""; $("#sheet").dataset.review = ""; $("#sheet").dataset.note = ""; $("#sheet").dataset.news = ""; $("#sheet").dataset.ek = ""; $("#sheet").dataset.ekid = ""; };
   let toastT = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 2200); }
   function rerenderSoft() { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); }
@@ -2418,7 +2873,7 @@
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -2490,6 +2945,9 @@
       setTimeout(() => { justStamped = null; }, 900);
       return;
     }
+    if (d.ekedit) { ekEditSheet(d.ekedit); return; }
+    if (d.ekinc) { const [id, by] = d.ekinc.split("|"), it = ekView().items[id]; if (it) { ekOp({ op: "inc", id, by: +by, it: { n: it.n, key: it.key, d: it.d, ean: it.ean } }); buzz(8); ekRefresh(); if (+by < 0 && it.c <= 1) toast(`${it.n || "Artikel"} von der Liste genommen`); } return; }
+    if (d.ekopen != null) { const B = ek().bring; if (B) { B.opened = 1; save(); setTimeout(ekRefresh, 1200); } return; }
     if (d.notesave) { saveNote(el); return; }
     if (d.noteedit != null) { const [slug, id] = d.noteedit.split("|"); delete noteDraft[slug]; if (id) noteEdit[slug] = id; else delete noteEdit[slug]; if ($("#sheet").dataset.note) cookNoteSheet(await getRecipe(cookRef)); else rerenderSoft(); setTimeout(() => { const t = $(`[data-notein="${slug}"]`); if (t && id) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 60); return; }
     if (d.notedel) { const [slug, id] = d.notedel.split("|"); const n = notesOf(slug).find((x) => x.id === id); putNote(slug, id, ""); lastDeleted = n ? { slug, n } : null; toast("Notiz gelöscht"); if ($("#sheet").dataset.note) cookNoteSheet(await getRecipe(cookRef)); else rerenderSoft(); return; }
@@ -2511,14 +2969,35 @@
       case "tour-end": endTour(); break;
       case "hint-cook": S.settings.hintCook = 1; save(); drawCook(view, await getRecipe(cookRef), cookRef); break;
       case "bringmail-go": {
-        const u = shownUpdates.find((x) => x.key === $("#sheet").dataset.bring), addr = (($("[data-mailto]") || {}).value || "").trim();
+        const u = curBring(), addr = (($("[data-mailto]") || {}).value || "").trim();
         if (!u) break;
         if (addr) { S.settings.mailTo = addr; save(); }
-        location.href = `mailto:${encodeURIComponent(addr).replace(/%40/g, "@")}?subject=${encodeURIComponent("Bring: neue Zutaten für den Wochenplan")}&body=${encodeURIComponent(bringText(u))}`;
+        location.href = `mailto:${encodeURIComponent(addr).replace(/%40/g, "@")}?subject=${encodeURIComponent(u.subject)}&body=${encodeURIComponent(u.text)}`;
         closeSheet(); toast("Mail-App geöffnet – Mail abschicken, dann auf dem Handy den Link antippen"); break;
       }
-      case "bringshare": { const u = shownUpdates.find((x) => x.key === $("#sheet").dataset.bring); if (u && navigator.share) navigator.share({ title: "Bring: neue Zutaten", text: bringText(u) }).catch(() => {}); break; }
-      case "bringcopy": { const u = shownUpdates.find((x) => x.key === $("#sheet").dataset.bring); if (u) { try { await navigator.clipboard.writeText(u.bring); toast("Link kopiert"); } catch (er) { toast("Kopieren ging nicht – bitte „Mail-App öffnen“ nutzen"); } } break; }
+      case "bringshare": { const u = curBring(); if (u && navigator.share) navigator.share({ title: u.subject, text: u.text }).catch(() => {}); break; }
+      case "bringcopy": { const u = curBring(); if (u) { try { await navigator.clipboard.writeText(u.link); toast("Link kopiert"); } catch (er) { toast("Kopieren ging nicht – bitte „Mail-App öffnen“ nutzen"); } } break; }
+      case "ek-cam": ekCamSheet(); break;
+      case "ek-code": ekCodeSheet(); break;
+      case "ek-ok": ekConfirm(); break;
+      case "ek-save": ekSave(); break;
+      case "ek-del": { const id = $("#sheet").dataset.ekid, it = ekView().items[id]; closeSheet(); if (it) { ekOp({ op: "del", id }); ekRefresh(); toast(`${it.n || "Artikel"} von der Liste genommen`); } break; }
+      case "ek-bring": ekBringStart(el); break;
+      case "ek-done": ekDone(); break;
+      case "ek-cancel": e.preventDefault(); ekCancel(); break;
+      case "ek-recheck": { const B = ek().bring; if (B) { B.status = "wait"; B.at = Date.now(); save(); ekRefresh(); ekPoll(); } break; }
+      case "ek-mail": {
+        const B = ek().bring; if (!B) break;
+        openSheet(`<h2>Bring-Link per Mail</h2>
+          <p class="small" style="margin:6px 0 10px">Schick dir den Link auf das Handy, auf dem Bring installiert ist. Dort in der Mail antippen – Bring öffnet sich mit der Einkaufsliste.</p>
+          <label class="small" for="mailto"><b>An diese Adresse</b></label>
+          <input class="field" id="mailto" type="email" inputmode="email" autocomplete="email" placeholder="name@beispiel.de" value="${esc(S.settings.mailTo || "")}" data-mailto>
+          <p class="small muted" style="margin:6px 0 12px">Die Adresse bleibt nur auf diesem Gerät gespeichert.</p>
+          <button class="btn primary big" data-act="bringmail-go">Mail-App öffnen</button>
+          ${navigator.share ? `<button class="btn big" style="margin-top:8px" data-act="bringshare">Anders schicken, z. B. per WhatsApp</button>` : ""}
+          <button class="btn ghost" style="margin-top:8px" data-act="bringcopy">Nur den Link kopieren</button>`, { bring: "ek" });
+        break;
+      }
       case "gh-save": saveToken(); break;
       case "gh-qr": e.preventDefault(); qrSheet(); break;
       case "gh-remove": setGhToken(""); closeSheet(); rerenderSoft(); toast("Schlüssel entfernt – Tauschen ist hier aus"); break;
@@ -2631,6 +3110,7 @@
       if (v) syncTaste(true);
       if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
       if (v) syncNotes(true);
+      if (v) syncEinkauf(true).then((ch) => { if (ch) ekRefresh(); });
       if (v) syncLog();
       if (v) syncVerlauf();
       if (!v) result = result === "changed" ? "changed" : "offline";
@@ -2664,6 +3144,8 @@
   ablageP.then(() => syncStars(true)).then((ch) => { if (ch) softIfIdle(); starsFirst(); }, starsFirst);
   setTimeout(starsFirst, 6000);
   ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
+  ablageP.then(() => syncEinkauf(true)).then((ch) => { if (ch) ekRefresh(); });
+  if (S.einkauf && S.einkauf.bring && S.einkauf.bring.status === "wait") setTimeout(ekPoll, 3000);
   ablageP.then(() => setTimeout(syncLog, 5000));
   ablageP.then(() => syncVerlauf()).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => { if (ablage.privat) softIfIdle(); });

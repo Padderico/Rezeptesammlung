@@ -636,11 +636,13 @@ body.dragging, body.dragging * { -webkit-user-select: none; user-select: none; }
 .tz-stack i:nth-child(2) { background: #EEC758; transform: rotate(-2deg); left: 12px; }
 .tz-stack i:nth-child(3) { background: linear-gradient(160deg, #EC6A40, #C73A26); transform: rotate(10deg); left: 14px; display: grid; place-items: center; color: #fff; }
 .tz-stack i .ico { width: 18px; height: 18px; }
-/* Sechs Tabs: etwas schmaler */
-#nav { max-width: 600px; padding: 0 4px; }
-#nav a { font-size: .68rem; letter-spacing: -.01em; }
+/* Sieben Tabs: etwas schmaler, auf kleinen Handys noch etwas kleiner */
+#nav { max-width: 660px; padding: 0 4px; }
+#nav a { font-size: .68rem; letter-spacing: -.01em; min-width: 0; }
+#nav a span { max-width: 100%; overflow: hidden; text-overflow: clip; white-space: nowrap; }
 #nav a::before { width: 50px; margin-left: -25px; }
-@media (max-width: 380px) { #nav a { font-size: .62rem; } }
+@media (max-width: 460px) { #nav { left: 6px; right: 6px; padding: 0 2px; } #nav a { font-size: .6rem; letter-spacing: -.02em; } #nav a::before { width: 42px; margin-left: -21px; } }
+@media (max-width: 370px) { #nav a { font-size: .55rem; } #nav a svg { width: 20px; height: 20px; } #nav a::before { width: 38px; margin-left: -19px; } }
 
 :root[data-scheme="dark"] #nav a.on::before { background: var(--accent); }
 :root[data-scheme="dark"] #nav a.on svg { color: var(--accent-ink); }
@@ -949,3 +951,36 @@ a.agp-go:active { transform: scale(.98); }
 .newsbar .icon-btn { width: 40px; height: 40px; background: transparent; border: 0; color: inherit; }
 .news-flash { animation: newsflash 2.4s var(--ease); border-radius: 18px; }
 @keyframes newsflash { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 15%, 70% { box-shadow: 0 0 0 4px var(--pumpkin), 0 0 0 10px rgba(228, 106, 18, .18); } }
+
+/* ---------- Einkaufsliste mit Scanner ---------- */
+.ek-scan-h { display: flex; gap: 14px; align-items: center; }
+.ek-ico { flex: none; width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.ek-ico .ico { width: 30px; height: 30px; }
+.ek-scan .act-btns { margin-top: 12px; }
+.ek-add { display: flex; gap: 8px; margin: 14px 0 4px; }
+.ek-add .search { padding-left: 16px; min-width: 0; }
+.ek-add input::-webkit-calendar-picker-indicator, .sheet input[list]::-webkit-calendar-picker-indicator { display: none !important; }
+.ek-add .btn { flex: none; min-height: 54px; min-width: 58px; font-size: 1.6rem; border-radius: 18px; padding: 0; }
+.ek-list { list-style: none; margin: 12px 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.ek-list > li { min-width: 0; }
+.ek-row { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 6px 8px 6px 4px; }
+.ek-row.miss { border-color: color-mix(in srgb, var(--pumpkin) 60%, transparent); background: var(--pumpkin-soft); }
+.ek-row.fresh { animation: ekin .9s var(--ease); }
+@keyframes ekin { 0% { transform: scale(.97); box-shadow: 0 0 0 3px var(--accent); } 100% { transform: none; box-shadow: 0 0 0 0 transparent; } }
+.ek-main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 8px 10px; color: var(--ink); cursor: pointer; font: inherit; border-radius: 14px; }
+.ek-main b { display: block; font: 700 1.06rem/1.2 var(--font-display); font-stretch: 92%; }
+.ek-main small { display: block; color: var(--muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ek-cnt { display: flex; align-items: center; gap: 2px; flex: none; }
+.ek-cnt b { min-width: 30px; text-align: center; font: 700 1.1rem/1 var(--font-body); font-variant-numeric: tabular-nums; }
+.ek-cnt button { width: 42px; height: 42px; border-radius: 13px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--ink); font: 700 1.35rem/1 var(--font-body); cursor: pointer; }
+.ek-cnt button:active { transform: scale(.92); }
+.ek-bring { margin: 16px 0 4px; }
+.ek-bring > .btn.big .ico { width: 22px; height: 22px; }
+.ek-code { font: 600 .8rem/1 var(--font-mono); letter-spacing: .02em; color: var(--muted); white-space: nowrap; }
+.ek-cam { position: relative; border-radius: 18px; overflow: hidden; background: #000; aspect-ratio: 4 / 3; }
+.ek-cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ek-cam i { position: absolute; left: 12%; right: 12%; top: 50%; height: 2px; background: var(--pumpkin); box-shadow: 0 0 14px var(--pumpkin); }
+.ek-help { margin: 22px 0 8px; }
+.ek-help summary { cursor: pointer; font-weight: 700; color: var(--muted); padding: 6px 2px; }
+.ek-help ul { padding-left: 20px; margin: 6px 0; }
+.ek-help li { margin: 6px 0; }

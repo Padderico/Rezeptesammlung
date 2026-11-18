@@ -7,7 +7,7 @@ Nur wenn alles grün ist, geht die Seite live; sonst bleibt die letzte funktioni
 1. Daten: alle JSON-Dateien unter app/daten/ und rezepte/rezepte.json lassen sich lesen und haben die nötigen Felder.
 2. Datenschutz: keine Vornamen der Familie in öffentlichen Daten und Seiten.
 3. App im Testbrowser (Playwright, Chromium): Woche, jedes Rezept der Woche, Kochmodus, Vorkochen, Checkliste,
-   Entdecken und Alle Rezepte öffnen – ohne JavaScript-Fehler und ohne „Gerade nicht ladbar“.
+   Entdecken, Einkaufsliste und Alle Rezepte öffnen – ohne JavaScript-Fehler und ohne „Gerade nicht ladbar“.
 Ausgabe: je Prüfung eine Zeile, am Ende „ALLES GRÜN“ oder die Fehlerliste (Exit-Code 1).
 """
 import functools
@@ -99,7 +99,7 @@ def check_photos():
 def check_privacy():
     names = re.compile(r"\b(" + "|".join(["An" + "ton", "An" + "ja", "Pad" + "de"]) + r")\b")
     hits = 0
-    for sub in ("app/daten", "rezepte", "b", "einkauf"):
+    for sub in ("app/daten", "rezepte", "b", "einkauf", "liste"):
         for f in (ROOT / sub).rglob("*"):
             if f.suffix in (".json", ".html", ".md", ".txt") and names.search(f.read_text(encoding="utf-8", errors="ignore")):
                 hits += 1
@@ -168,6 +168,7 @@ def check_app():
         good += visit("#/vorkochen", "#view h1", "Vorkochen")
         good += visit("#/checkliste", "#view h1", "Checkliste")
         good += visit("#/entdecken", "#view h1", "Entdecken")
+        good += visit("#/einkauf", "#ek-list", "Einkaufsliste")
         if visit("#/rezepte", "#rlist", "Alle Rezepte"):
             rows = len(pg.query_selector_all("#rlist > li a"))
             if rows != n_all:
