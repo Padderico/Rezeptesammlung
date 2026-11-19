@@ -625,7 +625,7 @@
   ],
   "total": 35,
   "last": "KW 48/2026",
-  "extra": false,
+  "extra": true,
   "current": true
  },
  {
@@ -713,7 +713,7 @@
   ],
   "total": 25,
   "last": "KW 48/2026",
-  "extra": true,
+  "extra": false,
   "current": true
  }
 ]

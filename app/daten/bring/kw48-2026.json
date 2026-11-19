@@ -169,6 +169,103 @@
    ],
    "url": "https://padderico.github.io/Rezeptesammlung/einkauf/kw48-2026-nachkauf-1119-1438.html",
    "bring": "https://api.getbring.com/rest/bringrecipes/deeplink?url=https%3A%2F%2Fpadderico.github.io%2FRezeptesammlung%2Feinkauf%2Fkw48-2026-nachkauf-1119-1438.html&source=web&baseQuantity=1&requestedQuantity=1"
+  },
+  {
+   "id": "1119-2127",
+   "at": "2026-11-19T21:27+01:00",
+   "changes": [
+    "Montag Abend: Köttbullar mit Rahmsoße, Kartoffelpüree & Preiselbeeren statt Rinder-Gemüse-Eintopf mit Kartoffeln",
+    "Dienstag Mittag: Rinder-Gemüse-Eintopf mit Kartoffeln statt Farfalle mit Lachs & Erbsen in Tomaten-Sahne-Soße",
+    "Donnerstag Mittag: Farfalle mit Lachs & Erbsen in Tomaten-Sahne-Soße statt Schweinegeschnetzeltes mit Champignon-Rahm, Spätzle & Brokkoli",
+    "Freitag Abend: Vesperbrett mit Bauernbrot, Schinken & Frühlingsquark statt Köttbullar mit Rahmsoße, Kartoffelpüree & Preiselbeeren"
+   ],
+   "add": [
+    {
+     "n": "Karotten",
+     "q": "1 kg",
+     "neu": false
+    },
+    {
+     "n": "Zwiebeln",
+     "q": "7 Stück",
+     "neu": false
+    },
+    {
+     "n": "Brokkoli",
+     "q": "1 Kopf, ca. 300 g",
+     "neu": false
+    },
+    {
+     "n": "Radieschen",
+     "q": "1 Bund, 60 g",
+     "neu": true
+    },
+    {
+     "n": "Frühlingszwiebeln",
+     "q": "1 Bund",
+     "neu": true
+    },
+    {
+     "n": "Gurke",
+     "q": "1 Stück",
+     "neu": true
+    },
+    {
+     "n": "Äpfel",
+     "q": "1 Stück",
+     "neu": true
+    },
+    {
+     "n": "Sahne",
+     "q": "2 Becher à 200 g",
+     "neu": false
+    },
+    {
+     "n": "Frischkäse",
+     "q": "2 Becher à 200 g, natur",
+     "neu": false
+    },
+    {
+     "n": "Quark",
+     "q": "1 Becher, 250 g",
+     "neu": true
+    },
+    {
+     "n": "Brot",
+     "q": "1 Laib Bauernbrot, ca. 750 g + 1 Bauernbrot, ca. 400 g, frisch am Fr",
+     "neu": false
+    },
+    {
+     "n": "Schinken",
+     "q": "150 g, gekocht, dünn geschnitten",
+     "neu": true
+    },
+    {
+     "n": "Aufschnitt",
+     "q": "100 g, mild, z. B. Lyoner",
+     "neu": true
+    }
+   ],
+   "remove": [
+    {
+     "n": "Champignons",
+     "q": "250 g, braun"
+    },
+    {
+     "n": "Spätzle",
+     "q": "500 g, frische Eierspätzle"
+    },
+    {
+     "n": "Paprikapulver",
+     "q": "edelsüß"
+    },
+    {
+     "n": "Schweinefleisch",
+     "q": "350 g, Schnitzel oder Lende"
+    }
+   ],
+   "url": "https://padderico.github.io/Rezeptesammlung/einkauf/kw48-2026-nachkauf-1119-2127.html",
+   "bring": "https://api.getbring.com/rest/bringrecipes/deeplink?url=https%3A%2F%2Fpadderico.github.io%2FRezeptesammlung%2Feinkauf%2Fkw48-2026-nachkauf-1119-2127.html&source=web&baseQuantity=1&requestedQuantity=1"
   }
  ]
 }
