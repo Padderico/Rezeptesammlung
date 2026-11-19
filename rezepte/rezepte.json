@@ -23,7 +23,7 @@
    "Heißluftfritteuse",
    "Kartoffel"
   ],
-  "total": 45,
+  "total": 50,
   "last": "KW 48/2026",
   "extra": true,
   "current": true
@@ -71,9 +71,25 @@
    "Vorkochen"
   ],
   "total": 40,
-  "last": "KW 47/2026",
+  "last": "KW 48/2026",
   "extra": false,
-  "current": false
+  "current": true
+ },
+ {
+  "slug": "fantakuchen-vom-blech",
+  "first": "KW 48/2026",
+  "title": "Fantakuchen vom Blech",
+  "tags": [
+   "Kuchen",
+   "Süß",
+   "Thermomix",
+   "Ofen",
+   "Vorkochen"
+  ],
+  "total": 45,
+  "last": "KW 48/2026",
+  "extra": false,
+  "current": true
  },
  {
   "slug": "farfalle-mit-lachs-und-erbsen-in-tomaten-sahne-sosse",
@@ -223,7 +239,7 @@
   ],
   "total": 30,
   "last": "KW 48/2026",
-  "extra": false,
+  "extra": true,
   "current": true
  },
  {
@@ -242,6 +258,22 @@
   "current": false
  },
  {
+  "slug": "hackfleisch-lauch-suppe-mit-kartoffeln",
+  "first": "KW 48/2026",
+  "title": "Hackfleisch-Lauch-Suppe mit Kartoffeln",
+  "tags": [
+   "Fleisch",
+   "Suppe",
+   "Kartoffel",
+   "Thermomix",
+   "Pfanne"
+  ],
+  "total": 40,
+  "last": "KW 48/2026",
+  "extra": false,
+  "current": true
+ },
+ {
   "slug": "hirse-karotten-taler-mit-fruehlingsquark-und-feldsalat",
   "first": "KW 48/2026",
   "title": "Hirse-Karotten-Taler mit Frühlingsquark & Feldsalat",
@@ -254,7 +286,7 @@
   "total": 50,
   "last": "KW 48/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "huehnersuppe-mit-nudeln-und-gemuese",
@@ -346,7 +378,7 @@
   "total": 35,
   "last": "KW 48/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "kartoffelgratin-mit-feldsalat-und-orangen-dressing",
@@ -592,9 +624,9 @@
    "Varoma"
   ],
   "total": 35,
-  "last": "KW 46/2026",
+  "last": "KW 48/2026",
   "extra": false,
-  "current": false
+  "current": true
  },
  {
   "slug": "schweinelendchen-in-apfel-rahm-mit-kartoffelpueree",
@@ -679,9 +711,9 @@
    "Leicht",
    "Varoma"
   ],
-  "total": 20,
+  "total": 25,
   "last": "KW 48/2026",
-  "extra": false,
+  "extra": true,
   "current": true
  }
 ]

@@ -1,0 +1,174 @@
+{
+ "week": "kw48-2026",
+ "updates": [
+  {
+   "id": "1119-1438",
+   "at": "2026-11-19T14:38+01:00",
+   "changes": [
+    "Montag Mittag: Cremige Maronen-Karotten-Suppe statt Grießbrei mit Apfel-Zimt-Kompott",
+    "Donnerstag Mittag: Schweinegeschnetzeltes mit Champignon-Rahm, Spätzle & Brokkoli statt Hirse-Karotten-Taler mit Frühlingsquark & Feldsalat",
+    "Donnerstag Abend: Hackfleisch-Lauch-Suppe mit Kartoffeln statt Kartoffel-Lauch-Suppe",
+    "Freitag Abend: Köttbullar mit Rahmsoße, Kartoffelpüree & Preiselbeeren statt Vesperbrett mit Bauernbrot, Schinken & Frühlingsquark"
+   ],
+   "add": [
+    {
+     "n": "Karotten",
+     "q": "750 g",
+     "neu": false
+    },
+    {
+     "n": "Brokkoli",
+     "q": "2 Köpfe, ca. 700 g",
+     "neu": false
+    },
+    {
+     "n": "Champignons",
+     "q": "250 g, braun",
+     "neu": true
+    },
+    {
+     "n": "Milch",
+     "q": "0,5 l",
+     "neu": false
+    },
+    {
+     "n": "Sahne",
+     "q": "3 Becher à 200 g",
+     "neu": false
+    },
+    {
+     "n": "Eier",
+     "q": "6 Stück",
+     "neu": false
+    },
+    {
+     "n": "Spätzle",
+     "q": "500 g, frische Eierspätzle",
+     "neu": true
+    },
+    {
+     "n": "Hirse",
+     "q": "1 Packung, 500 g, zum Einweichen",
+     "neu": false
+    },
+    {
+     "n": "Haferflocken",
+     "q": "1 Packung, zart, zum Einweichen",
+     "neu": false
+    },
+    {
+     "n": "Mehl",
+     "q": "1 Packung, 1 kg, Type 405",
+     "neu": true
+    },
+    {
+     "n": "Zucker",
+     "q": "1 Packung, 150 g für den Kuchen",
+     "neu": false
+    },
+    {
+     "n": "Vanillezucker",
+     "q": "1 Päckchen",
+     "neu": true
+    },
+    {
+     "n": "Backpulver",
+     "q": "1 Päckchen",
+     "neu": true
+    },
+    {
+     "n": "Puderzucker",
+     "q": "1 Packung, 250 g",
+     "neu": true
+    },
+    {
+     "n": "Zuckerstreusel",
+     "q": "1 Päckchen, bunt",
+     "neu": true
+    },
+    {
+     "n": "Fanta",
+     "q": "1 Flasche à 0,5 l, Orange",
+     "neu": true
+    },
+    {
+     "n": "Öl",
+     "q": "Rapsöl, für den Kuchen 150 ml, Sonnenblume oder Raps",
+     "neu": false
+    },
+    {
+     "n": "Paprikapulver",
+     "q": "edelsüß",
+     "neu": true
+    },
+    {
+     "n": "Brot",
+     "q": "1 Laib Bauernbrot, ca. 750 g",
+     "neu": false
+    },
+    {
+     "n": "Hackfleisch",
+     "q": "700 g, gemischt",
+     "neu": false
+    },
+    {
+     "n": "Schweinefleisch",
+     "q": "350 g, Schnitzel oder Lende",
+     "neu": true
+    }
+   ],
+   "remove": [
+    {
+     "n": "Feldsalat",
+     "q": "150 g"
+    },
+    {
+     "n": "Gurke",
+     "q": "1 Stück"
+    },
+    {
+     "n": "Äpfel",
+     "q": "3 Stück, säuerlich"
+    },
+    {
+     "n": "Orange",
+     "q": "1 Stück"
+    },
+    {
+     "n": "Frühlingsquark",
+     "q": "2 Becher à 200 g"
+    },
+    {
+     "n": "Reibekäse",
+     "q": "1 Packung, 200 g, Gouda oder Emmentaler"
+    },
+    {
+     "n": "Grieß",
+     "q": "1 Packung, Weichweizengrieß"
+    },
+    {
+     "n": "Honig",
+     "q": "1 Glas"
+    },
+    {
+     "n": "Essig",
+     "q": "Apfelessig"
+    },
+    {
+     "n": "Zimt",
+     "q": "gemahlen"
+    },
+    {
+     "n": "Schinken",
+     "q": "150 g, gekocht, dünn geschnitten"
+    },
+    {
+     "n": "Aufschnitt",
+     "q": "100 g, mild, z. B. Lyoner"
+    }
+   ],
+   "url": "https://padderico.github.io/Rezeptesammlung/einkauf/kw48-2026-nachkauf-1119-1438.html",
+   "bring": "https://api.getbring.com/rest/bringrecipes/deeplink?url=https%3A%2F%2Fpadderico.github.io%2FRezeptesammlung%2Feinkauf%2Fkw48-2026-nachkauf-1119-1438.html&source=web&baseQuantity=1&requestedQuantity=1"
+  }
+ ]
+}
