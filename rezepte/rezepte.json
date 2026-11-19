@@ -15,6 +15,20 @@
   "current": false
  },
  {
+  "slug": "backfisch-aus-der-heissluftfritteuse-mit-kartoffelspalten",
+  "first": "KW 48/2026",
+  "title": "Backfisch aus der Heißluftfritteuse mit Kartoffelspalten",
+  "tags": [
+   "Fisch",
+   "Heißluftfritteuse",
+   "Kartoffel"
+  ],
+  "total": 45,
+  "last": "KW 48/2026",
+  "extra": true,
+  "current": true
+ },
+ {
   "slug": "brokkoli-nudelauflauf-mit-kaesesosse",
   "first": "KW 47/2026",
   "title": "Brokkoli-Nudelauflauf mit Käsesoße",
@@ -27,6 +41,21 @@
   ],
   "total": 45,
   "last": "KW 47/2026",
+  "extra": true,
+  "current": false
+ },
+ {
+  "slug": "cremige-lauch-pasta-mit-frischkaese-und-parmesan",
+  "first": "KW 48/2026",
+  "title": "Cremige Lauch-Pasta mit Frischkäse und Parmesan",
+  "tags": [
+   "Vegetarisch",
+   "Pasta",
+   "Thermomix",
+   "One-Pot"
+  ],
+  "total": 25,
+  "last": "KW 48/2026",
   "extra": true,
   "current": true
  },
@@ -44,6 +73,23 @@
   "total": 40,
   "last": "KW 47/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "farfalle-mit-lachs-und-erbsen-in-tomaten-sahne-sosse",
+  "first": "KW 48/2026",
+  "title": "Farfalle mit Lachs & Erbsen in Tomaten-Sahne-Soße",
+  "tags": [
+   "Fisch",
+   "Pasta",
+   "Thermomix",
+   "Varoma",
+   "One-Pot",
+   "Eisen"
+  ],
+  "total": 30,
+  "last": "KW 48/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -59,7 +105,7 @@
   "total": 35,
   "last": "KW 47/2026",
   "extra": true,
-  "current": true
+  "current": false
  },
  {
   "slug": "flammkuchen-mit-lauch-und-zwiebeln",
@@ -120,6 +166,22 @@
   "current": false
  },
  {
+  "slug": "gemuese-tortellini-suppe",
+  "first": "KW 48/2026",
+  "title": "Gemüse-Tortellini-Suppe",
+  "tags": [
+   "Vegetarisch",
+   "Suppe",
+   "Thermomix",
+   "One-Pot",
+   "Leicht"
+  ],
+  "total": 25,
+  "last": "KW 48/2026",
+  "extra": true,
+  "current": true
+ },
+ {
   "slug": "gnocchi-blech-mit-paprika-zucchini-und-feta",
   "first": "KW 46/2026",
   "title": "Gnocchi-Blech mit Paprika, Zucchini & Feta",
@@ -160,8 +222,8 @@
    "Süß"
   ],
   "total": 30,
-  "last": "KW 47/2026",
-  "extra": true,
+  "last": "KW 48/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -176,6 +238,37 @@
   ],
   "total": 45,
   "last": "KW 47/2026",
+  "extra": true,
+  "current": false
+ },
+ {
+  "slug": "hirse-karotten-taler-mit-fruehlingsquark-und-feldsalat",
+  "first": "KW 48/2026",
+  "title": "Hirse-Karotten-Taler mit Frühlingsquark & Feldsalat",
+  "tags": [
+   "Vegetarisch",
+   "Thermomix",
+   "Pfanne",
+   "Eisen"
+  ],
+  "total": 50,
+  "last": "KW 48/2026",
+  "extra": false,
+  "current": true
+ },
+ {
+  "slug": "huehnersuppe-mit-nudeln-und-gemuese",
+  "first": "KW 48/2026",
+  "title": "Hühnersuppe mit Nudeln und Gemüse",
+  "tags": [
+   "Fleisch",
+   "Suppe",
+   "Thermomix",
+   "One-Pot",
+   "Vorkochen"
+  ],
+  "total": 45,
+  "last": "KW 48/2026",
   "extra": true,
   "current": true
  },
@@ -192,7 +285,7 @@
   "total": 40,
   "last": "KW 47/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "kartoffel-gemuese-blech-mit-brokkoli-feta-und-kraeuterquark",
@@ -237,7 +330,7 @@
   "total": 45,
   "last": "KW 47/2026",
   "extra": true,
-  "current": true
+  "current": false
  },
  {
   "slug": "kartoffel-lauch-suppe",
@@ -247,12 +340,13 @@
    "Vegetarisch",
    "Suppe",
    "Kartoffel",
-   "Thermomix"
+   "Thermomix",
+   "One-Pot"
   ],
   "total": 35,
-  "last": "KW 46/2026",
-  "extra": true,
-  "current": false
+  "last": "KW 48/2026",
+  "extra": false,
+  "current": true
  },
  {
   "slug": "kartoffelgratin-mit-feldsalat-und-orangen-dressing",
@@ -268,6 +362,22 @@
   ],
   "total": 65,
   "last": "KW 47/2026",
+  "extra": false,
+  "current": false
+ },
+ {
+  "slug": "koettbullar-mit-rahmsosse-kartoffelpueree-und-preiselbeeren",
+  "first": "KW 48/2026",
+  "title": "Köttbullar mit Rahmsoße, Kartoffelpüree & Preiselbeeren",
+  "tags": [
+   "Fleisch",
+   "Kartoffel",
+   "Thermomix",
+   "Heißluftfritteuse",
+   "Eisen"
+  ],
+  "total": 40,
+  "last": "KW 48/2026",
   "extra": false,
   "current": true
  },
@@ -328,7 +438,7 @@
   "total": 40,
   "last": "KW 47/2026",
   "extra": true,
-  "current": true
+  "current": false
  },
  {
   "slug": "minestrone-mit-sternchennudeln",
@@ -341,8 +451,8 @@
    "One-Pot"
   ],
   "total": 35,
-  "last": "KW 47/2026",
-  "extra": true,
+  "last": "KW 48/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -375,6 +485,23 @@
   "total": 30,
   "last": "KW 47/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "one-pot-penne-mit-haehnchen-brokkoli-und-parmesan",
+  "first": "KW 48/2026",
+  "title": "One-Pot-Penne mit Hähnchen, Brokkoli & Parmesan",
+  "tags": [
+   "Fleisch",
+   "Pasta",
+   "Thermomix",
+   "Varoma",
+   "One-Pot",
+   "Eisen"
+  ],
+  "total": 35,
+  "last": "KW 48/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -404,6 +531,23 @@
   "total": 60,
   "last": "KW 47/2026",
   "extra": false,
+  "current": false
+ },
+ {
+  "slug": "rinder-gemuese-eintopf-mit-kartoffeln",
+  "first": "KW 48/2026",
+  "title": "Rinder-Gemüse-Eintopf mit Kartoffeln",
+  "tags": [
+   "Fleisch",
+   "Suppe",
+   "One-Pot",
+   "Eisen",
+   "Vorkochen",
+   "Einfrieren"
+  ],
+  "total": 125,
+  "last": "KW 48/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -421,7 +565,7 @@
   "total": 175,
   "last": "KW 47/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "rindergulasch-mit-spaetzle-und-gurkensalat",
@@ -451,6 +595,21 @@
   "last": "KW 46/2026",
   "extra": false,
   "current": false
+ },
+ {
+  "slug": "schweinelendchen-in-apfel-rahm-mit-kartoffelpueree",
+  "first": "KW 48/2026",
+  "title": "Schweinelendchen in Apfel-Rahm mit Kartoffelpüree",
+  "tags": [
+   "Fleisch",
+   "Kartoffel",
+   "Thermomix",
+   "Pfanne"
+  ],
+  "total": 40,
+  "last": "KW 48/2026",
+  "extra": true,
+  "current": true
  },
  {
   "slug": "spinat-kaese-frittata-aus-der-heissluftfritteuse",
@@ -494,7 +653,7 @@
   "total": 30,
   "last": "KW 47/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "vesper-brett-mit-frischem-kraeuterquark",
@@ -509,5 +668,20 @@
   "last": "KW 46/2026",
   "extra": false,
   "current": false
+ },
+ {
+  "slug": "vesperbrett-mit-bauernbrot-schinken-und-fruehlingsquark",
+  "first": "KW 48/2026",
+  "title": "Vesperbrett mit Bauernbrot, Schinken & Frühlingsquark",
+  "tags": [
+   "Fleisch",
+   "Vesper",
+   "Leicht",
+   "Varoma"
+  ],
+  "total": 20,
+  "last": "KW 48/2026",
+  "extra": false,
+  "current": true
  }
 ]

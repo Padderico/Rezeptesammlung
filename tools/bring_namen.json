@@ -160,6 +160,8 @@
     {"key": "Oregano", "anzeige": "Oregano", "varianten": []},
     {"key": "Currypulver", "anzeige": "Currypulver", "varianten": ["Curry", "Currypulver mild"]},
     {"key": "Maronen", "anzeige": "Maronen", "varianten": ["Marone", "Esskastanien", "Maroni"]},
+    {"key": "Preiselbeeren", "anzeige": "Preiselbeeren", "varianten": ["Preiselbeere", "Preiselbeerkompott", "Wildpreiselbeeren"]},
+    {"key": "Tortellini", "anzeige": "Tortellini", "varianten": ["Käse-Tortellini", "Tortelloni"]},
     {"key": "Muffinförmchen", "anzeige": "Muffinförmchen", "varianten": ["Papierförmchen", "Muffin-Förmchen"]}
   ]
 }
