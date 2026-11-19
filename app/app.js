@@ -442,6 +442,7 @@
     html += syncBanner();
     html += planMissingBanner();
     html += actionBanners(ups, "todo");
+    html += msgBanner();
     if (installEvt && S.settings.installHint && !standalone()) {
       html += `<div class="banner"><p>Als App auf dem Handy installieren?</p><button class="btn small" data-act="install">Installieren</button><button class="icon-btn" style="width:40px;height:40px;background:transparent;border:0;color:inherit" data-act="nohint" aria-label="Ausblenden">${CLOSE}</button></div>`;
     }
@@ -462,6 +463,7 @@
     html += rateCard();
     html += actionBanners(ups, "info");
     html += await discoverTeaser();
+    html += msgCard();
     if (w.notice) html += `<div class="notice${noticeOpen ? "" : " clamp"}" data-act="notice"><b class="nt">Hinweis zum Plan</b><span>${esc(w.notice)}</span><i class="more">${noticeOpen ? "weniger" : "ganz lesen"}</i></div>`;
     html += `</div><div class="wk-rest">`;
     const rest = ordered.filter((d) => d !== todayDay);
@@ -947,7 +949,7 @@
   function pendingInfo() {
     const ats = [];
     const add = (ops) => (ops || []).forEach((o) => { const a = o.at || (o.swap && o.swap.at); if (a) ats.push(new Date(a).getTime()); else ats.push(Date.now()); });
-    add(stars().ops); add(notesSt().ops); add(taste().ops); add(ek().ops); add(vr().ops);
+    add(stars().ops); add(notesSt().ops); add(taste().ops); add(ek().ops); add(vr().ops); add(msgSt().ops);
     for (const k of Object.keys(S.swaps || {})) add((S.swaps[k] || {}).ops);
     return { n: ats.length, since: ats.length ? Math.min(...ats) : 0 };
   }
@@ -1001,7 +1003,7 @@
     const [, m, d] = nextMon.split("-").map(Number);
     return `<section class="act"><div class="act-h"><span class="act-ico">${ICON_WAIT}</span><div><span class="act-k">Noch nicht da</span><b>Der Plan ab Montag, ${d}.${m}., fehlt</b><div class="small">Normalerweise kommt er donnerstags gegen 6 Uhr. Der Buddy prüft das stündlich, startet die Planung bei Bedarf neu und gibt Bescheid. <a href="#" data-act="reload">Jetzt nachsehen</a></div></div></div></section>`;
   }
-  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet), syncEinkauf(quiet), syncVorrat(quiet)]).then((r) => r.some(Boolean)); }
+  function syncAll(quiet) { return Promise.all([syncSwaps(quiet), syncTaste(quiet), syncStars(quiet), syncNotes(quiet), syncEinkauf(quiet), syncVorrat(quiet), syncMsgs(quiet)]).then((r) => r.some(Boolean)); }
 
   /* ---------- Hinweise: Was ist noch zu tun? (oben in der Woche, orange) ---------- */
   async function bringUpdates() {
@@ -2105,6 +2107,87 @@
     })().finally(() => { notesSyncing = null; });
     return notesSyncing;
   }
+  /* ---------- Nachricht an den Buddy ----------
+     Wünsche und Fragen direkt aus der App statt per Mail-Antwort (Outlook hat Antworten als Spam blockiert).
+     Gespeichert im privaten Datenrepo unter nachrichten/buddy.json. Die stündliche Buddy-Aufgabe (7–22 Uhr)
+     beantwortet neue Nachrichten per Mail und schreibt eine kurze Antwort zurück, die hier erscheint. */
+  const MSG_PATH = "/contents/nachrichten/buddy.json";
+  const MSG_INFO = "Nachrichten aus dem Kochbuddy an den Koch- und Einkaufsbuddy. items[id] = {text, at, status: neu|erledigt, antwort?: {text, at}}. Neue Einträge beantwortet die Antwort-Aufgabe.";
+  const CHAT = '<svg class="ico" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M8 10h8M8 13h5"/></svg>';
+  const msgSt = () => { const M = (S.msgs = S.msgs || {}); M.items = M.items || {}; M.ops = M.ops || []; M.seen = M.seen || {}; return M; };
+  let msgDraft = "";
+  const msgList = () => Object.entries(msgSt().items).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.at < b.at ? 1 : -1));
+  const msgUnread = () => msgList().filter((m) => m.antwort && !msgSt().seen[m.id]);
+  function msgItem(m) {
+    const pending = msgSt().ops.some((o) => o.id === m.id), isNew = m.antwort && !msgSt().seen[m.id];
+    const st = pending ? (ghToken() ? "wird gesendet …" : "noch auf diesem Gerät") : m.antwort ? "beantwortet" : "beim Buddy, Antwort folgt";
+    return `<li class="${isNew ? "new" : ""}"><p class="mq">${esc(m.text)}</p><div class="msg-meta"><small>${noteDate(m.at)} · ${st}</small>${isNew ? `<span class="chip pump">Neue Antwort</span>` : ""}</div>${m.antwort ? `<div class="ma"><b>Dein Buddy</b><p>${esc(m.antwort.text)}</p></div>` : ""}</li>`;
+  }
+  function msgCard() {
+    const list = msgList(), shown = list.slice(0, 2);
+    let h = `<section class="card notes-box msg-card" id="msg-card"><h3 class="nb-h">${CHAT}Nachricht an den Buddy</h3>`;
+    h += `<p class="small muted" style="margin:4px 0 8px">Wünsche, Fragen oder Änderungen am Plan – der Buddy antwortet meist innerhalb einer Stunde (7–22 Uhr), hier und per Mail.</p>`;
+    if (shown.length) h += `<ul class="msg-list">${shown.map(msgItem).join("")}</ul>`;
+    h += `<textarea class="note-in" rows="2" data-msgin placeholder="z. B. Mittwochabend sind wir auswärts essen">${esc(msgDraft)}</textarea>`;
+    h += `<div class="nb-btns"><button type="button" class="btn small primary" data-act="msg-send">Senden</button>${list.length > 2 ? `<button type="button" class="btn small ghost" data-act="msg-all">Alle ${list.length} Nachrichten</button>` : ""}</div>`;
+    const line = embedded ? "In der Vorschau wird nichts gesendet." : !ghToken() ? `Damit Nachrichten beim Buddy ankommen: <a href="#" data-act="gh-setup">einmalig Speichern einrichten</a>` : "";
+    if (line) h += `<p class="small muted" style="margin:10px 0 0">${line}</p>`;
+    return h + `</section>`;
+  }
+  const msgBanner = () => { const n = msgUnread().length; return n ? `<div class="banner msg-ban"><p>${CHAT}Der Buddy hat auf ${n === 1 ? "deine Nachricht" : `${n} Nachrichten`} geantwortet.</p><button class="btn small" data-act="msg-show">Lesen</button></div>` : ""; };
+  function msgMarkSeen() { const M = msgSt(); let ch = false; for (const m of msgList()) if (m.antwort && !M.seen[m.id]) { M.seen[m.id] = 1; ch = true; } if (ch) save(); return ch; }
+  function msgAllSheet() { openSheet(`<h2>Nachrichten an den Buddy</h2><ul class="msg-list sheet-msgs">${msgList().map(msgItem).join("")}</ul>`); msgMarkSeen(); }
+  function sendMsg() {
+    const ta = $("[data-msgin]"), text = ((ta && ta.value) || msgDraft || "").trim().slice(0, 1500);
+    if (!text) { toast("Erst etwas eintippen"); if (ta) ta.focus(); return; }
+    if (embedded) { toast("In der Vorschau wird nichts gesendet"); return; }
+    const M = msgSt(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at = new Date().toISOString();
+    M.ops.push({ op: "add", id, text, at }); M.items[id] = { text, at, status: "neu" };
+    msgDraft = ""; msgMarkSeen(); save();
+    if (navigator.vibrate && S.settings.vibrate) navigator.vibrate(10);
+    toast(ghToken() ? "Gesendet – der Buddy antwortet meist innerhalb einer Stunde" : "Gespeichert – zum Senden einmalig Speichern einrichten");
+    rerenderSoft(); scheduleMsgPush(300);
+  }
+  let msgTimer = null, msgSyncing = null;
+  const scheduleMsgPush = (ms = 800) => { clearTimeout(msgTimer); msgTimer = setTimeout(() => syncMsgs(true).then((ch) => { if (ch) softIfIdle(); }), ms); };
+  function setMsgsFrom(items) {
+    const M = msgSt(), next = {};
+    for (const [id, m] of Object.entries(items || {})) if (m && m.text) next[id] = { text: m.text, at: m.at, status: m.status || "neu", ...(m.antwort && m.antwort.text ? { antwort: { text: m.antwort.text, at: m.antwort.at } } : {}) };
+    for (const o of M.ops) if (!next[o.id]) next[o.id] = { text: o.text, at: o.at, status: "neu" };
+    if (JSON.stringify(next) === JSON.stringify(M.items)) return false;
+    M.items = next; save(); return true;
+  }
+  function syncMsgs(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (msgSyncing) return msgSyncing;
+    msgSyncing = (async () => {
+      const M = msgSt();
+      if (!dataReady() || !ghToken()) return false;
+      try {
+        for (let k = 0; k < 3; k++) {
+          const r = await dgh("GET", MSG_PATH);
+          const data = r ? JSON.parse(b64d(r.content)) : {};
+          data.info = MSG_INFO; data.items = data.items || {};
+          const ops = M.ops.slice();
+          if (!ops.length) return setMsgsFrom(data.items);
+          for (const o of ops) if (!data.items[o.id]) data.items[o.id] = { text: o.text, at: o.at, status: "neu" };
+          data.updated = new Date().toISOString();
+          try {
+            await dgh("PUT", MSG_PATH, { message: "Koch-App: Nachricht an den Buddy", content: b64e(JSON.stringify(data, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+            M.ops = M.ops.slice(ops.length); save(); syncMark(true);
+            setMsgsFrom(data.items);
+            return true;
+          } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+        }
+      } catch (e) {
+        syncMark(false, e);
+        if (!quiet && e.code === "auth") { toast(`Nachricht nicht gesendet: ${e.message}`); tokenSheet(e.message); }
+      }
+      return false;
+    })().finally(() => { msgSyncing = null; });
+    return msgSyncing;
+  }
+
   /* neu zeichnen nur, wenn gerade niemand tippt oder eine Schublade offen hat */
   // Mehrere Abgleiche kurz hintereinander → nur ein Neuaufbau, und nie während getippt, gewischt oder gekocht wird
   let softT = null, lastTouch = 0;
@@ -2215,10 +2298,11 @@
   let news = null, newsStep = 0, newsItem = null;
   async function loadNews() { if (news) return news; try { news = (await getJSON("daten/neu.json")).items || []; } catch (e) { news = []; } return news; }
   const newsSeen = () => (S.settings.newsSeen = S.settings.newsSeen || []);
+  const newsKey = (it) => (it ? `${it.id}#${(it.schritte || []).length}` : ""); // wächst ein Eintrag am selben Tag, zeigt die App ihn noch einmal
   async function maybeNews() {
     if (inCooking || !$("#sheet").hidden || !$("#alarm").hidden || !S.settings.toured || embedded) return;
     const list = await loadNews(), top = list[0];
-    if (!top || newsSeen().includes(top.id) || $("#newsbar")) return;
+    if (!top || newsSeen().includes(newsKey(top)) || $("#newsbar")) return;
     showNews(0, top);
   }
   const newsText = (t) => esc(String(t || "").replace(/\{kind\}/g, kidName() || "das Kind"));
@@ -2256,8 +2340,8 @@
   function newsEnd(done) {
     $("#newsbar") && $("#newsbar").remove();
     if ($("#sheet").dataset.news) closeSheet();
-    if (done && newsItem && !newsSeen().includes(newsItem.id)) { newsSeen().push(newsItem.id); save(); toast("Viel Spaß mit den Neuerungen!"); }
-    else if (!done && newsItem && !newsSeen().includes(newsItem.id)) { newsSeen().push(newsItem.id); save(); toast("Die Tour findest du unten in der Woche unter „Was ist neu?“"); }
+    if (done && newsItem && !newsSeen().includes(newsKey(newsItem))) { newsSeen().push(newsKey(newsItem)); save(); toast("Viel Spaß mit den Neuerungen!"); }
+    else if (!done && newsItem && !newsSeen().includes(newsKey(newsItem))) { newsSeen().push(newsKey(newsItem)); save(); toast("Die Tour findest du unten in der Woche unter „Was ist neu?“"); }
   }
 
   /* ---------- Alle Rezepte ---------- */
@@ -3361,6 +3445,9 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       case "news-show": newsShow(); break;
       case "news-done": newsEnd(true); break;
       case "news-end": newsEnd(false); break;
+      case "msg-send": e.preventDefault(); sendMsg(); break;
+      case "msg-all": e.preventDefault(); msgAllSheet(); break;
+      case "msg-show": e.preventDefault(); { const c = $("#msg-card"); if (c) c.scrollIntoView({ behavior: "smooth", block: "start" }); msgMarkSeen(); const b = $(".msg-ban"); if (b) b.remove(); } break;
       case "news-open": e.preventDefault(); { const l = await loadNews(); if (l[0]) showNews(0, l[0]); } break;
       case "review-done": closeSheet(); reviewList = null; toast("Danke! Der Buddy plant künftig danach."); setTimeout(maybeNews, 900); break;
       case "review-demo": {
@@ -3377,7 +3464,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     if (el.dataset.eat) { S.eat[el.dataset.eat] = el.value; save(); getRecipe(el.dataset.eat).then((r) => ($("#plan-out").innerHTML = planText(r, el.value))); }
     if (el.dataset.act === "block-beep") { S.block[weekId].beep = el.checked; save(); unlockAudio(); askNotify(); blockTimers(el.checked); }
   });
-  document.addEventListener("input", (e) => { if (e.target.dataset.search != null) { filter.q = e.target.value; drawList($("#view")); } if (e.target.dataset.notein) noteDraft[e.target.dataset.notein] = e.target.value; });
+  document.addEventListener("input", (e) => { if (e.target.dataset.search != null) { filter.q = e.target.value; drawList($("#view")); } if (e.target.dataset.notein) noteDraft[e.target.dataset.notein] = e.target.value; if (e.target.dataset.msgin != null) msgDraft = e.target.value; });
 
   /* ---------- Einstellungen anwenden, Installation ---------- */
   function applySettings() {
@@ -3440,6 +3527,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       if (v) syncTaste(true);
       if (v) syncStars(true).then((ch) => { if (ch && $("#sheet").dataset.review) { reviewList = null; maybeReview(); } });
       if (v) syncNotes(true);
+      if (v) syncMsgs(true).then((ch) => { if (ch) softIfIdle(); });
       if (v) syncEinkauf(true).then((ch) => { if (ch) ekRefresh(); });
       if (v) syncVorrat(true).then((ch) => { if (ch) vrRefresh(); });
       if (v) syncLog();

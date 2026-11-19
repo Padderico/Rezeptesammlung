@@ -6,6 +6,8 @@
    "datum": "19.11.2026",
    "titel": "Neu im Kochbuddy",
    "schritte": [
+    { "ico": "bell", "t": "Schreib dem Buddy direkt", "x": "Neu in der Woche: „Nachricht an den Buddy“. Wünsche, Fragen oder Änderungen am Plan einfach eintippen und auf Senden tippen. Das klappt auch, wenn Outlook eine Antwort-Mail mal blockiert.", "ziel": "#/", "zeige": "#msg-card" },
+    { "ico": "bell", "t": "Die Antwort kommt hierher", "x": "Der Buddy antwortet meist innerhalb einer Stunde zwischen 7 und 22 Uhr – per Mail und direkt hier unter deiner Nachricht. Oben in der Woche steht dann „Der Buddy hat geantwortet“.", "ziel": "#/", "zeige": "#msg-card" },
     { "ico": "cart", "t": "Angebote in zwei Bereichen", "x": "Unter „Angebote“ stehen oben die absoluten Top-Angebote der Woche. Darunter kommen die Angebote, die zu euren Rezepten passen – zum Beispiel Sahne oder Butter, die ihr ohnehin braucht.", "ziel": "#/angebote", "zeige": "#deals-rezept" },
     { "ico": "cart", "t": "Wofür brauche ich das?", "x": "Bei jedem passenden Angebot steht in Blau, für welches Gericht es ist. Das gilt auch für Top-Angebote, die zufällig im Plan vorkommen.", "ziel": "#/angebote", "zeige": "#deals-top" }
    ]

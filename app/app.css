@@ -1027,3 +1027,16 @@ a.agp-go:active { transform: scale(.98); }
 .fits-for .ico { width: 18px; height: 18px; }
 :root[data-scheme="dark"] .fits-for { color: var(--fish); }
 :root[data-scheme="dark"] .deal.fits { border-left-color: var(--fish); }
+
+/* ---------- Nachricht an den Buddy ---------- */
+.msg-list { list-style: none; margin: 8px 0 10px; padding: 0; display: grid; gap: 8px; }
+.msg-list li { background: var(--surface-2); border-radius: 12px; padding: 10px 12px 8px; }
+.msg-list li.new { outline: 2px solid var(--accent); }
+.msg-list .mq { margin: 0; white-space: pre-wrap; }
+.msg-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--muted); }
+.msg-list .ma { margin-top: 8px; padding: 8px 10px; border-left: 4px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.msg-list .ma b { font-size: .8rem; color: var(--accent); }
+.msg-list .ma p { margin: 2px 0 0; white-space: pre-wrap; }
+.sheet-msgs { max-height: 65vh; overflow: auto; }
+.msg-ban p { display: flex; align-items: center; gap: 8px; }
+.msg-ban .ico { width: 20px; height: 20px; flex: none; }
