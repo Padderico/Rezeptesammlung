@@ -43,7 +43,10 @@ h4 { font-size:7.5pt; text-transform:uppercase; letter-spacing:.08em; color:var(
 .watch { background:var(--psoft); border-radius:3mm; padding:2.5mm 4mm; margin:3mm 0; break-inside:avoid; }
 .watch p, .makers p { margin:0 0 1mm; font-size:8.5pt; }
 .makers { background:var(--paper); border-radius:3mm; padding:2.5mm 4mm; margin:3mm 0; break-inside:avoid; }
-.src { color:var(--muted); font-size:7.2pt; margin-top:3mm; }"""
+.src { color:var(--muted); font-size:7.2pt; margin-top:3mm; }
+.rzh { margin-top:4.5mm; }
+.item.rz { border-left:5px solid #2F6FA3; }
+.rz .note b { color:#2F6FA3; }"""
 
 def page_html(d):
     rows = []
@@ -55,6 +58,19 @@ def page_html(d):
 <div class="price">{e(it['price'])}<small>statt {e(it['normal'])}</small></div></div>
 <div class="barrow"><div class="pct">−{int(it['save'])} %</div><div class="bar"><span style="width:{max(3, min(100, int(it['save'])))}%"></span></div><span class="tag">{e(it['rating'])}</span></div>
 {maker}<p class="note">{e(it.get('note',''))}</p></div>""")
+    # Passend zu euren Rezepten: Angebote für Zutaten der Woche (fuer = Gericht/e, normal und save optional)
+    rz = []
+    for it in d.get("rezept", []):
+        small = f"<small>statt {e(it['normal'])}</small>" if it.get("normal") else "<small>Angebotspreis</small>"
+        bar = ""
+        if it.get("save"):
+            tag = f'<span class="tag">{e(it["rating"])}</span>' if it.get("rating") else ""
+            bar = f'<div class="barrow"><div class="pct">−{int(it["save"])} %</div><div class="bar"><span style="width:{max(3, min(100, int(it["save"])))}%"></span></div>{tag}</div>'
+        fuer = f"<b>Für {e(it['fuer'])}:</b> " if it.get("fuer") else ""
+        rz.append(f"""<div class="item rz"><div class="top"><div><div class="rank">Rezept · {e(it['shop'])}</div>
+<div class="name">{e(it['name'])}</div><div class="meta">{e(it.get('size',''))} · gültig {e(it.get('valid',''))}</div></div>
+<div class="price">{e(it['price'])}{small}</div></div>
+{bar}<p class="note">{fuer}{e(it.get('note',''))}</p></div>""")
     tips = "".join(f'<div class="tip"><b>{e(t["label"])}</b>{e(t["text"])}</div>' for t in d.get("tips", []))
     plan = "".join(f"""<div class="shop"><div class="sn">{e(s['shop'])}</div><div class="sw">{e(s.get('when',''))}</div>
 <ul>{''.join(f'<li>{e(x)}</li>' for x in s.get('items', []))}</ul></div>""" for s in d.get("plan", []))
@@ -65,6 +81,7 @@ def page_html(d):
 {f'<p class="skip">{e(d["skipped"])}</p>' if d.get('skipped') else ''}
 {f'<div class="tips"><h4>So kaufst du am besten ein</h4>{tips}</div>' if tips else ''}
 <h4>Ersparnis gegenüber Normalpreis</h4><div class="items">{''.join(rows)}</div>
+{f'<h4 class="rzh">Passend zu euren Rezepten</h4><div class="items">{"".join(rz)}</div>' if rz else ''}
 {f'<div class="plan"><h4>Dein Einkaufszettel für die Schnäppchen – zum Abhaken</h4><div class="shops">{plan}</div></div>' if plan else ''}
 {f'<div class="watch"><h4>Preiswecker – noch nicht kaufen</h4>{watch}</div>' if watch else ''}
 {f'<div class="makers"><h4>Wer steckt hinter der Eigenmarke?</h4>{makers}</div>' if makers else ''}

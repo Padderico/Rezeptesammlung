@@ -38,6 +38,7 @@ const join = (ls) => ls.reduce((acc, l) => (acc && /\S-$/.test(acc) ? acc + l.s 
 const HEADS = [
   ["tips", /^SO KAUFST DU/],
   ["items", /^ERSPARNIS/],
+  ["rezept", /^PASSEND ZU EUREN REZEPTEN/i],
   ["plan", /^DEIN EINKAUFSZETTEL/],
   ["watch", /^PREISWECKER/],
   ["makers", /^WER STECKT/],
@@ -58,7 +59,7 @@ function paragraphs(lines, factor = 1.12) {
 
 /** Zeilen der Schnäppchen-Seiten in eine Struktur übersetzen */
 export function parseDeals(lines) {
-  const d = { title: "", subtitle: "", intro: [], tips: [], items: [], plan: [], watch: [], makers: [], sources: "" };
+  const d = { title: "", subtitle: "", intro: [], tips: [], items: [], rezept: [], plan: [], watch: [], makers: [], sources: "" };
   if (!lines.length) return d;
   d.title = lines[0].s;
   // Abschnitte bestimmen
@@ -87,21 +88,22 @@ export function parseDeals(lines) {
     else if (tip) tip.text.push(l);
   }
   d.tips = d.tips.map((t) => ({ label: t.label, text: join(t.text) }));
-  // Angebote
+  // Angebote: „Platz n · Laden“ (Top-Angebote) bzw. „Rezept · Laden“ (passend zu den Rezepten)
+  const cardsOf = (ls) => {
   let card = null;
-  const cards = [];
-  for (const l of body("items")) {
-    const m = l.s.match(/^PLATZ (\d+) · (.+)$/i);
-    if (m) { card = { rank: +m[1], shop: m[2], lines: [] }; cards.push(card); continue; }
+  const cards = [], out = [];
+  for (const l of ls) {
+    const m = l.s.match(/^(?:PLATZ (\d+)|REZEPT) · (.+)$/i);
+    if (m) { card = { rank: m[1] ? +m[1] : 0, shop: m[2], lines: [] }; cards.push(card); continue; }
     if (card) card.lines.push(l);
   }
   for (const c of cards) {
     const L = c.lines;
-    const si = L.findIndex((l) => /^statt\b/i.test(l.s));
-    const it = { rank: c.rank, shop: c.shop, name: "", meta: "", price: "", normal: "", save: null, rating: "", maker: "", note: "" };
+    const si = L.findIndex((l) => /^(statt\b|Angebotspreis$)/i.test(l.s));
+    const it = { rank: c.rank, shop: c.shop, name: "", meta: "", price: "", normal: "", save: null, rating: "", maker: "", note: "", fuer: "" };
     if (si > 0) {
       it.price = L[si - 1].s;
-      it.normal = L[si].s.replace(/^statt\s*/i, "");
+      it.normal = /^statt/i.test(L[si].s) ? L[si].s.replace(/^statt\s*/i, "") : "";
       const top = L.slice(0, si - 1);
       const nameH = top.length ? Math.max(...top.map((l) => l.h)) : 0;
       it.name = join(top.filter((l) => near(l.h, nameH, 0.2)));
@@ -123,8 +125,14 @@ export function parseDeals(lines) {
         it.note = join(nt);
       } else it.note = join(rest);
     } else it.note = join(L);
-    d.items.push(it);
+    const fm = it.note.match(/^Für (.{2,90}?):\s*(.*)$/);
+    if (fm) { it.fuer = fm[1]; it.note = fm[2]; }
+    out.push(it);
   }
+  return out;
+  };
+  d.items = cardsOf(body("items"));
+  d.rezept = cardsOf(body("rezept"));
   // Einkaufszettel: Laden (größte Schrift), Wann, Punkte (Punkte stehen im PDF teils am Ende, daher nach Position zuordnen)
   const planLines = body("plan");
   const shopH = planLines.length ? Math.max(...planLines.map((l) => l.h)) : 0;

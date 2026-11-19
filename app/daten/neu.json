@@ -2,6 +2,15 @@
  "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
  "items": [
   {
+   "id": "2026-11-19",
+   "datum": "19.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "cart", "t": "Angebote in zwei Bereichen", "x": "Unter „Angebote“ stehen oben die absoluten Top-Angebote der Woche. Darunter kommen die Angebote, die zu euren Rezepten passen – zum Beispiel Sahne oder Butter, die ihr ohnehin braucht.", "ziel": "#/angebote", "zeige": "#deals-rezept" },
+    { "ico": "cart", "t": "Wofür brauche ich das?", "x": "Bei jedem passenden Angebot steht in Blau, für welches Gericht es ist. Das gilt auch für Top-Angebote, die zufällig im Plan vorkommen.", "ziel": "#/angebote", "zeige": "#deals-top" }
+   ]
+  },
+  {
    "id": "2026-11-18",
    "datum": "18.11.2026",
    "titel": "Neu im Kochbuddy",

@@ -1018,3 +1018,12 @@ a.agp-go:active { transform: scale(.98); }
 .label-prev img { width: 100%; max-width: 330px; aspect-ratio: 384 / 240; border-radius: 10px; box-shadow: 0 3px 14px rgba(0, 0, 0, .18); background: #fff; }
 .vr-rename { margin-top: 16px; }
 .vr-rename .ek-add .btn { font-size: 1rem; min-width: 0; padding: 0 18px; border-radius: 14px; min-height: 50px; }
+/* Angebote: zwei Bereiche */
+.deal-h { margin-bottom: 2px; }
+.deal-sub { margin: 0 0 10px; }
+.deal-empty { padding: 14px 0 6px; text-align: left; }
+.deal.fits { border-left: 5px solid #2F6FA3; }
+.fits-for { display: flex; align-items: center; gap: 6px; margin: 8px 0 2px; font-weight: 700; font-size: .9rem; color: #2F6FA3; }
+.fits-for .ico { width: 18px; height: 18px; }
+:root[data-scheme="dark"] .fits-for { color: var(--fish); }
+:root[data-scheme="dark"] .deal.fits { border-left-color: var(--fish); }

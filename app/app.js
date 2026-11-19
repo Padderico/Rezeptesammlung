@@ -1422,7 +1422,7 @@
     let cache = null;
     try { cache = JSON.parse(localStorage.getItem(DEALS_KEY) || "null"); } catch (e) { cache = null; }
     const fresh = cache && cache.url === url && cache.built === (w0.built || "");
-    if (fresh) drawDeals(view, w0, cache.data, url);
+    if (fresh) await drawDeals(view, w0, cache.data, url);
     else view.innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<div class="loading">${ART.pot}<span>Lese die Angebote aus dem Wochen-PDF …</span></div>`;
     if (fresh && Date.now() - (cache.at || 0) < 10 * 60000) return;
     try {
@@ -1437,28 +1437,58 @@
       }
     }
   }
-  function drawDeals(view, w0, d, url) {
+  /* Welche Angebote passen zu den Zutaten der Planwoche? (gleiche Bring-Namen wie Einkaufsliste und Rezepte) */
+  async function dealMatcher(w0) {
+    let wk = null;
+    try { wk = await week(w0.id); } catch (e) { return () => null; }
+    const bn = await bringNames(), use = new Map();
+    for (const rid of new Set(wk.days.flatMap((d) => d.meals.map((m) => m.recipe)))) {
+      const r = wk.recipes[rid];
+      for (const i of (r && r.ingredients) || []) { if (!i.b) continue; if (!use.has(i.b)) use.set(i.b, new Set()); use.get(i.b).add(shortTitle(r.title)); }
+    }
+    return (name) => { const a = textMatch(bn, name), u = a && use.get(a.n); return u ? [...u] : null; };
+  }
+  const PLAY_FORK = '<svg class="ico" viewBox="0 0 24 24"><path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7a2 2 0 0 1-2 2M9 3v6M16.5 21V3c-2 1.5-3 4-3 7v3h3"/></svg>';
+  const isHot = (it) => it.save >= 45 || /Bestpreis|Schnäppchen|Black/i.test(it.rating || "");
+  function dealCard(it, fits) {
+    const fuer = it.fuer || (fits ? fits.slice(0, 3).join(", ") : "");
+    return `<article class="deal${isHot(it) ? " hot" : ""}${fuer ? " fits" : ""}">
+      <div class="deal-top"><div style="min-width:0"><div class="eyebrow">${it.rank ? `<span class="rank">${it.rank}</span>` : ""}${esc(niceShop(it.shop))}</div><b class="dn">${esc(it.name)}</b>${it.meta && it.meta.replace(/[·\s]|gültig/g, "") ? `<div class="small muted">${esc(it.meta.replace(/^\s*·\s*/, ""))}</div>` : ""}</div>
+      <div class="dp"><b>${esc(it.price)}</b>${it.normal ? `<small>statt ${esc(it.normal)}</small>` : it.rank ? "" : `<small>Angebotspreis</small>`}</div></div>
+      ${it.save != null ? `<div class="barrow"><span class="pct">−${it.save} %</span><span class="bar"><i style="width:${Math.max(3, Math.min(100, it.save))}%"></i></span>${it.rating ? `<span class="chip${/Bestpreis|Schnäppchen|Black/i.test(it.rating) ? " pump" : ""}">${esc(it.rating)}</span>` : ""}</div>` : ""}
+      ${fuer ? `<p class="fits-for">${PLAY_FORK}Für ${esc(fuer)}</p>` : ""}
+      ${it.maker ? `<p class="small" style="margin:4px 0"><b>Hersteller:</b> ${esc(it.maker)}</p>` : ""}${it.note ? `<p class="small muted" style="margin:4px 0 0">${esc(it.note)}</p>` : ""}</article>`;
+  }
+  async function drawDeals(view, w0, d, url) {
     const ck = bag("dealcheck", `kw${w0.kw}-${w0.year}`);
-    let h = `<header class="top"><div><div class="eyebrow">KW ${w0.kw} · aus dem Wochen-PDF</div><h1>Angebote</h1></div></header>` + prospekteHtml(d.items);
-    if (!d.items || !d.items.length) {
+    const items = d.items || [], rez = d.rezept || [], all = [...items, ...rez];
+    let h = `<header class="top"><div><div class="eyebrow">KW ${w0.kw} · aus dem Wochen-PDF</div><h1>Angebote</h1></div></header>` + prospekteHtml(all);
+    if (!all.length && !d.title) {
       h += `<div class="card"><h2>Keine Angebotsseite</h2><p class="muted">In diesem Wochen-PDF gibt es diesmal keine Seite „Schnäppchen der Woche“.</p><a class="btn" href="${esc(url)}">PDF öffnen</a></div>`;
       if (d.pages && d.pages.length) h += `<button class="btn ghost" data-act="deals-render">Seite als Bild anzeigen</button><div id="dealpages"></div>`;
       view.innerHTML = h; view.dataset.pdf = url; view.dataset.pages = (d.pages || []).join(","); return;
     }
+    const match = await dealMatcher(w0);
     if (d.subtitle) h += `<p class="muted small" style="margin:0 0 6px;font-weight:700">${esc(d.subtitle)}</p>`;
-    const shops = ["Alle", ...new Set(d.items.map((it) => shopKey(it.shop)))];
-    h += `<div class="section-title" style="margin-top:14px">Die stärksten Angebote</div>`;
-    if (shops.length > 2) h += `<div class="seg">${shops.map((s) => `<button data-shopfilter="${esc(s)}" aria-pressed="${dealFilter === s}">${esc(s)}</button>`).join("")}</div>`;
-    h += d.items.filter((it) => dealFilter === "Alle" || shopKey(it.shop) === dealFilter).map((it) => `<article class="deal${it.save >= 45 || /Bestpreis|Schnäppchen|Black/i.test(it.rating) ? " hot" : ""}">
-      <div class="deal-top"><div style="min-width:0"><div class="eyebrow"><span class="rank">${it.rank}</span>${esc(niceShop(it.shop))}</div><b class="dn">${esc(it.name)}</b>${it.meta ? `<div class="small muted">${esc(it.meta)}</div>` : ""}</div>
-      <div class="dp"><b>${esc(it.price)}</b>${it.normal ? `<small>statt ${esc(it.normal)}</small>` : ""}</div></div>
-      ${it.save != null ? `<div class="barrow"><span class="pct">−${it.save} %</span><span class="bar"><i style="width:${Math.max(3, Math.min(100, it.save))}%"></i></span>${it.rating ? `<span class="chip${/Bestpreis|Schnäppchen|Black/i.test(it.rating) ? " pump" : ""}">${esc(it.rating)}</span>` : ""}</div>` : ""}
-      ${it.maker ? `<p class="small" style="margin:4px 0"><b>Hersteller:</b> ${esc(it.maker)}</p>` : ""}${it.note ? `<p class="small muted" style="margin:4px 0 0">${esc(it.note)}</p>` : ""}</article>`).join("");
+    if (!all.length && d.intro && d.intro.length) h += `<div class="tip"><p style="margin:0">${esc(d.intro[0])}</p></div>`;
+    const shops = ["Alle", ...new Set(all.map((it) => shopKey(it.shop)))];
+    if (shops.length > 2) h += `<div class="seg" style="margin-top:12px">${shops.map((s) => `<button data-shopfilter="${esc(s)}" aria-pressed="${dealFilter === s}">${esc(s)}</button>`).join("")}</div>`;
+    const shown = (it) => dealFilter === "Alle" || shopKey(it.shop) === dealFilter;
+    // 1) Absolute Top-Angebote
+    h += `<div class="section-title deal-h" id="deals-top" style="margin-top:14px">Absolute Top-Angebote</div><p class="small muted deal-sub">Die stärksten Schnäppchen der Woche – auch für Vorrat und Alltag.</p>`;
+    const topShown = items.filter(shown);
+    h += topShown.length ? topShown.map((it) => dealCard(it, match(it.name))).join("") : `<p class="empty deal-empty">${items.length ? "Bei diesem Laden keine Top-Angebote." : "Diese Woche keine Top-Angebote."}</p>`;
+    // 2) Passend zu euren Rezepten: vom Buddy gesucht, sonst die Top-Angebote, die zu Zutaten der Woche passen
+    const derived = rez.length ? [] : items.map((it) => ({ it, fits: match(it.name) })).filter((x) => x.fits);
+    h += `<div class="section-title deal-h" id="deals-rezept">Passend zu euren Rezepten</div><p class="small muted deal-sub">${rez.length ? "Angebote für Zutaten, die ihr in dieser Planwoche braucht." : derived.length ? "Diese Top-Angebote braucht ihr auch für die Rezepte der Woche." : "Angebote für Zutaten, die ihr in dieser Planwoche braucht."}</p>`;
+    const rzShown = rez.length ? rez.filter(shown).map((it) => dealCard(it, match(it.name))) : derived.filter((x) => shown(x.it)).map((x) => dealCard(x.it, x.fits));
+    h += rzShown.length ? rzShown.join("") : `<p class="empty deal-empty">${rez.length || derived.length ? "Bei diesem Laden nichts Passendes." : "Für die Zutaten dieser Woche gibt es gerade keine passenden Angebote."}</p>`;
     if (d.plan && d.plan.length) {
       h += `<div class="section-title">Einkaufszettel zum Abhaken</div>` + d.plan.map((s, i) => `<section class="card"><h3>${esc(s.shop)}</h3>${s.when ? `<p class="small muted" style="margin:2px 0 4px">${esc(s.when)}</p>` : ""}<ul class="checks">${s.items.map((x, j) => checkRow(ck[`${i}:${j}`], esc(x), `data-dealcheck="${i}:${j}"`)).join("")}</ul></section>`).join("");
     }
     if (d.tips && d.tips.length) h += `<div class="section-title">So kaufst du am besten ein</div><div class="card tipgrid">${d.tips.map((t) => `<div><b>${esc(t.label)}</b>${esc(t.text)}</div>`).join("")}</div>`;
-    if (d.intro && d.intro.length) h += `<div class="section-title">Hinweise</div>` + d.intro.map((p, i) => (i === 0 ? `<div class="tip"><p style="margin:0">${esc(p)}</p></div>` : `<p class="small muted">${esc(p)}</p>`)).join("");
+    const intro = all.length ? d.intro || [] : (d.intro || []).slice(1);
+    if (intro.length) h += `<div class="section-title">Hinweise</div>` + intro.map((p, i) => (i === 0 ? `<div class="tip"><p style="margin:0">${esc(p)}</p></div>` : `<p class="small muted">${esc(p)}</p>`)).join("");
     if (d.watch && d.watch.length) h += `<div class="section-title">Preiswecker – noch nicht kaufen</div><div class="card">${d.watch.map((x) => `<p class="small" style="margin:4px 0 8px">${x.name ? `<b>${esc(x.name)}:</b> ` : ""}${esc(x.text)}</p>`).join("")}</div>`;
     if (d.makers && d.makers.length) h += `<details class="card"><summary><b>Wer steckt hinter der Eigenmarke?</b></summary>${d.makers.map((x) => `<p class="small" style="margin:8px 0 0">${x.name ? `<b>${esc(x.name)}:</b> ` : ""}${esc(x.text)}</p>`).join("")}</details>`;
     h += `<p class="small muted" style="margin:18px 0 0">${esc(d.sources || "")}</p><div class="links"><a class="btn small" href="${esc(url)}">Ganzes Wochen-PDF öffnen</a></div>`;
