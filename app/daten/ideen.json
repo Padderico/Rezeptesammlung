@@ -89,6 +89,28 @@
    "i:butternudeln-mit-rahmkarotten-und-parmesan",
    "i:japanisches-gemuese-curry-mit-kartoffeln-und-reis",
    "i:spaetzle-gemuese-pfanne-mit-champignons-und-bergkaese"
+  ],
+  "2026-11-20": [
+   "i:honig-knoblauch-haehnchen-mit-reis-und-zuckerschoten",
+   "i:rinderhack-paprika-pasta-in-sahnesosse",
+   "i:yakisoba-nudelpfanne-mit-schwein-und-spitzkohl",
+   "i:hackbaellchen-in-paprikarahm-mit-spaetzle",
+   "i:haehnchen-pasta-bake-mit-brokkoli-und-cheddar",
+   "i:griessnockerlsuppe-mit-rindfleisch-und-wurzelgemuese",
+   "i:hackfleisch-boerek-rolle-mit-joghurt-dip",
+   "i:lachs-orzo-mit-erbsen-und-zitronenbutter",
+   "i:kokos-fischsuppe-mit-reisnudeln-und-gemuese",
+   "i:kabeljau-auf-tomaten-bohnen-gemuese-mit-ciabatta",
+   "i:penne-in-rote-bete-frischkaese-sosse",
+   "i:maultaschen-pfanne-mit-tomaten-zucchini-und-mozzarella",
+   "i:milde-gemuese-ramen-mit-pak-choi-und-mais",
+   "i:zitronen-orzo-mit-zucchini-erbsen-und-feta",
+   "i:apfelstrudel-mit-vanillesosse",
+   "i:mais-kartoffel-chowder-mit-paprika",
+   "i:pilz-paprika-stroganoff-mit-reis",
+   "i:lecso-paprika-tomaten-gemuese-mit-reis",
+   "i:krautkrapfen-mit-sauerkraut-und-bergkaese",
+   "i:gefuellte-conchiglioni-mit-ricotta-und-spinat"
   ]
  },
  "ideas": [
@@ -2833,6 +2855,254 @@
    ],
    "min": 30,
    "art": "pilz"
+  },
+  {
+   "id": "honig-knoblauch-haehnchen-mit-reis-und-zuckerschoten",
+   "t": "Honig-Knoblauch-Hähnchen mit Reis und Zuckerschoten",
+   "d": "Zarte Hähnchenstücke in glänzender, milder Honigsoße, dazu Reis und knackige Schoten.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Asiatisch"
+   ],
+   "min": 30,
+   "art": "huhn"
+  },
+  {
+   "id": "rinderhack-paprika-pasta-in-sahnesosse",
+   "t": "Rinderhack-Paprika-Pasta in Sahnesoße",
+   "d": "Nudeln, Rinderhack und süße Paprika in einer cremigen Soße aus einem Topf.",
+   "tags": [
+    "Fleisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "min": 30,
+   "art": "rind"
+  },
+  {
+   "id": "yakisoba-nudelpfanne-mit-schwein-und-spitzkohl",
+   "t": "Yakisoba – Nudelpfanne mit Schwein und Spitzkohl",
+   "d": "Japanische Bratnudeln mit feinen Schweinestreifen, Spitzkohl und Karotten, mild gewürzt.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Japanisch"
+   ],
+   "min": 30,
+   "art": "nudel"
+  },
+  {
+   "id": "hackbaellchen-in-paprikarahm-mit-spaetzle",
+   "t": "Hackbällchen in Paprikarahm mit Spätzle",
+   "d": "Saftige kleine Hackbällchen in sämiger Paprika-Rahmsoße, dazu frische Spätzle.",
+   "tags": [
+    "Fleisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 40,
+   "art": "rind"
+  },
+  {
+   "id": "haehnchen-pasta-bake-mit-brokkoli-und-cheddar",
+   "t": "Hähnchen-Pasta-Bake mit Brokkoli und Cheddar",
+   "d": "Penne, Hähnchen und Brokkoli in Käsesoße, im Ofen goldbraun überbacken.",
+   "tags": [
+    "Fleisch",
+    "Auflauf",
+    "Ofen",
+    "Britisch"
+   ],
+   "min": 45,
+   "art": "auflauf"
+  },
+  {
+   "id": "griessnockerlsuppe-mit-rindfleisch-und-wurzelgemuese",
+   "t": "Grießnockerlsuppe mit Rindfleisch und Wurzelgemüse",
+   "d": "Klare Rinderbrühe mit fluffigen Grießnockerl, zartem Fleisch und viel Gemüse.",
+   "tags": [
+    "Fleisch",
+    "Suppe",
+    "Thermomix",
+    "Deutsch"
+   ],
+   "min": 60,
+   "art": "suppe"
+  },
+  {
+   "id": "hackfleisch-boerek-rolle-mit-joghurt-dip",
+   "t": "Hackfleisch-Börek-Rolle mit Joghurt-Dip",
+   "d": "Knusprige Teigrolle mit mild gewürztem Hack und Gemüse, dazu ein frischer Dip.",
+   "tags": [
+    "Fleisch",
+    "Ofen",
+    "Türkisch"
+   ],
+   "min": 50,
+   "art": "rind"
+  },
+  {
+   "id": "lachs-orzo-mit-erbsen-und-zitronenbutter",
+   "t": "Lachs-Orzo mit Erbsen und Zitronenbutter",
+   "d": "Cremige Reisnudeln mit Lachsstücken, süßen Erbsen und einem Hauch Zitrone.",
+   "tags": [
+    "Fisch",
+    "One-Pot",
+    "Italienisch"
+   ],
+   "min": 25,
+   "art": "fisch"
+  },
+  {
+   "id": "kokos-fischsuppe-mit-reisnudeln-und-gemuese",
+   "t": "Kokos-Fischsuppe mit Reisnudeln und Gemüse",
+   "d": "Sanfte Thai-Suppe mit Seelachs, Karotten und Reisnudeln in milder Kokosbrühe.",
+   "tags": [
+    "Fisch",
+    "Suppe",
+    "Thermomix",
+    "Thailändisch"
+   ],
+   "min": 30,
+   "art": "fisch"
+  },
+  {
+   "id": "kabeljau-auf-tomaten-bohnen-gemuese-mit-ciabatta",
+   "t": "Kabeljau auf Tomaten-Bohnen-Gemüse mit Ciabatta",
+   "d": "Saftiger Kabeljau aus dem Ofen auf weißen Bohnen und Tomaten, dazu Brot zum Tunken.",
+   "tags": [
+    "Fisch",
+    "Ofen",
+    "Italienisch"
+   ],
+   "min": 35,
+   "art": "fisch"
+  },
+  {
+   "id": "penne-in-rote-bete-frischkaese-sosse",
+   "t": "Penne in Rote-Bete-Frischkäse-Soße",
+   "d": "Leuchtend rosa Nudeln in einer milden, cremigen Soße – ein Hingucker für Kinder.",
+   "tags": [
+    "Vegetarisch",
+    "Pasta",
+    "Thermomix",
+    "One-Pot"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "maultaschen-pfanne-mit-tomaten-zucchini-und-mozzarella",
+   "t": "Maultaschen-Pfanne mit Tomaten, Zucchini und Mozzarella",
+   "d": "Gebratene Gemüse-Maultaschen mit Tomaten und Zucchini, mit Mozzarella geschmolzen.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 25,
+   "art": "gemuese"
+  },
+  {
+   "id": "milde-gemuese-ramen-mit-pak-choi-und-mais",
+   "t": "Milde Gemüse-Ramen mit Pak Choi und Mais",
+   "d": "Wärmende Nudelsuppe mit Pak Choi, Mais und Karotten in milder Miso-Brühe.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Japanisch"
+   ],
+   "min": 30,
+   "art": "suppe"
+  },
+  {
+   "id": "zitronen-orzo-mit-zucchini-erbsen-und-feta",
+   "t": "Zitronen-Orzo mit Zucchini, Erbsen und Feta",
+   "d": "Frischer Orzo aus einem Topf mit grünem Gemüse und zerbröseltem Feta.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Thermomix",
+    "Griechisch"
+   ],
+   "min": 25,
+   "art": "nudel"
+  },
+  {
+   "id": "apfelstrudel-mit-vanillesosse",
+   "t": "Apfelstrudel mit Vanillesoße",
+   "d": "Hauchdünner Teig um saftige Zimtäpfel, warm aus dem Ofen mit Vanillesoße.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Süß",
+    "Österreichisch"
+   ],
+   "min": 60,
+   "art": "suess"
+  },
+  {
+   "id": "mais-kartoffel-chowder-mit-paprika",
+   "t": "Mais-Kartoffel-Chowder mit Paprika",
+   "d": "Sämige amerikanische Suppe mit Kartoffeln, süßem Mais und Paprika.",
+   "tags": [
+    "Vegetarisch",
+    "Suppe",
+    "Thermomix",
+    "Amerikanisch"
+   ],
+   "min": 35,
+   "art": "kartoffel"
+  },
+  {
+   "id": "pilz-paprika-stroganoff-mit-reis",
+   "t": "Pilz-Paprika-Stroganoff mit Reis",
+   "d": "Champignons und Paprika in mildem Sahne-Paprika-Rahm, dazu lockerer Reis.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Russisch"
+   ],
+   "min": 30,
+   "art": "pilz"
+  },
+  {
+   "id": "lecso-paprika-tomaten-gemuese-mit-reis",
+   "t": "Lecsó – Paprika-Tomaten-Gemüse mit Reis",
+   "d": "Ungarischer Gemüsetopf aus Paprika, Tomaten und Zwiebeln, mild und sämig geschmort.",
+   "tags": [
+    "Vegetarisch",
+    "One-Pot",
+    "Ungarisch"
+   ],
+   "min": 40,
+   "art": "tomate"
+  },
+  {
+   "id": "krautkrapfen-mit-sauerkraut-und-bergkaese",
+   "t": "Krautkrapfen mit Sauerkraut und Bergkäse",
+   "d": "Nudelteig-Schnecken mit Sauerkraut und Zwiebeln, in der Pfanne saftig geschmort.",
+   "tags": [
+    "Vegetarisch",
+    "Pfanne",
+    "Schwäbisch"
+   ],
+   "min": 70,
+   "art": "nudel"
+  },
+  {
+   "id": "gefuellte-conchiglioni-mit-ricotta-und-spinat",
+   "t": "Gefüllte Conchiglioni mit Ricotta und Spinat",
+   "d": "Große Muschelnudeln mit Spinat-Ricotta-Füllung, in Tomatensoße überbacken.",
+   "tags": [
+    "Vegetarisch",
+    "Ofen",
+    "Italienisch"
+   ],
+   "min": 50,
+   "art": "nudel"
   }
  ]
 }
