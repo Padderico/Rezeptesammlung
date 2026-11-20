@@ -2,6 +2,14 @@
  "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
  "items": [
   {
+   "id": "2026-11-20",
+   "datum": "20.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "cal", "t": "Nur das Datum drucken", "x": "Beim Etikettendrucker im Vorrat gibt es jetzt „Datum drucken“: ein Etikett nur mit dem heutigen Datum, ganz groß. Praktisch für alles, was ohne Rezept in den Gefrierschrank oder Kühlschrank kommt.", "ziel": "#/vorrat", "zeige": "#vr-printer" }
+   ]
+  },
+  {
    "id": "2026-11-19",
    "datum": "19.11.2026",
    "titel": "Neu im Kochbuddy",

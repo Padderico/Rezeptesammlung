@@ -2895,6 +2895,17 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     const HEAD = '"Bricolage Grotesque", "Segoe UI", sans-serif', BODY = '"Atkinson Hyperlegible", "Segoe UI", sans-serif';
     g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.fillStyle = "#000"; g.strokeStyle = "#000"; g.textBaseline = "alphabetic";
     const pad = 14 * s;
+    if (it.nur === "datum") {
+      // nur das Tagesdatum, so groß wie es aufs Etikett passt, mittig
+      const txt = dmy(it.am), maxW = w - 2 * pad, maxH = h - 2 * pad;
+      let size = 160 * s, m;
+      for (; size > 20 * s; size -= 2 * s) {
+        g.font = `800 ${size}px ${HEAD}`; m = g.measureText(txt);
+        if (m.width <= maxW && (m.actualBoundingBoxAscent || size * 0.72) + (m.actualBoundingBoxDescent || 0) <= maxH) break;
+      }
+      const asc = m.actualBoundingBoxAscent || size * 0.72, desc = m.actualBoundingBoxDescent || 0;
+      g.textAlign = "center"; g.fillText(txt, w / 2, h / 2 + (asc - desc) / 2); g.textAlign = "left";
+    } else {
     // Kopfzeile: Schneeflocke, „EINGEFROREN“, Datum
     const sx = pad + 11 * s, sy = pad + 11 * s, sr = 10 * s;
     g.lineWidth = 2.6 * s; g.lineCap = "round";
@@ -2930,6 +2941,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     g.font = `700 ${16 * s}px ${BODY}`; g.fillText("VERBRAUCHEN BIS", pad, h - 34 * s);
     g.fillText(`${it.m || 3} ${(it.m || 3) === 1 ? "MONAT" : "MONATE"}`, pad, h - 14 * s);
     g.font = `800 ${38 * s}px ${HEAD}`; g.textAlign = "right"; g.fillText(dmy(it.bis), w - pad, h - 16 * s); g.textAlign = "left";
+    }
     // reines Schwarz-Weiß wie beim Thermodruck
     const img = g.getImageData(0, 0, w, h), px = img.data;
     for (let i = 0; i < px.length; i += 4) { const v = px[i] * 0.3 + px[i + 1] * 0.59 + px[i + 2] * 0.11 < 150 ? 0 : 255; px[i] = px[i + 1] = px[i + 2] = v; px[i + 3] = 255; }
@@ -3067,7 +3079,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     if (!canBT()) return `<p class="small muted" style="margin:0">Etiketten druckt die App in Chrome auf dem Android-Tablet mit dem Niimbot B1 (50 × 30 mm). Auf diesem Gerät geht das nicht – der Vorrat funktioniert trotzdem.</p>`;
     const on = prnOn(), dens = S.settings.printDensity || 3;
     return `<div class="spread"><div><b>Etikettendrucker</b><div class="small muted">${on ? `Verbunden${prnName ? ` · ${esc(prnName)}` : ""}` : S.settings.printer ? `${esc(S.settings.printer)} · verbindet sich beim Drucken` : "Niimbot B1 · noch nicht verbunden"}</div></div><span class="prn-dot${on ? " on" : ""}" aria-hidden="true"></span></div>
-      <div class="act-btns"><button class="btn small" data-act="prn-connect">${on ? "Neu verbinden" : "Drucker verbinden"}</button><button class="btn small" data-act="prn-test">Testetikett</button></div>
+      <div class="act-btns"><button class="btn small" data-act="prn-connect">${on ? "Neu verbinden" : "Drucker verbinden"}</button><button class="btn small" data-act="prn-test">Testetikett</button><button class="btn small" data-act="prn-date">Datum drucken</button></div>
       <details class="prn-more"><summary class="small">Druckstärke: ${dens}</summary><div class="seg" style="margin-top:8px">${[1, 2, 3, 4, 5].map((n) => `<button data-density="${n}" aria-pressed="${n === dens}">${n}</button>`).join("")}</div>
       <p class="small muted" style="margin:6px 0 0">Zu blass: höher. Verschmiert: niedriger. Normal ist 3.</p></details>`;
   }
@@ -3386,6 +3398,12 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       case "ek-cam": ekCamSheet(); break;
       case "vr-undo": vrUndo(); break;
       case "prn-connect": try { if (!canBT()) break; await printerConnect(true); toast(`Drucker verbunden${prnName ? ": " + prnName : ""}`); } catch (er) { toast(printErrText(er)); } break;
+      case "prn-date": {
+        if (!canBT()) break;
+        const am = today();
+        try { await printLabel({ nur: "datum", am }); toast(`Etikett mit ${dmy(am)} gedruckt`); } catch (er) { toast(printErrText(er)); }
+        break;
+      }
       case "prn-test": {
         if (!canBT()) break;
         const am = today(), it = { t: "Testetikett Rindergulasch", am, bis: addMonthsIso(am, 3), m: 3 };
