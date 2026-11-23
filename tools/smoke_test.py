@@ -104,7 +104,7 @@ def check_privacy():
             if f.suffix in (".json", ".html", ".md", ".txt") and names.search(f.read_text(encoding="utf-8", errors="ignore")):
                 hits += 1
                 fail(f"Vorname in öffentlicher Datei: {f.relative_to(ROOT)}")
-    for f in (ROOT / "app").glob("*.*"):
+    for f in list((ROOT / "app").glob("*.*")) + list((ROOT / "app/iphone").glob("*.*")):
         if f.suffix in (".js", ".mjs", ".css", ".html") and names.search(f.read_text(encoding="utf-8", errors="ignore")):
             hits += 1
             fail(f"Vorname im App-Code: {f.relative_to(ROOT)}")
@@ -170,6 +170,10 @@ def check_app():
         good += visit("#/entdecken", "#view h1", "Entdecken")
         good += visit("#/einkauf", "#ek-list", "Einkaufsliste")
         good += visit("#/vorrat", "#vorrat-list", "Vorrat")
+        good += visit("#/iphone", ".ipw", "iPhone-Widget")
+        iph = (ROOT / "app/iphone/heute.js").read_text(encoding="utf-8")
+        if not iph.startswith("// KOCHBUDDY-HEUTE"):
+            fail("app/iphone/heute.js: Kennung „// KOCHBUDDY-HEUTE“ fehlt am Anfang – der Lader auf den iPhones würde den Code ablehnen")
         if visit("#/rezepte", "#rlist", "Alle Rezepte"):
             rows = len(pg.query_selector_all("#rlist > li a"))
             if rows != n_all:

@@ -2,6 +2,15 @@
  "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
  "items": [
   {
+   "id": "2026-11-23",
+   "datum": "23.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "plate", "t": "Was gibt's heute? Steht jetzt auf dem iPhone", "x": "Neu: ein Widget für den Home- und Sperrbildschirm am iPhone. Es zeigt, was es heute mittags und abends gibt, und stellt sich nach 21 Uhr auf morgen um.", "ziel": "#/iphone", "zeige": "#ip-prev" },
+    { "ico": "bell", "t": "Oder einfach Siri fragen", "x": "„Hey Siri, was gibt's zu essen?“ – Siri liest Mittag und Abend vor. Die Einrichtung dauert ein paar Minuten und steht Schritt für Schritt auf der neuen iPhone-Seite. Am Tablet zeigt die Seite einen QR-Code zum Scannen.", "ziel": "#/iphone", "zeige": "#ip-steps" }
+   ]
+  },
+  {
    "id": "2026-11-20",
    "datum": "20.11.2026",
    "titel": "Neu im Kochbuddy",

@@ -16,6 +16,7 @@
   const ICON_WAIT = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
   const LIST = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>';
   const BACK = '<svg class="ico" viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>';
+  const ICON_FORK = '<svg class="fork" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v8a2 2 0 0 0 2 2v10h2V12a2 2 0 0 0 2-2V2h-1.5v7h-1V2h-1v7h-1V2zM16 2c-1.7 1-2.5 3.5-2.5 6v5H16v9h2V2z"/></svg>';
   const NEXT = '<svg class="ico" viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>';
   const PLAY = '<svg class="ico" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
   const GRIP = '<svg class="ico" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></g></svg>';
@@ -354,9 +355,9 @@
     document.body.classList.toggle("cooking", inCooking);
     if (parts[0] === "verbinden") {
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
-      navTo("#/", "replace"); return;
+      navTo(parts[2] === "iphone" ? "#/iphone" : "#/", "replace"); return;
     }
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte", "vorrat"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte", "vorrat", "iphone"].includes(parts[0])) { navTo("#/", "replace"); return; }
     const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
@@ -373,6 +374,7 @@
       else if (parts[0] === "rezepte") await renderAll(view);
       else if (parts[0] === "vorrat") await renderVorrat(view);
       else if (parts[0] === "entdecken") await renderDiscover(view);
+      else if (parts[0] === "iphone") await renderIphone(view);
       else await renderWeek(view);
     } catch (e) {
       if (navigator.onLine !== false) logError("Laden", e.message, e.stack);
@@ -480,7 +482,7 @@
       html += `</section>`;
     }
     html += `</div></div>`;
-    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a> · <a href="#" data-act="news-open">Was ist neu?</a>${embedded ? ` · <a href="#" data-act="review-demo">Wochen-Check zeigen</a>` : ""}</p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
+    html += `<footer class="foot"><p class="small"><a href="#" data-act="help">So funktioniert der Kochbuddy</a> · <a href="#" data-act="news-open">Was ist neu?</a>${embedded ? "" : ` · <a href="#/iphone">Aufs iPhone: Widget & Siri</a>`}${embedded ? ` · <a href="#" data-act="review-demo">Wochen-Check zeigen</a>` : ""}</p><p class="small muted" id="stand">${standLine(w)}</p></footer>`;
     view.innerHTML = html;
     renderedDay = today();
   }
@@ -3084,6 +3086,80 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       <p class="small muted" style="margin:6px 0 0">Zu blass: höher. Verschmiert: niedriger. Normal ist 3.</p></details>`;
   }
   function vrRefresh() { if (location.hash.startsWith("#/vorrat")) drawVorrat($("#view")); }
+  /* ---------- iPhone: Widget & Siri (Scriptable) ---------- */
+  const IP_LOADER = `// Kochbuddy – was gibt's heute? Widget und Siri.
+// Holt sich den aktuellen Kochbuddy-Code selbst. Diesen Text nicht ändern.
+const QUELLE = "https://padderico.github.io/rezeptesammlung/app/iphone/heute.js";
+const fm = FileManager.local();
+const datei = fm.joinPath(fm.libraryDirectory(), "kochbuddy-heute.js");
+let code = "";
+try {
+  const r = new Request(QUELLE + "?t=" + Math.floor(Date.now() / 600000));
+  r.timeoutInterval = 10;
+  const neu = await r.loadString();
+  if (r.response.statusCode === 200 && neu.startsWith("// KOCHBUDDY-HEUTE")) { code = neu; fm.writeString(datei, neu); }
+} catch (e) {}
+if (!code && fm.fileExists(datei)) code = fm.readString(datei);
+if (!code) throw new Error("Kochbuddy nicht erreichbar – bitte mit Internet nochmal starten.");
+await new Function("return (async () => {\\n" + code + "\\n})()")();
+`;
+  const isIOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  async function copyLoader() {
+    try { await navigator.clipboard.writeText(IP_LOADER); toast("Code kopiert – jetzt Scriptable öffnen"); }
+    catch (e) {
+      const ta = $("#ip-code"); if (ta) { ta.closest("details").open = true; ta.focus(); ta.select(); }
+      toast("Bitte den markierten Code kopieren");
+    }
+  }
+  /** Vorschau mit dem echten Plan: so sieht das mittlere Widget gerade aus (gleiche Regeln wie im Skript) */
+  async function iphonePreview() {
+    const now = new Date(), h = now.getHours() + now.getMinutes() / 60;
+    const iso = h >= 21 ? addDays(today(), 1) : today(), word = h >= 21 ? "Morgen" : "Heute";
+    const cur = h >= 21 ? "" : h < 14 ? "Mittag" : "Abend", past = h >= 14 && h < 21 ? "Mittag" : "";
+    let w = null, d = null;
+    for (const wk of weeks) { try { const x = withSwaps(await week(wk.id)); const y = x.days.find((z) => z.iso === iso); if (y) { w = x; d = y; break; } } catch (e) { /* Woche fehlt */ } }
+    const dt = new Date(iso + "T12:00");
+    const head = `<div class="ipw-h">${ICON_FORK}<b>${word} · ${DAYS[dt.getDay()]}, ${dt.getDate()}.${dt.getMonth() + 1}.</b></div>`;
+    if (!d) return `<div class="ipw">${head}<div class="ipw-row"><div class="ipw-p now"><i class="bar" style="--c:var(--pumpkin-hi)"></i><div><small class="k">Kein Plan</small><b>${word} plant ihr selbst</b><span>Der Buddy plant Montag bis Freitag</span></div></div></div></div>`;
+    const plates = ["Mittag", "Abend"].map((slot) => {
+      const m = d.meals.find((x) => x.slot === slot), r = m && w.recipes[m.recipe];
+      const away = !m && /auswärts/i.test(d.main || "") && String(d.main).toLowerCase().startsWith(slot.toLowerCase());
+      const [t1, t2] = r ? (r.title.match(/^(.+?)\s((?:mit|aus|in|vom|&)\s.+)$/) || [0, r.title, ""]).slice(1) : [away ? "Auswärts essen" : "Nichts geplant", away ? "Heute wird nicht gekocht" : ""];
+      const how = !m ? "" : m.mode === "aufwaermen" ? `${m.badge || "Vorgekocht"}, aufwärmen` : `Frisch kochen${r && r.time ? `, ${r.time.total} Min.` : ""}`;
+      const c = r ? { meat: "#EE8B83", fish: "#86BFE8", veg: "#97D18A" }[tone(r.tags)] || "#A9C7B9" : "#A9C7B9";
+      return `<div class="ipw-p${cur === slot ? " now" : ""}${past === slot ? " past" : ""}"><i class="bar" style="--c:${c}"></i><div><small class="k">${cur === slot ? `<i class="dot"></i>${slot} · jetzt` : slot}</small><b>${esc(t1)}</b>${t2 ? `<span>${esc(t2)}</span>` : ""}${how ? `<span>${esc(how)}</span>` : ""}</div></div>`;
+    }).join("");
+    return `<div class="ipw">${head}<div class="ipw-row">${plates}</div></div>`;
+  }
+  async function renderIphone(view) {
+    if (!weeks.length) await loadIndex();
+    const ios = isIOS(), t = ghToken();
+    const here = `${location.origin}${location.pathname}${t ? `#/verbinden/${t}/iphone` : "#/iphone"}`;
+    view.innerHTML = `<div class="r-topbar"><a class="back" href="#/" data-act="back" data-fallback="#/">${BACK}Zurück</a></div>
+      <header class="top"><div><div class="eyebrow">Fürs iPhone</div><h1>Was gibt's heute?</h1></div></header>
+      <section class="card ip-hero"><div id="ip-prev"></div>
+        <p>Ein Widget auf dem Home- und Sperrbildschirm zeigt, was es heute mittags und abends gibt. Siri beantwortet „Was gibt's zu essen?“. Beides aktualisiert sich von selbst, wenn der Buddy den Plan ändert.</p></section>
+      ${ios ? "" : `<section class="card ip-qr"><h2>Auf dem iPhone weitermachen</h2><p class="small">Die Einrichtung passiert am iPhone. Diesen Code mit der iPhone-Kamera scannen, dann öffnet sich diese Seite dort${t ? " – und das iPhone ist gleich mit den Tauschen verbunden" : ""}.</p><div class="qrbox" id="ip-qrbox"></div>${t ? `<p class="small muted">Der Code enthält den Schlüssel – nur mit euren eigenen iPhones scannen.</p>` : ""}</section>`}
+      <ol class="ip-steps" id="ip-steps">
+        <li><h3>Scriptable laden</h3><p>Scriptable ist eine kostenlose App ohne Werbung und ohne Konto. Sie zeigt das Kochbuddy-Widget an.</p>
+          <div class="ip-btns"><a class="btn small" href="https://apps.apple.com/de/app/scriptable/id1405459188" target="_blank" rel="noopener">Im App Store öffnen</a></div></li>
+        <li><h3>Kochbuddy-Skript anlegen</h3><p>„Code kopieren“ antippen, dann „Scriptable öffnen“. Es öffnet sich ein leeres Skript: lange ins Feld tippen und „Einfügen“ wählen. Oben auf „Untitled Script“ tippen, <b>Kochbuddy</b> eintragen, dann „Done“.</p>
+          <div class="ip-btns"><button class="btn primary small" data-act="ip-copy">Code kopieren</button><a class="btn small" href="scriptable:///add">Scriptable öffnen</a></div>
+          <details class="ip-code"><summary>Code ansehen</summary><textarea id="ip-code" readonly rows="9" spellcheck="false">${esc(IP_LOADER)}</textarea><p class="small muted">Diese paar Zeilen holen sich den eigentlichen Kochbuddy-Code. Verbesserungen kommen so von selbst aufs iPhone.</p></details></li>
+        <li><h3>Widget auf den Home-Bildschirm</h3><p>Auf dem Home-Bildschirm eine freie Stelle lange drücken, „Bearbeiten“ und dann „Widget hinzufügen“. Scriptable suchen, die mittlere Größe wählen und hinzufügen. Danach das neue Widget lange drücken, „Widget bearbeiten“ und bei „Script“ <b>Kochbuddy</b> auswählen.</p>
+          <p class="small muted">Für den Sperrbildschirm: Sperrbildschirm lange drücken, „Anpassen“, „Sperrbildschirm“, ins Widget-Feld tippen und Scriptable in der breiten Form wählen. Antippen und wieder <b>Kochbuddy</b> auswählen.</p></li>
+        <li><h3>Siri fragen</h3><p>In der App „Kurzbefehle“ auf „+“ tippen, „Aktion hinzufügen“ und Scriptable wählen. Dort „Run Script“ nehmen und bei „Script“ <b>Kochbuddy</b> auswählen. Oben den Namen auf <b>Was gibt's zu essen</b> ändern und „Fertig“ tippen.</p>
+          <p class="small muted">Ab dann reicht: „Hey Siri, was gibt's zu essen?“ Siri liest Mittag und Abend vor. Ab 14 Uhr sagt sie das Abendessen und schon den Mittag von morgen.</p></li>
+        <li><h3>Tausche sofort anzeigen</h3>${t
+          ? `<p>Ein Tipp verbindet das Widget mit den Tauschen aus der App. Dann stimmt es auch, wenn heute noch getauscht wird. Der Schlüssel bleibt im Schlüsselbund dieses iPhones.</p><div class="ip-btns"><a class="btn primary small" href="scriptable:///run/Kochbuddy?verbinden=${encodeURIComponent(t)}">Mit Tauschen verbinden</a></div>`
+          : `<p>Damit ein Tausch von heute sofort im Widget steht, braucht dieses iPhone den Schlüssel der App. Am Tablet diese Seite öffnen (Woche, ganz unten „Aufs iPhone: Widget & Siri“) und den Code dort mit der iPhone-Kamera scannen. Dann steht hier der Knopf zum Verbinden.</p>`}
+          <p class="small muted">Ohne diesen Schritt zeigt das Widget den Plan. Ein Tausch erscheint dann, sobald der Buddy ihn um 21 Uhr übernimmt.</p></li>
+      </ol>
+      <p class="small muted" style="margin:6px 2px 24px">Auf beiden iPhones einrichten, dann muss niemand mehr fragen. Das Widget aktualisiert sich etwa alle 30 Minuten und um 14 und 21 Uhr. Antippen öffnet den Kochbuddy, ein Tipp auf ein Gericht gleich das Rezept.</p>`;
+    $("#ip-prev", view).innerHTML = await iphonePreview();
+    if (!ios) { try { const qr = (await import("./vendor/qrcode.mjs")).default(0, "M"); qr.addData(here); qr.make(); $("#ip-qrbox", view).innerHTML = qr.createSvgTag({ cellSize: 5, margin: 3, scalable: true }); } catch (e) { $("#ip-qrbox", view).textContent = here; } }
+  }
+
   async function renderVorrat(view) {
     view.innerHTML = `<header class="top"><div><div class="eyebrow" id="vr-count"></div><h1>Vorrat</h1></div></header>
       ${recSwitch("vorrat")}
@@ -3432,6 +3508,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       }
       case "gh-save": saveToken(); break;
       case "gh-qr": e.preventDefault(); qrSheet(); break;
+      case "ip-copy": copyLoader(); break;
       case "gh-remove": setGhToken(""); closeSheet(); rerenderSoft(); toast("Schlüssel entfernt – Tauschen ist hier aus"); break;
       case "sw-more": { const pool = await tastePool(); extraDeck(pool); rerenderSoft(); window.scrollTo(0, 0); break; }
       case "deals-retry": localStorage.removeItem(DEALS_KEY); rerenderSoft(); break;
