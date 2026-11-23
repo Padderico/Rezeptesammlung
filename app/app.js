@@ -3089,7 +3089,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
   /* ---------- iPhone: Widget & Siri (Scriptable) ---------- */
   const IP_LOADER = `// Kochbuddy – was gibt's heute? Widget und Siri.
 // Holt sich den aktuellen Kochbuddy-Code selbst. Diesen Text nicht ändern.
-const QUELLE = "https://padderico.github.io/rezeptesammlung/app/iphone/heute.js";
+const QUELLE = "https://padderico.github.io/Rezeptesammlung/app/iphone/heute.js";
 const fm = FileManager.local();
 const datei = fm.joinPath(fm.libraryDirectory(), "kochbuddy-heute.js");
 let code = "";

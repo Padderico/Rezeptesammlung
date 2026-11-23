@@ -5,7 +5,7 @@
 // zusätzlich die Tausche aus der App, damit ein heute getauschtes Gericht sofort stimmt.
 // Keine Namen, keine Schlüssel in dieser Datei.
 
-const BASE = "https://padderico.github.io/rezeptesammlung/app/";
+const BASE = "https://padderico.github.io/Rezeptesammlung/app/";
 const DATA_REPO = "Padderico/Einkaufsbuddy-Daten";
 const KEY = "kochbuddy.gh";
 const SCRIPT_NAME = "Kochbuddy";
