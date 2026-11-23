@@ -82,7 +82,7 @@
     {"key": "Dill", "anzeige": "Dill", "varianten": ["TK-Dill"]},
     {"key": "Basilikum", "anzeige": "Basilikum", "varianten": []},
     {"key": "Koriander", "anzeige": "Koriander", "varianten": []},
-    {"key": "Kräuter", "anzeige": "Kräuter", "varianten": ["TK-Kräuter", "Kräutermischung", "8-Kräuter"]},
+    {"key": "Kräuter", "anzeige": "Kräuter", "varianten": ["TK-Kräuter", "Kräutermischung", "8-Kräuter", "italienische Kräuter"], "zusatz": {"italienische Kräuter": "italienisch, getrocknet"}},
     {"key": "Milch", "anzeige": "Milch", "varianten": ["Vollmilch", "Frischmilch", "H-Milch"]},
     {"key": "Rahm", "anzeige": "Sahne", "varianten": ["Sahne", "Schlagsahne", "Kochsahne", "Schlagrahm", "Becher Sahne"], "stueck": {"Becher Sahne": "Becher"}},
     {"key": "Sauerrahm", "anzeige": "Sauerrahm", "varianten": ["saure Sahne", "Schmand"]},
