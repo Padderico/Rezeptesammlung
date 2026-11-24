@@ -14,6 +14,9 @@ import functools
 import os
 import http.server
 import json
+import sys
+import pathlib as _pl
+sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
 import pathlib
 import re
 import socketserver
@@ -66,6 +69,26 @@ def check_data():
             fail(f"rezepte.json nennt {r['slug']}, aber app/daten/rezepte/{r['slug']}.json fehlt")
     if not bad:
         ok(f"{len(files)} JSON-Dateien lesbar, Wochen und Rezepte vollständig")
+
+
+def check_recipes():
+    """Rezept-Prüfung (tools/rezept_pruefung.py) für alle Wochen, die noch laufen oder kommen: FEHLER = nicht live."""
+    import datetime
+    import rezept_pruefung as rp
+    idx = json.loads((ROOT / "app/daten/wochen.json").read_text(encoding="utf-8"))
+    today = datetime.date.today()
+    n = bad = 0
+    for w in idx.get("weeks", []):
+        if datetime.date.fromisoformat(w["start"]) + datetime.timedelta(days=6) < today:
+            continue
+        for name, r in rp.load([ROOT / "app/daten/wochen" / w["file"]]):
+            n += 1
+            errs, _ = rp.check(name, r)
+            for e in errs:
+                bad += 1
+                fail(f"Rezept-Prüfung {name} ({r.get('title', '')}): {e}")
+    if not bad:
+        ok(f"Rezept-Prüfung: {n} Rezepte der laufenden und kommenden Wochen ohne Fehler")
 
 
 def check_photos():
@@ -189,6 +212,7 @@ if __name__ == "__main__":
     check_data()
     check_privacy()
     check_photos()
+    check_recipes()
     try:
         check_app()
     except Exception as e:  # noqa: BLE001

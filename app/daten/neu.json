@@ -2,6 +2,16 @@
  "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
  "items": [
   {
+   "id": "2026-11-24",
+   "datum": "24.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "pot", "t": "Rezepte noch einmal geprüft", "x": "Alle Rezepte dieser Woche sind Schritt für Schritt geprüft und mit TM31-Rezepten der Rezeptwelt abgeglichen. Was sich geändert hat, steht oben in der Woche unter „Hinweis zum Plan“.", "ziel": "#/", "zeige": ".notice" },
+    { "ico": "timer", "t": "Immer die richtige Menge im Schritt", "x": "Stehen zwei gleiche Zutaten im Rezept, etwa Wasser für die Kartoffeln und Wasser für die Soße, zeigt der Kochmodus jetzt nur noch die Menge, die in diesem Schritt wirklich in den Topf kommt.", "ziel": "@rezept", "zeige": ".steps-list" },
+    { "ico": "plate", "t": "Nudeln werden sicher gar", "x": "Bei Farfalle mit Lachs und Penne mit Hähnchen kocht der Thermomix jetzt erst auf, bevor die Nudeln dazukommen. Beim Hähnchen gart das Fleisch vorher schon 8 Minuten." }
+   ]
+  },
+  {
    "id": "2026-11-23",
    "datum": "23.11.2026",
    "titel": "Neu im Kochbuddy",

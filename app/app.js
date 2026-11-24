@@ -188,7 +188,7 @@
 
   /* Zutaten, die in einem Schritt vorkommen (für "schon im Topf") */
   const ADJ = new Set("frisch frische frischer frisches braune braun rote rot gelbe gelb grüne grün kleine klein große groß vorwiegend festkochend mehligkochend festkochende edelsüß mittelscharf scharf salzarm gehackt gehackte tiefgekühlt tk getrocknet gemahlen gerieben geriebener natur griechischer weiche weich kalte kalt warme warm junge jung reife reif säuerlich säuerliche dünne dicke oder und für die der das zum zur mit von etwas nach geschmack bio optional dressing".split(" "));
-  const HEADS = ["käse", "öl", "brühe", "nudeln", "sahne", "milch", "mehl", "zucker", "essig", "saft", "mark", "pulver", "senf", "butter", "quark", "salz", "pfeffer", "tomaten", "reis", "salat", "fleisch"];
+  const HEADS = ["käse", "öl", "brühe", "stärke", "nudeln", "sahne", "milch", "mehl", "zucker", "essig", "saft", "mark", "pulver", "senf", "butter", "quark", "salz", "pfeffer", "tomaten", "reis", "salat", "fleisch"];
   function stems(ing) {
     const base = (ing.n || "").replace(/\(.*?\)/g, " ").split(",")[0];
     const out = new Set();
@@ -210,23 +210,72 @@
   const STOP_N = new Set("haut schale saft dressing stück stücke form metzger sorte sorten scheiben glas dose packung mutti tube flasche".split(" "));
   const INFL = ["", "n", "e", "en", "s", "es", "er", "ern"];
   const FORMS = ["scheiben", "würfel", "würfeln", "stücke", "stücken", "streifen", "schale", "saft", "filet", "filets", "hälften", "ringe", "spalten", "blätter", "röschen", "zehe", "zehen", "stifte", "raspeln"];
-  const nounMemo = new WeakMap();
+  const nounMemo = new WeakMap(), derivedMemo = new WeakMap();
   function nounStems(ing) {
     if (nounMemo.has(ing)) return nounMemo.get(ing);
-    const out = new Set();
-    const n0 = ing.n || "";
-    const src = n0.replace(/\(.*?\)/g, " ").split(",")[0] + " " + (ing.b || "") + " " + (n0.match(/\(([^)]*)\)/) || ["", ""])[1];
+    const out = new Set(), derived = new Set();
+    // Nur der eigentliche Name (vor Klammer und Komma) und der Bring-Name zählen. Klammern wie „(zum Garen der Kartoffeln)“
+    // oder „(für die Bällchen)“ sagen nur, WOFÜR die Zutat ist – siehe qualStems.
+    const src = (ing.n || "").replace(/\(.*?\)/g, " ").split(",")[0] + " " + (ing.b || "");
     for (const w0 of src.split(/[\s/]+/)) for (const w1 of w0.split("-")) {
       if (!/^[A-ZÄÖÜ]/.test(w1)) continue;
       let w = w1.toLowerCase().replace(/[^a-zäöüß]/g, "");
       if (w.length < 3 || STOP_N.has(w) || ADJ.has(w)) continue;
-      for (const hd of HEADS) if (w.endsWith(hd) && w !== hd) out.add(hd);
+      for (const hd of HEADS) if (w.endsWith(hd) && w !== hd) { out.add(hd); derived.add(hd); }
       for (const suf of ["en", "n", "e", "s"]) if (w.length > 4 && w.endsWith(suf)) { w = w.slice(0, -suf.length); break; }
-      out.add(w);
+      out.add(w); derived.delete(w);
     }
     const res = [...out];
     nounMemo.set(ing, res);
+    derivedMemo.set(ing, derived);
     return res;
+  }
+  /* Andere Namen derselben Zutat in der Klammer, z. B. „passierte Tomaten (Mutti Passata, Glasflasche)“ → Passata.
+     Nur der erste Teil der Klammer und nie, wenn sie sagt, wofür die Zutat ist („für die Bällchen“, „zum Garen …“). */
+  const aliasMemo = new WeakMap();
+  function aliasStems(ing) {
+    if (aliasMemo.has(ing)) return aliasMemo.get(ing);
+    const out = [];
+    const par = ((ing.n || "").match(/\(([^)]*)\)/) || ["", ""])[1].split(",")[0].trim();
+    if (par && !/^(für|fürs|zum|zur|am|an|über|nur|aus|vom|von|je|ca|etwa|z\.|nach|ohne|mit)\b/i.test(par) && par.split(/\s+/).length <= 3) {
+      for (const w1 of par.split(/[\s/-]+/)) {
+        if (!/^[A-ZÄÖÜ][a-zäöüß]/.test(w1)) continue;
+        let w = w1.toLowerCase().replace(/[^a-zäöüß]/g, "");
+        if (w.length < 4 || STOP_N.has(w) || ADJ.has(w)) continue;
+        for (const suf of ["en", "n", "e", "s"]) if (w.length > 4 && w.endsWith(suf)) { w = w.slice(0, -suf.length); break; }
+        out.push(w);
+      }
+    }
+    aliasMemo.set(ing, out);
+    return out;
+  }
+  /* Wofür ist die Zutat? Wörter aus Klammer und nach dem Komma („fürs Püree“, „zum Garen der Kartoffeln“) */
+  const QUAL_STOP = new Set("für fürs zum zur der die das den dem des und oder mit von vom im in am an auf aus bei nach etwa ca zum gut sehr plus extra".split(" "));
+  const qualMemo = new WeakMap();
+  function qualStems(ing) {
+    if (qualMemo.has(ing)) return qualMemo.get(ing);
+    const n0 = ing.n || "";
+    const src = [...n0.matchAll(/\(([^)]*)\)/g)].map((x) => x[1]).join(" ") + " " + n0.replace(/\(.*?\)/g, " ").split(",").slice(1).join(" ");
+    const out = new Set();
+    for (const w0 of src.toLowerCase().split(/[^a-zäöüß]+/)) {
+      if (w0.length < 4 || QUAL_STOP.has(w0) || ADJ.has(w0)) continue;
+      let w = w0;
+      for (const suf of ["en", "n", "e", "s"]) if (w.length > 5 && w.endsWith(suf)) { w = w.slice(0, -suf.length); break; }
+      out.add(w);
+    }
+    const res = [...out];
+    qualMemo.set(ing, res);
+    return res;
+  }
+  /** Mehrere Zutaten mit demselben Namen (Wasser fürs Garen, Wasser für die Soße): die passende über den Schritttext wählen.
+      Nicht eindeutig → -1 (lieber keine Menge als eine falsche). */
+  function pickIng(r, cands, text) {
+    if (cands.length === 1) return cands[0];
+    const t = text.toLowerCase();
+    const hit = cands.filter((i) => qualStems(r.ingredients[i]).some((q) => t.includes(q)));
+    if (hit.length === 1) return hit[0];
+    if (hit.length === 0) { const plain = cands.filter((i) => !qualStems(r.ingredients[i]).length); if (plain.length === 1) return plain[0]; }
+    return -1;
   }
   function wordMatch(word, stem) {
     if (!word.startsWith(stem)) return false;
@@ -242,22 +291,38 @@
     let out = "", last = 0, m;
     const re = /[A-Za-zÄÖÜäöüß]+(?:-[A-Za-zÄÖÜäöüß]+)*/g;
     while ((m = re.exec(text))) {
+      // Zutaten sind Hauptwörter: kleingeschriebene Wörter („garen“, „weich“) nie als Zutat lesen
+      if (!/^[A-ZÄÖÜ]/.test(m[0])) continue;
       const parts = m[0].toLowerCase().split("-");
-      let best = -1, bestLen = 0;
-      r.ingredients.forEach((ing, idx) => {
-        if (used.has(idx) || ing.a == null) return;
-        for (const st of nounStems(ing)) {
-          // vorne passend (Kartoffel|scheiben) zählt voll; nur der Anfang der Zutat („Hähnchen“ → Hähnchenbrustfilet) schwächer
-          const sc = parts.some((pt) => wordMatch(pt, st)) ? st.length : parts.some((pt) => pt.length >= 5 && st.startsWith(pt)) ? 1 : 0;
-          if (sc > bestLen) { best = idx; bestLen = sc; }
+      let bestLen = 0, cands = [];
+      const score = (stemsOf) => r.ingredients.forEach((ing, idx) => {
+        if (ing.a == null) return;
+        let sc = 0;
+        const der = derivedMemo.get(ing) || new Set();
+        for (const st of stemsOf(ing)) {
+          // vorne passend (Kartoffel|scheiben) zählt voll; nur der Anfang der Zutat („Hähnchen“ → Hähnchenbrustfilet) schwächer;
+          // „Zucker“ passt besser zu Zucker als zu Vanillezucker (dort nur abgeleitet)
+          let v = parts.some((pt) => wordMatch(pt, st)) ? st.length : parts.some((pt) => pt.length >= 5 && st.startsWith(pt)) ? 1 : 0;
+          if (v > 1 && der.has(st)) v -= 0.5;
+          if (v > sc) sc = v;
         }
+        if (sc > bestLen) { bestLen = sc; cands = [idx]; } else if (sc && sc === bestLen) cands.push(idx);
       });
+      score(nounStems);
+      if (!cands.length) score(aliasStems);
+      if (!cands.length) continue;
+      // „Wasser für die Kartoffeln“: hier nennen die Kartoffeln nur den Zweck – Etikett erst, wenn sie selbst in den Topf kommen
+      if (/(?:wasser|milch|brühe|sahne|öl)\s+(?:für\s+die|für\s+den|fürs|zum|zur)\s+$/i.test(text.slice(Math.max(0, m.index - 24), m.index))) continue;
+      // Schon in diesem Schritt erwähnt („1000 g Wasser … über Wasser garen“): gleiche Zutat, kein zweites Etikett
+      if (cands.some((i) => used.has(i))) continue;
+      const best = pickIng(r, cands, text);
+      cands.forEach((i) => used.add(i));
       if (best < 0) continue;
-      used.add(best);
       // Steht die Menge schon im Text („500 g Spätzle“) oder ist nur ein Teil gemeint („einen Schuss Wasser“, „den restlichen Käse“), nichts dazuschreiben
       const before = text.slice(Math.max(0, m.index - 22), m.index), after = text.slice(m.index + m[0].length, m.index + m[0].length + 24);
       if (/\d[\d,.½¼¾⅓⅔–-]*\s*(?:[a-zA-ZäöüÄÖÜß]{1,7}\.?\s+){0,2}$/.test(before.slice(-16))) continue;
       if (/(?:schuss|etwas|wenig|bisschen|spritzer|prise|rest\w*|übrige\w*|hälfte(?:\s+(?:der|des|vom))?)\s+(?:\w+\s+)?$/i.test(before)) continue;
+      if (/(?:^|[\s.,:])(?:ein|eine|einen|einem)\s+(?:stück\s+)?$/i.test(before)) continue; // „eine Farfalle probieren“: nur ein Stück, nicht die ganze Menge
       if (/^wasser/i.test(m[0]) && /spül|wasch|einweich|abgieß|abschreck/i.test(after)) continue;
       found.push(best);
       const amt = qtyLabel(r.ingredients[best], m[0], amount(r.ingredients[best], k), scaleVal(r.ingredients[best].a, null, k));
@@ -317,7 +382,12 @@
   function ingsForStep(r, text) {
     const t = " " + (text || "").toLowerCase() + " ";
     const hit = [];
+    // Zutaten mit gleichem Namen (zweimal Wasser, zweimal Milch) nur über annotate (Kontext) zuordnen, nie beide
+    const key = (ing) => (nounStems(ing)[0] || "");
+    const count = {};
+    r.ingredients.forEach((ing) => { const k0 = key(ing); if (k0) count[k0] = (count[k0] || 0) + 1; });
     r.ingredients.forEach((ing, i) => {
+      if (count[key(ing)] > 1) return;
       const ss = stems(ing);
       if (ss.some((s) => (s === "öl" ? /[\s(]öl[\s,.)]/.test(t) : t.includes(s)))) hit.push(i);
     });
