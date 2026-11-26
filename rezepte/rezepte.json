@@ -24,8 +24,8 @@
    "Kartoffel"
   ],
   "total": 58,
-  "last": "KW 48/2026",
-  "extra": true,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -55,8 +55,8 @@
    "One-Pot"
   ],
   "total": 30,
-  "last": "KW 48/2026",
-  "extra": true,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -73,7 +73,7 @@
   "total": 40,
   "last": "KW 48/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "fantakuchen-vom-blech",
@@ -89,7 +89,7 @@
   "total": 45,
   "last": "KW 48/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "farfalle-mit-lachs-und-erbsen-in-tomaten-sahne-sosse",
@@ -104,8 +104,8 @@
    "Eisen"
   ],
   "total": 35,
-  "last": "KW 48/2026",
-  "extra": false,
+  "last": "KW 49/2026",
+  "extra": true,
   "current": true
  },
  {
@@ -136,6 +136,20 @@
   "last": "KW 47/2026",
   "extra": false,
   "current": false
+ },
+ {
+  "slug": "fleischbaellchen-in-tomatensosse-aus-dem-gefrierschrank",
+  "first": "KW 49/2026",
+  "title": "Fleischbällchen in Tomatensoße aus dem Gefrierschrank",
+  "tags": [
+   "Fleisch",
+   "Aufwärmen",
+   "Leicht"
+  ],
+  "total": 15,
+  "last": "KW 49/2026",
+  "extra": false,
+  "current": true
  },
  {
   "slug": "frikadellen-aus-der-heissluftfritteuse-mit-kartoffel-karotten-stampf",
@@ -193,8 +207,8 @@
    "Leicht"
   ],
   "total": 25,
-  "last": "KW 48/2026",
-  "extra": true,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -238,8 +252,8 @@
    "Süß"
   ],
   "total": 30,
-  "last": "KW 48/2026",
-  "extra": true,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -271,7 +285,7 @@
   "total": 45,
   "last": "KW 48/2026",
   "extra": false,
-  "current": true
+  "current": false
  },
  {
   "slug": "hirse-karotten-taler-mit-fruehlingsquark-und-feldsalat",
@@ -299,9 +313,9 @@
    "One-Pot",
    "Vorkochen"
   ],
-  "total": 45,
-  "last": "KW 48/2026",
-  "extra": true,
+  "total": 55,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -409,8 +423,8 @@
    "Eisen"
   ],
   "total": 55,
-  "last": "KW 48/2026",
-  "extra": false,
+  "last": "KW 49/2026",
+  "extra": true,
   "current": true
  },
  {
@@ -435,12 +449,13 @@
   "tags": [
    "Vegetarisch",
    "Suppe",
-   "Vorrat"
+   "Aufwärmen",
+   "Leicht"
   ],
-  "total": 10,
-  "last": "KW 46/2026",
+  "total": 15,
+  "last": "KW 49/2026",
   "extra": false,
-  "current": false
+  "current": true
  },
  {
   "slug": "lachs-aus-dem-varoma-mit-kartoffeln-gemuese-und-zitronen-dill-sosse",
@@ -483,8 +498,8 @@
    "One-Pot"
   ],
   "total": 40,
-  "last": "KW 48/2026",
-  "extra": false,
+  "last": "KW 49/2026",
+  "extra": true,
   "current": true
  },
  {
@@ -532,8 +547,8 @@
    "Eisen"
   ],
   "total": 40,
-  "last": "KW 48/2026",
-  "extra": false,
+  "last": "KW 49/2026",
+  "extra": true,
   "current": true
  },
  {
@@ -578,8 +593,8 @@
    "Einfrieren"
   ],
   "total": 135,
-  "last": "KW 48/2026",
-  "extra": false,
+  "last": "KW 49/2026",
+  "extra": true,
   "current": true
  },
  {
@@ -624,8 +639,8 @@
    "Varoma"
   ],
   "total": 35,
-  "last": "KW 48/2026",
-  "extra": true,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -639,8 +654,8 @@
    "Pfanne"
   ],
   "total": 50,
-  "last": "KW 48/2026",
-  "extra": true,
+  "last": "KW 49/2026",
+  "extra": false,
   "current": true
  },
  {
@@ -712,7 +727,7 @@
    "Varoma"
   ],
   "total": 25,
-  "last": "KW 48/2026",
+  "last": "KW 49/2026",
   "extra": false,
   "current": true
  }
