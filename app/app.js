@@ -748,7 +748,7 @@
     if (timed) h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
       <div class="tbar" aria-hidden="true"><i style="width:${share}%"></i></div>${r.time.active < r.time.total ? `<p class="tlegend"><i></i>Aktiv am Herd: ${r.time.active} Min. – die übrige Zeit gart es von allein.</p>` : ""}</div>`;
     else h += `<div class="facts"><div class="fact"><b>${r.ingredients.length}</b><span>Zutaten</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div><div class="fact"><b>${r.steps.some((s) => s.dev === "tm") ? "TM31" : "–"}</b><span>${r.steps.some((s) => s.dev === "tm") ? "Thermomix" : "ohne Thermomix"}</span></div>${isOg ? `<p class="tlegend">Gesamtzeit steht nicht im Original – die Zeiten der einzelnen Schritte schon.</p>` : ""}</div>`;
-    h += `<div class="r-cols"><div class="sticky">`;
+    h += `<div class="r-cols"><div class="sticky scol" data-sk="r:${esc(ref)}">`;
     h += `<a class="btn primary big start" href="#/k/${ref}">${PLAY}${nDone && nDone < r.steps.length ? `Weiterkochen · Schritt ${nDone + 1}` : nDone ? "Nochmal kochen" : "Kochmodus starten"}</a>`;
     if (timed) h += `<div class="card plan"><div class="line"><label for="eat-at"><b>Essen um</b></label><input id="eat-at" type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div><p class="small muted" style="margin:0">Uhrzeit eintragen, dann rechnet die App aus, wann du anfangen musst.</p></div>`;
     h += `<div class="card"><div class="spread"><h3>Zutaten</h3><div class="stepper"><button data-portion="-1" aria-label="Weniger">−</button><output>${perRecipe ? `${p}× Rezept` : `${p} Port.`}</output><button data-portion="1" aria-label="Mehr">+</button></div></div>`;
@@ -772,6 +772,7 @@
     h += `</div></div>`;
     view.innerHTML = h;
     view.dataset.ref = ref;
+    scolInit(view);
   }
   function mealSlot(ref) {
     const [, wid, rid] = ref.split(":");
@@ -792,6 +793,37 @@
     }
     return `<span>Jetzt starten, fertig ca.</span><span class="big-time">${hm(now + total)}</span>`;
   }
+
+  /* ---------- Spalten mit eigenem Scrollbereich ----------
+     Auf dem Tablet (quer und hoch) scrollt die Zutatenliste für sich: im Rezept die linke Spalte, im Kochmodus die rechte.
+     Ein weicher Rand oben bzw. unten zeigt, dass es dort weitergeht. Im Rezept bleibt die Stelle beim Neuzeichnen
+     (z. B. Portionen ändern) erhalten; im Kochmodus beginnt jeder Schritt oben bei „In diesem Schritt“. */
+  const scolPos = {};
+  function scolFade(el) {
+    const more = el.scrollHeight - el.clientHeight > 2;
+    el.classList.toggle("fade-t", more && el.scrollTop > 4);
+    el.classList.toggle("fade-b", more && el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+  }
+  // Die Spalte reicht immer genau bis zum unteren Rand (über Leiste bzw. Knöpfen), auch solange sie noch nicht oben klebt
+  function scolFit(el) {
+    if (getComputedStyle(el).position !== "sticky") { el.style.removeProperty("--scol-top"); return; }
+    const t = Math.round(Math.max(14, Math.min(el.getBoundingClientRect().top, innerHeight * 0.55))) + "px";
+    if (el.style.getPropertyValue("--scol-top") !== t) el.style.setProperty("--scol-top", t);
+  }
+  const scolAll = () => $$(".scol").forEach((el) => { scolFit(el); scolFade(el); });
+  function scolInit(root) {
+    $$(".scol", root).forEach((el) => { scolFit(el); const k = el.dataset.sk; if (k && scolPos[k]) el.scrollTop = scolPos[k]; scolFade(el); });
+    [300, 1200].forEach((ms) => setTimeout(scolAll, ms)); // Schriften und Fotos ändern die Höhe
+  }
+  let scolRaf = 0;
+  document.addEventListener("scroll", (e) => {
+    const el = e.target;
+    if (el === document) { if (!scolRaf) scolRaf = requestAnimationFrame(() => { scolRaf = 0; scolAll(); }); return; }
+    if (!el || !el.classList || !el.classList.contains("scol")) return;
+    if (el.dataset.sk) scolPos[el.dataset.sk] = el.scrollTop;
+    scolFade(el);
+  }, true);
+  window.addEventListener("resize", scolAll);
 
   /* ---------- Kochmodus ---------- */
   let cookRef = null, cookStep = 0, showList = false;
@@ -845,15 +877,18 @@
     h += `<div class="num"><b>${i + 1}</b><span>von ${n}</span>${steps[i] ? '<em class="chip ok">erledigt</em>' : ""}${ph.phase ? `<span class="phase">${esc(ph.phase)}</span>` : ""}</div>`;
     h += `<p class="stxt">${ann.html}</p>${readout(st)}`;
     if (timers.length) h += `<div class="cook-timers">${timers.map((t, x) => timerChip({ min: t.min, max: t.max, text: t.text, label: t.label, title: shortTitle(r.title), sub: `Schritt ${i + 1}: ${excerpt(t.main ? ph.text : t.label + " – " + ph.text)}`, ctx: `${ref}:${i}:${x}` }, `${ref}:${i}:${x}`)).join("")}</div>`;
-    h += `</div><div>`;
+    h += `</div><div class="cook-side scol">`;
     if (hits.length) {
       h += `<div class="card cook-ings"><h3>In diesem Schritt</h3><p class="small muted" style="margin:2px 0 4px">Abhaken, was schon drin ist – oder direkt die Menge im Text antippen.</p><ul class="checks ing">${hits.map((m) => checkRow(ing[m], `<span class="q">${esc(amount(r.ingredients[m], k))}</span><span>${esc(r.ingredients[m].n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
     }
     const left = r.ingredients.length - Object.keys(ing).length;
+    // Tablet: die ganze Zutatenliste steht gleich daneben und scrollt für sich (am Handy reicht der Knopf)
+    h += `<div class="card cook-all"><h3>Alle Zutaten</h3><ul class="checks ing">${r.ingredients.map((x, m) => checkRow(ing[m], `<span class="q">${esc(amount(x, k))}</span><span>${esc(x.n)}</span>`, `data-ing="${m}"`)).join("")}</ul></div>`;
     h += `<button class="btn ghost small all" data-act="cook-list">${LIST}Alle Zutaten & Schritte${left > 0 ? ` · ${left} Zutaten noch nicht abgehakt` : ""}</button>`;
     h += `<div class="cook-meta"><span>${c.start ? `Gestartet ${hm(c.start)}${r.time && r.time.total ? ` · geplant fertig ${hm(c.start + r.time.total * 60000)}` : ""}` : ""}</span>${wakeLock ? '<span class="wake">Bildschirm bleibt an</span>' : ""}</div>`;
     h += `</div></div>`;
     view.innerHTML = h + cookFoot(i, n);
+    scolInit(view);
   }
   const cookFoot = (i, n, list) => `<div class="cook-foot"><div class="in">${list
     ? `<button class="btn big" data-act="cook-list" style="grid-column:1/-1">${BACK}Zurück zum Schritt</button>`

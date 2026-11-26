@@ -305,9 +305,13 @@ p { text-wrap: pretty; }
 .tip-ico { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--surface); color: var(--accent); display: grid; place-items: center; }
 .tip.guide { border: 1.5px solid var(--accent); margin-top: 14px; }
 .links { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
-@media (min-width: 820px) {
-  .r-cols { display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 26px; align-items: start; }
-  .r-cols > .sticky { position: sticky; top: 14px; }
+/* Zwei Spalten ab Tablet-Breite, auch hochkant (Android-Tablets haben hochkant ca. 800 px).
+   Die Zutaten-Spalte bleibt stehen und scrollt für sich – nie mehr ans Seitenende, um die letzten Zutaten zu sehen. */
+@media (min-width: 740px) {
+  .r-cols { display: grid; grid-template-columns: minmax(290px, min(400px, 42%)) minmax(0, 1fr); gap: 26px; align-items: start; }
+  .r-cols > .sticky { position: sticky; top: 14px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 0 6px 14px 2px; margin: 0 -6px 0 -2px;
+    max-height: calc(100vh - var(--scol-top, 14px) - 30px - var(--nav-h) - var(--dock-h) - var(--safe-b));
+    max-height: calc(100dvh - var(--scol-top, 14px) - 30px - var(--nav-h) - var(--dock-h) - var(--safe-b)); }
 }
 
 /* ---------- Timer-Knöpfe ---------- */
@@ -370,11 +374,24 @@ body.cooking #app { padding-bottom: calc(100px + var(--dock-h) + var(--safe-b));
 .done-hero { text-align: center; padding: 30px 0 10px; }
 .done-hero .art { width: 170px; margin: 0 auto 14px; }
 .done-hero h1 { font-size: 2.4rem; font-stretch: 78%; }
-@media (min-width: 820px) {
-  .cook-cols { display: grid; grid-template-columns: 1fr minmax(300px, 380px); gap: 30px; align-items: start; }
+.cook-all { display: none; }
+@media (min-width: 740px) {
+  .cook-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, min(380px, 40%)); gap: 26px; align-items: start; }
+  .cook-side { position: sticky; top: 14px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 0 6px 14px 2px; margin: 0 -6px 0 -2px;
+    max-height: calc(100vh - var(--scol-top, 14px) - 104px - var(--dock-h) - var(--safe-b));
+    max-height: calc(100dvh - var(--scol-top, 14px) - 104px - var(--dock-h) - var(--safe-b)); }
+  .cook-all { display: block; margin-top: 10px; }
+  .cook-all h3 { font-size: 1.05rem; }
+}
+@media (min-width: 900px) {
+  .cook-cols { gap: 30px; }
   .cook-step .stxt { font-size: 1.7rem; }
   .cook-step .num b { font-size: 6rem; }
 }
+/* Weicher Rand: hier geht die Liste weiter */
+.scol.fade-b { -webkit-mask-image: linear-gradient(#000 calc(100% - 44px), transparent); mask-image: linear-gradient(#000 calc(100% - 44px), transparent); }
+.scol.fade-t { -webkit-mask-image: linear-gradient(transparent, #000 30px); mask-image: linear-gradient(transparent, #000 30px); }
+.scol.fade-t.fade-b { -webkit-mask-image: linear-gradient(transparent, #000 30px, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(transparent, #000 30px, #000 calc(100% - 44px), transparent); }
 
 /* ---------- Vorkochen: Zeitleiste ---------- */
 .card.today.live .spread { align-items: flex-start; }

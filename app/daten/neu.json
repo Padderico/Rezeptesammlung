@@ -6,6 +6,7 @@
    "datum": "26.11.2026",
    "titel": "Neu im Kochbuddy",
    "schritte": [
+    { "ico": "pot", "t": "Die Zutatenliste scrollt für sich", "x": "Am Tablet – quer und hochkant – bleibt die Zutatenliste im Rezept links stehen und lässt sich allein hoch- und runterscrollen, ohne ans Ende der Seite zu müssen. Im Kochmodus steht rechts neben dem Schritt jetzt die ganze Zutatenliste, ebenfalls zum Scrollen für sich.", "ziel": "@rezept", "zeige": ".r-cols > .sticky" },
     { "ico": "pot", "t": "Die OG-Rezepte aus dem Kochbuch-Ordner", "x": "Die handgeschriebenen Rezepte aus dem Ordner stehen jetzt im Rezepte-Tab – mit eigenem Tag ganz vorne. Die Nummer steht wie im Ordner auf dem Textmarker-Strich in der Farbe des Bereichs.", "ziel": "#/rezepte", "zeige": ".seg button.og-tag" },
     { "ico": "cal", "t": "Nach Bereichen und mit Thermomix", "x": "Im Tag lässt sich nach den Farben im Ordner filtern: Vegetarisch, Fleisch & Fisch, Dips & Soßen, Kuchen und Plätzchen. Der Schalter zeigt nur Rezepte mit Thermomix – den Filter Thermomix gibt es jetzt auch für alle anderen Rezepte.", "ziel": "#/rezepte", "zeige": "[data-tag=\"Thermomix\"]" },
     { "ico": "plate", "t": "Das Original ist immer dabei", "x": "Im Rezept zeigt „Originalseite ansehen“ das Foto der handgeschriebenen Seite. Was beim Abschreiben unsicher war, steht orange markiert – kurz im Original nachsehen und bei Bedarf eine Notiz schreiben." }
