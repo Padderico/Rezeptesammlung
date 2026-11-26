@@ -1072,3 +1072,42 @@ a.agp-go:active { transform: scale(.98); }
 .ip-code { margin-top: 10px; }
 .ip-code summary { cursor: pointer; color: var(--accent); font-weight: 700; font-size: .9rem; }
 .ip-code textarea { width: 100%; box-sizing: border-box; margin-top: 8px; font: .74rem/1.4 var(--font-mono); background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px; resize: vertical; }
+
+/* ---------- OG-Rezepte aus dem Kochbuch-Ordner ----------
+   Die Nummer steht wie im Ordner auf einem Textmarker-Strich in der Farbe des Bereichs. */
+.ogb-gruen { --hl: #A8DD8A; } .ogb-rosa { --hl: #F6AFC0; } .ogb-tuerkis { --hl: #8EDBD3; } .ogb-lila { --hl: #CDB0EE; } .ogb-gelb { --hl: #F5DC6E; }
+.og-nr { position: relative; isolation: isolate; flex: none; display: inline-grid; place-items: center; min-width: 2.7rem; height: 2.1rem; padding: 0 .35rem; font: 800 1.12rem/1 var(--font-display); font-stretch: 80%; font-variant-numeric: tabular-nums; color: #10261E; }
+.og-nr::before { content: ""; position: absolute; z-index: -1; inset: .3rem -.15rem .25rem; background: var(--hl, #DAE2DA); border-radius: .25rem .6rem .3rem .7rem; transform: rotate(-3deg) skewX(-10deg); }
+.og-nr.big { min-width: 3.6rem; height: 2.8rem; font-size: 1.7rem; }
+.og-kick { display: flex; align-items: center; gap: 12px; margin: 0 0 10px; }
+.og-kick span { font-weight: 700; line-height: 1.2; }
+.og-kick small { display: block; color: var(--muted); font-weight: 400; font-size: .84rem; }
+.seg button.og-tag, .seg button.og-tag[aria-pressed="true"] { background-image: linear-gradient(90deg, #A8DD8A 0 20%, #F6AFC0 20% 40%, #8EDBD3 40% 60%, #CDB0EE 60% 80%, #F5DC6E 80%); background-size: calc(100% - 30px) 3px; background-repeat: no-repeat; background-position: 50% calc(100% - 5px); }
+.seg button.og-tag[aria-pressed="true"] { background-color: var(--tanne); }
+.og-bar { margin: 4px 0 2px; }
+.og-bar > p { margin: 2px 0 8px; }
+.og-b { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
+.og-b::-webkit-scrollbar { display: none; }
+.og-b button { flex: none; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: .88rem; font-weight: 700; cursor: pointer; }
+.og-b button i { width: 11px; height: 11px; border-radius: 3px; background: var(--hl); transform: rotate(-8deg); }
+.og-b button small { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+.og-b button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }
+.og-tm { display: inline-flex; align-items: center; gap: 10px; margin: 6px 0 0; border: 0; background: none; padding: 6px 0; font-weight: 700; font-size: .92rem; cursor: pointer; }
+.og-tm small { color: var(--muted); font-variant-numeric: tabular-nums; }
+.og-tm .sw { position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--line-2); transition: background .15s; }
+.og-tm .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform .15s var(--ease); }
+.og-tm[aria-pressed="true"] .sw { background: var(--accent); }
+.og-tm[aria-pressed="true"] .sw::after { transform: translateX(16px); }
+.og-tm:focus-visible, .og-b button:focus-visible { outline: 3px solid var(--pumpkin); outline-offset: 2px; }
+.chip.og { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); }
+.og-card .og-notes { margin: 8px 0 0; padding-left: 1.1em; }
+.og-card .og-notes li + li { margin-top: 4px; }
+.og-uns { margin: 12px 0 0; background: var(--pumpkin-soft); color: var(--pumpkin-ink); border-radius: 14px; padding: 10px 14px; font-size: .92rem; }
+.og-uns ul { margin: 4px 0 0; padding-left: 1.1em; }
+.og-card > .btn { margin-top: 12px; }
+.og-pages h2 { margin-right: 30px; }
+.og-page { margin: 12px 0; border-radius: 14px; overflow: auto; background: var(--surface-2); min-height: 140px; display: grid; place-items: center; cursor: zoom-in; }
+.og-page img { display: block; width: 100%; height: auto; }
+.og-page.zoom { place-items: start; max-height: 72vh; cursor: zoom-out; }
+.og-page.zoom img { width: 230%; max-width: none; }
+@media (prefers-reduced-motion: reduce) { .og-tm .sw, .og-tm .sw::after { transition: none; } }

@@ -7,8 +7,8 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const pad = (n) => String(n).padStart(2, "0");
   const DAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-  const DEV = { tm: "Thermomix TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd" };
-  const DEV_SHORT = { tm: "TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd" };
+  const DEV = { tm: "Thermomix TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd", grill: "Grill" };
+  const DEV_SHORT = { tm: "TM31", ofen: "Ofen", hlf: "Heißluftfritteuse", herd: "Herd", grill: "Grill" };
   const CHECK = '<span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
   const CLOCK = '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>';
   const CLOSE = '<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -63,6 +63,13 @@
   async function getRecipe(ref) {
     const [kind, a, b] = ref.split(":");
     if (kind === "w") { const w = await week(a); const r = w.recipes[b]; if (!r) throw new Error("Rezept fehlt"); return r; }
+    if (kind === "og") {
+      let d = ogLocal();
+      if (!d || !d.rezepte[a]) d = await loadOG(true); // neu dazugekommen oder noch nie geladen
+      const r = d && d.rezepte[a];
+      if (!r) throw Object.assign(new Error(d ? "Rezept fehlt" : "Die OG-Rezepte brauchen den Schlüssel dieses Geräts"), { code: "og" });
+      return r;
+    }
     return getJSON(`daten/rezepte/${a}.json`);
   }
 
@@ -121,7 +128,7 @@
   function toggle(name, key, idx) { const b = bag(name, key); if (b[idx]) delete b[idx]; else b[idx] = 1; save(); return !!b[idx]; }
 
   /* ---------- Mengen ---------- */
-  const FR = [[0, ""], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"], [1, ""]];
+  const FR = [[0, ""], [0.125, "⅛"], [0.25, "¼"], [1 / 3, "⅓"], [0.5, "½"], [2 / 3, "⅔"], [0.75, "¾"], [1, ""]];
   function fmt(v) {
     let w = Math.floor(v + 1e-9), f = v - w, best = FR[0], bd = 1;
     for (const x of FR) { const d = Math.abs(f - x[0]); if (d < bd) { bd = d; best = x; } }
@@ -428,7 +435,7 @@
       navTo(parts[2] === "iphone" ? "#/iphone" : "#/", "replace"); return;
     }
     if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte", "vorrat", "iphone"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
+    const nav = parts[0] === "r" && /^(og|a):/.test(parts[1] || "") ? "rezepte" : { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -734,16 +741,18 @@
     const eat = S.eat[ref] || (slot && S.settings.eat[slot]) || "";
     let h = `<div class="r-topbar"><a class="back" href="${fromWeek ? "#/" : "#/rezepte"}" data-act="back" data-fallback="${fromWeek ? "#/" : "#/rezepte"}">${BACK}Zurück</a>${embedded ? "" : `<button type="button" class="freeze-btn" data-freeze="${esc(ref)}" aria-label="Einfrieren: in den Vorrat und Etikett drucken" title="${esc(freezeName(r))} einfrieren">${SNOW}<span>Einfrieren</span></button>`}</div>`;
     if (canBT()) loadNiim().catch(() => {});
-    const c = tone(r.tags), share = r.time.total ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
+    const c = tone(r.tags), timed = !!(r.time && r.time.total), share = timed ? Math.max(4, Math.min(100, Math.round((r.time.active / r.time.total) * 100))) : 100;
+    const isOg = ref.startsWith("og:"), perRecipe = r.unit === "Rezept";
     h += fotoHero(r);
-    h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).kind ? " stamped" : ""}"><div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
-    h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
+    h += `<div class="r-head${c ? " t-" + c : ""}${r.slug && rating(r.slug).kind ? " stamped" : ""}">${isOg ? ogKick(r) : ""}<div class="chips">${tagChips(r.tags, 6)}</div><h1>${esc(r.title)}</h1>${stampHtml(r)}</div>`;
+    if (timed) h += `<div class="facts"><div class="fact"><b>${r.time.total}</b><span>Min. gesamt</span></div><div class="fact active"><b>${r.time.active}</b><span>Min. aktiv</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div>
       <div class="tbar" aria-hidden="true"><i style="width:${share}%"></i></div>${r.time.active < r.time.total ? `<p class="tlegend"><i></i>Aktiv am Herd: ${r.time.active} Min. – die übrige Zeit gart es von allein.</p>` : ""}</div>`;
+    else h += `<div class="facts"><div class="fact"><b>${r.ingredients.length}</b><span>Zutaten</span></div><div class="fact"><b>${r.steps.length}</b><span>Schritte</span></div><div class="fact"><b>${r.steps.some((s) => s.dev === "tm") ? "TM31" : "–"}</b><span>${r.steps.some((s) => s.dev === "tm") ? "Thermomix" : "ohne Thermomix"}</span></div>${isOg ? `<p class="tlegend">Gesamtzeit steht nicht im Original – die Zeiten der einzelnen Schritte schon.</p>` : ""}</div>`;
     h += `<div class="r-cols"><div class="sticky">`;
     h += `<a class="btn primary big start" href="#/k/${ref}">${PLAY}${nDone && nDone < r.steps.length ? `Weiterkochen · Schritt ${nDone + 1}` : nDone ? "Nochmal kochen" : "Kochmodus starten"}</a>`;
-    h += `<div class="card plan"><div class="line"><label for="eat-at"><b>Essen um</b></label><input id="eat-at" type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div><p class="small muted" style="margin:0">Uhrzeit eintragen, dann rechnet die App aus, wann du anfangen musst.</p></div>`;
-    h += `<div class="card"><div class="spread"><h3>Zutaten</h3><div class="stepper"><button data-portion="-1" aria-label="Weniger">−</button><output>${p} Port.</output><button data-portion="1" aria-label="Mehr">+</button></div></div>`;
-    if (p !== (r.base || 3)) h += `<p class="small muted">Umgerechnet von ${r.base} Portionen. Garzeiten und die Füllmenge im Mixtopf (max. 2 l) im Blick behalten.</p>`;
+    if (timed) h += `<div class="card plan"><div class="line"><label for="eat-at"><b>Essen um</b></label><input id="eat-at" type="time" value="${esc(eat)}" data-eat="${esc(ref)}"></div><div class="line" id="plan-out">${planText(r, eat)}</div><p class="small muted" style="margin:0">Uhrzeit eintragen, dann rechnet die App aus, wann du anfangen musst.</p></div>`;
+    h += `<div class="card"><div class="spread"><h3>Zutaten</h3><div class="stepper"><button data-portion="-1" aria-label="Weniger">−</button><output>${perRecipe ? `${p}× Rezept` : `${p} Port.`}</output><button data-portion="1" aria-label="Mehr">+</button></div></div>`;
+    if (p !== (r.base || 3)) h += `<p class="small muted">${perRecipe ? `Alle Mengen mal ${p}. Backform, Backzeit` : `Umgerechnet von ${r.base} Portionen. Garzeiten`} und die Füllmenge im Mixtopf (max. 2 l) im Blick behalten.</p>`;
     else if (r.servingsNote) h += `<p class="small muted">${esc(r.servingsNote)}</p>`;
     h += `<ul class="checks ing">${r.ingredients.map((i, n) => checkRow(ing[n], `<span class="q">${esc(amount(i, k))}</span><span>${esc(i.n)}</span>`, `data-ing="${n}"`)).join("")}</ul></div>`;
     h += `</div><div>`;
@@ -753,11 +762,12 @@
       const ph = phaseOf(st.t);
       return `<li class="${steps[n] ? "done" : ""}" data-go="${n}">${ph.phase ? `<span class="phase">${esc(ph.phase)}</span><br>` : ""}<span class="stxt">${annotate(r, ph.text, k).html}</span>${readout(st)}${stepTimers(st).length ? `<div class="chips" style="margin-top:8px">${stepTimers(st).map((t) => `<span class="chip pump">${CLOCK}${esc(durText(t))}</span>`).join("")}</div>` : ""}</li>`;
     }).join("")}</ol></div>`;
+    if (isOg) h += ogCard(r);
     if (r.kid) h += `<div class="tip kid"><span class="tip-ico">${ICON_KID}</span><div><h3>Fürs Kind</h3><p style="margin:0">${esc(r.kid)}</p></div></div>`;
     if (r.store || !embedded) h += `<div class="card"><h3>Aufbewahren & Varianten</h3>${r.store ? `<p style="margin:6px 0 0">${esc(r.store)}</p>` : ""}${embedded ? "" : `<div class="freeze-line"><button type="button" class="btn small" data-freeze="${esc(ref)}">${SNOW} ${esc(freezeName(r))} einfrieren</button><span class="small muted">Etikett wird gedruckt · haltbar bis ${dmy(addMonthsIso(today(), freezeMonths(r)))} · ${vrCount(r.slug)}</span></div>`}</div>`;
     h += notesBox(r);
     h += rateBlock(r);
-    h += verlaufCard(r);
+    if (!isOg || ogCooked(r.slug)) h += verlaufCard(r);
     h += `<div class="links">${r.bring ? `<a class="btn small" href="${esc(r.bring)}">In Bring übernehmen</a>` : ""}${r.page ? `<a class="btn small ghost" href="${esc(r.page)}">Rezeptseite</a>` : ""}${nDone || Object.keys(ing).length || Object.keys(pre).length ? `<button class="btn small ghost" data-act="reset-recipe">Häkchen zurücksetzen</button>` : ""}</div>`;
     h += `</div></div>`;
     view.innerHTML = h;
@@ -841,7 +851,7 @@
     }
     const left = r.ingredients.length - Object.keys(ing).length;
     h += `<button class="btn ghost small all" data-act="cook-list">${LIST}Alle Zutaten & Schritte${left > 0 ? ` · ${left} Zutaten noch nicht abgehakt` : ""}</button>`;
-    h += `<div class="cook-meta"><span>${c.start ? `Gestartet ${hm(c.start)} · geplant fertig ${hm(c.start + r.time.total * 60000)}` : ""}</span>${wakeLock ? '<span class="wake">Bildschirm bleibt an</span>' : ""}</div>`;
+    h += `<div class="cook-meta"><span>${c.start ? `Gestartet ${hm(c.start)}${r.time && r.time.total ? ` · geplant fertig ${hm(c.start + r.time.total * 60000)}` : ""}` : ""}</span>${wakeLock ? '<span class="wake">Bildschirm bleibt an</span>' : ""}</div>`;
     h += `</div></div>`;
     view.innerHTML = h + cookFoot(i, n);
   }
@@ -2416,25 +2426,120 @@
     else if (!done && newsItem && !newsSeen().includes(newsKey(newsItem))) { newsSeen().push(newsKey(newsItem)); save(); toast("Die Tour findest du unten in der Woche unter „Was ist neu?“"); }
   }
 
+  /* ---------- OG-Rezepte: die handgeschriebenen Originalrezepte aus dem Kochbuch-Ordner ----------
+     Familienrezepte, darum nur im privaten Repo: kochbuch/og.json (Titel, Bereiche = Farben im Ordner, Rezepte)
+     und die Seitenfotos unter kochbuch/seiten/. Die App liest beides mit dem Schlüssel des Geräts und merkt sich die
+     Sammlung auf dem Gerät (auch ohne Netz da); frisch geholt wird höchstens alle 6 Stunden. Rezepte heißen og:<slug>. */
+  const OG_PATH = "/contents/kochbuch/og.json", OG_LS = "kochbuddy.og", OG_PICS = "kochbuddy-fotos-1";
+  let og = null, ogAt = 0, ogBusy = null;
+  function ogLocal() {
+    if (og || embedded) return og;
+    try { const x = JSON.parse(localStorage.getItem(OG_LS) || "null"); if (x && x.data && x.data.rezepte) { og = x.data; ogAt = x.at || 0; } } catch (e) { /* nichts gemerkt */ }
+    return og;
+  }
+  function loadOG(fresh) {
+    ogLocal();
+    if (embedded || !ghToken()) return Promise.resolve(og);
+    if (og && !fresh && Date.now() - ogAt < 6 * 3600000) return Promise.resolve(og);
+    if (ogBusy) return ogBusy;
+    ogBusy = (async () => {
+      try {
+        const r = await gh("GET", OG_PATH, null, DATA_REPO);
+        const data = r && r.content ? JSON.parse(b64d(r.content)) : null;
+        if (data && data.rezepte) {
+          og = data; ogAt = Date.now();
+          try { localStorage.setItem(OG_LS, JSON.stringify({ at: ogAt, data })); } catch (e) { /* Speicher voll: gilt dann bis zum Neustart */ }
+        }
+      } catch (e) { /* kein Netz oder kein Zugriff: das Gemerkte reicht */ }
+      return og;
+    })().finally(() => { ogBusy = null; });
+    return ogBusy;
+  }
+  const ogCooked = (slug) => { const v = verlaufOf(slug); return !!(v.last || v.lastKw); };
+  const ogLast = (slug) => (ogCooked(slug) ? lastChip(slug) : ""); // „noch nicht gekocht“ wäre bei den alten Familienrezepten falsch
+  const ogBereich = (key) => ((og && og.bereiche) || []).find((b) => b.key === key) || { key, label: "" };
+  const ogItems = () => (og ? Object.values(og.rezepte).sort((a, b) => a.nr - b.nr).map((r) => ({ slug: r.slug, title: r.title, tags: r.tags, og: true, nr: r.nr, bereich: r.bereich })) : []);
+  const ogNr = (r, cls = "") => `<span class="og-nr ogb-${esc(r.bereich)}${cls}" aria-label="Nummer ${r.nr} im Ordner">${r.nr}</span>`;
+  const ogKick = (r) => `<div class="og-kick">${ogNr(r, " big")}<span>${esc(ogBereich(r.bereich).label)}<small>aus dem Kochbuch-Ordner</small></span></div>`;
+  function ogCard(r) {
+    const notes = r.notes || [], uns = r.unsicher || [];
+    return `<div class="card og-card"><h3>Hinweise zum Rezept</h3>
+      ${notes.length ? `<ul class="og-notes">${notes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${uns.length ? `<div class="og-uns"><b>Beim Abschreiben unsicher – bitte im Original nachsehen</b><ul>${uns.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      ${(r.seiten || []).length ? `<button class="btn small" data-act="og-page">${r.seiten.length > 1 ? `Die ${r.seiten.length} Originalseiten ansehen` : "Originalseite ansehen"}</button>` : ""}
+      <p class="small muted" style="margin:10px 0 0">Mengen, Zeiten und Reihenfolge wie im Original. Wenn etwas nicht stimmt: Notiz unten schreiben.</p></div>`;
+  }
+  const ogPics = {};
+  async function ogPic(p) {
+    if (ogPics[p]) return ogPics[p];
+    const key = new URL(`og-seiten/${p}.jpg`, location.href).href;
+    let blob = null;
+    try { const hit = await (await caches.open(OG_PICS)).match(key); if (hit) blob = await hit.blob(); } catch (e) { /* kein Speicher */ }
+    if (!blob) {
+      const x = await gh("GET", `/contents/kochbuch/seiten/${encodeURIComponent(p)}.jpg`, null, DATA_REPO);
+      if (!x || !x.content) throw Object.assign(new Error("Seite fehlt"), { code: 404 });
+      const bin = atob(String(x.content).replace(/\s/g, "")), u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      blob = new Blob([u8], { type: "image/jpeg" });
+      try { await (await caches.open(OG_PICS)).put(key, new Response(blob, { headers: { "Content-Type": "image/jpeg" } })); } catch (e) { /* dann eben jedes Mal neu */ }
+    }
+    return (ogPics[p] = URL.createObjectURL(blob));
+  }
+  async function ogPages(ref) {
+    const r = await getRecipe(ref), pages = r.seiten || [];
+    openSheet(`<div class="og-pages"><h2>${esc(r.title)}</h2><p class="small muted">${pages.length > 1 ? "Originalseiten" : "Originalseite"} aus dem Kochbuch-Ordner · zum Vergrößern antippen</p>
+      ${pages.map((p) => `<figure class="og-page" data-ogpic="${esc(p)}"><span class="small muted">Seite wird geladen …</span></figure>`).join("")}
+      <button class="btn" data-act="sheet-close">Schließen</button></div>`);
+    for (const p of pages) {
+      let html;
+      try { html = `<img src="${await ogPic(p)}" alt="Handgeschriebene Originalseite: ${esc(r.title)}">`; }
+      catch (e) { html = `<span class="small muted">${e.code === "offline" ? "Ohne Netz nicht ladbar – die Seite kommt, sobald das Gerät wieder online ist." : e.code === "notoken" || e.code === "auth" ? "Dieses Gerät hat keinen Zugriff auf die private Ablage." : "Seite nicht ladbar."}</span>`; }
+      const fig = $(`#sheet [data-ogpic="${p}"]`); if (fig) fig.innerHTML = html;
+    }
+  }
+
   /* ---------- Alle Rezepte ---------- */
-  let filter = { q: "", tag: "Alle" };
+  let filter = { q: "", tag: "Alle", ogB: "", ogTm: false };
   async function renderAll(view) {
     let list;
     try { list = await getJSON("../rezepte/rezepte.json"); } catch (e) { list = embedded ? embedded.files["../rezepte/rezepte.json"] || [] : []; }
-    const tags = ["Alle", "Fleisch", "Fisch", "Vegetarisch", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
-    let h = `<header class="top"><div><div class="eyebrow">${list.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>${recSwitch("rezepte")}`;
+    const o = ogLocal(), ogTag = o && o.titel;
+    const all = list.concat(ogItems());
+    const tags = ["Alle", ...(ogTag ? [ogTag] : []), "Fleisch", "Fisch", "Vegetarisch", "Thermomix", "Suppe", "Pasta", "Kartoffel", "One-Pot", "Ofen", "Varoma", "Vorkochen"];
+    if (!tags.includes(filter.tag)) filter.tag = "Alle";
+    let h = `<header class="top"><div><div class="eyebrow">${all.length} Rezepte</div><h1>Alle Rezepte</h1></div></header>${recSwitch("rezepte")}`;
     h += `<label class="searchbox"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="search" type="search" aria-label="Rezepte durchsuchen" placeholder="Suchen, z. B. Suppe, Lachs, Gnocchi" value="${esc(filter.q)}" data-search></label>`;
-    h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${t}" aria-pressed="${filter.tag === t}">${t}</button>`).join("")}</div>`;
-    h += `<ul class="r-list" id="rlist"></ul>`;
+    h += `<div class="seg" style="margin-top:10px">${tags.map((t) => `<button data-tag="${esc(t)}" aria-pressed="${filter.tag === t}"${t === ogTag ? ' class="og-tag"' : ""}>${esc(t)}</button>`).join("")}</div>`;
+    h += `<div id="ogbar"></div><ul class="r-list" id="rlist"></ul>`;
     view.innerHTML = h;
-    view._list = list;
+    view._list = all;
     drawList(view);
+    if (!embedded && ghToken()) loadOG().then((d) => { if (d && d !== o && /^#\/rezepte/.test(location.hash)) rerenderSoft(); });
+  }
+  function ogBar() {
+    const all = Object.values(og.rezepte), n = (key) => all.filter((r) => !key || r.bereich === key).length;
+    const miss = (og.fehlend || []).length ? ` Nr. ${og.fehlend.join(", ")} ${og.fehlend.length > 1 ? "fehlen" : "fehlt"} noch.` : "";
+    return `<div class="og-bar"><p class="small muted">${all.length} Rezepte aus dem Kochbuch-Ordner, sortiert nach Nummer.${miss}</p>
+      <div class="og-b" role="group" aria-label="Bereiche im Ordner">${[{ key: "", label: "Alle Bereiche" }, ...(og.bereiche || [])].map((b) => `<button data-ogb="${esc(b.key)}" aria-pressed="${filter.ogB === b.key}">${b.key ? `<i class="ogb-${esc(b.key)}"></i>` : ""}${esc(b.label)}<small>${n(b.key)}</small></button>`).join("")}</div>
+      <button class="og-tm" data-ogtm aria-pressed="${filter.ogTm}"><span class="sw" aria-hidden="true"></span>Nur Rezepte mit Thermomix <small>${all.filter((r) => (r.tags || []).includes("Thermomix")).length}</small></button></div>`;
   }
   function drawList(view) {
     const q = filter.q.toLowerCase().trim();
+    const ogMode = !!(og && filter.tag === og.titel);
+    // Die Leiste nur beim Wechsel neu bauen, sonst nur die Schalter setzen (sie bleibt dort gescrollt, wo man getippt hat)
+    const bar = $("#ogbar", view);
+    if (bar && bar.dataset.on !== String(ogMode)) { bar.innerHTML = ogMode ? ogBar() : ""; bar.dataset.on = String(ogMode); }
+    if (bar && ogMode) {
+      $$("[data-ogb]", bar).forEach((b) => b.setAttribute("aria-pressed", b.dataset.ogb === filter.ogB));
+      const tm = $("[data-ogtm]", bar); tm.setAttribute("aria-pressed", filter.ogTm);
+      $("small", tm).textContent = Object.values(og.rezepte).filter((r) => (!filter.ogB || r.bereich === filter.ogB) && (r.tags || []).includes("Thermomix")).length;
+    }
     const items = (view._list || []).filter((m) => (filter.tag === "Alle" || (m.tags || []).includes(filter.tag)) &&
-      (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q)));
-    $("#rlist", view).innerHTML = items.map((m) => `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"${fotoOf(m.slug) ? ' class="has-ph"' : ""}>${fotoThumb(m.slug)}<span class="xt"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span>${lastChip(m.slug)}</span></span></a></li>`).join("") ||
+      (!ogMode || ((!filter.ogB || m.bereich === filter.ogB) && (!filter.ogTm || (m.tags || []).includes("Thermomix")))) &&
+      (!q || m.title.toLowerCase().includes(q) || (m.tags || []).join(" ").toLowerCase().includes(q) || (m.og && String(m.nr) === q)));
+    $("#rlist", view).innerHTML = items.map((m) => m.og
+      ? `<li class="og-row${tone(m.tags) ? " t-" + tone(m.tags) : ""}"><a href="#/r/og:${esc(m.slug)}">${ogNr(m)}<span class="xt"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${ogMode ? `<span class="chip plain">${esc(ogBereich(m.bereich).label)}</span>` : `<span class="chip og">${esc(og.titel)}</span>`}${(m.tags || []).includes("Thermomix") ? '<span class="chip">Thermomix</span>' : ""}${ogLast(m.slug)}</span></span></a></li>`
+      : `<li class="${tone(m.tags) ? "t-" + tone(m.tags) : ""}"><a href="#/r/a:${esc(m.slug)}"${fotoOf(m.slug) ? ' class="has-ph"' : ""}>${fotoThumb(m.slug)}<span class="xt"><b>${esc(m.title)}</b><span class="chips">${miniRating(m.slug)}${m.current ? '<span class="chip pump">diese Woche</span>' : ""}${tagChips(m.tags, 3)}<span class="chip plain">${m.total} Min.</span>${lastChip(m.slug)}</span></span></a></li>`).join("") ||
       `<li class="empty">Nichts gefunden.</li>`;
   }
 
@@ -3432,7 +3537,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density],[data-ogb],[data-ogtm],[data-ogpic]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -3473,6 +3578,9 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
       S.portions[ref] = Math.max(1, Math.min(12, portions(ref, r) + +d.portion)); save(); rerenderSoft(); return;
     }
     if (d.tag) { filter.tag = d.tag; $$("[data-tag]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.tag === d.tag)); drawList(view); return; }
+    if (d.ogb != null) { filter.ogB = d.ogb; drawList(view); return; }
+    if (d.ogtm != null) { filter.ogTm = !filter.ogTm; drawList(view); return; }
+    if (d.ogpic) { el.classList.toggle("zoom"); return; }
     if (d.alarm) {
       const id = $("#alarm").dataset.id, t = S.timers.find((x) => x.id === id);
       if (t) {
@@ -3588,6 +3696,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
       case "cook-prev": cookGo(-1, false); break;
       case "cook-list": showList = !showList; drawCook(view, await getRecipe(cookRef), cookRef); window.scrollTo(0, 0); break;
       case "cook-restart": delete S.steps[cookRef]; delete S.ing[cookRef]; S.cook[cookRef] = { start: Date.now(), step: 0 }; cookStep = 0; save(); drawCook(view, await getRecipe(cookRef), cookRef); break;
+      case "og-page": ogPages(view.dataset.ref).catch((e) => toast(e.message)); break;
       case "reset-recipe": { const ref = view.dataset.ref; ["steps", "ing", "prep", "cook"].forEach((k) => delete S[k][ref]); if (cookRef === ref) cookRef = null; save(); rerenderSoft(); toast("Zurückgesetzt"); break; }
       case "block-start": S.block[weekId] = { start: Date.now(), done: {}, beep: false }; save(); updateWake(); rerenderSoft(); break;
       case "block-finish": { const B = (S.block[weekId] = S.block[weekId] || {}); B.end = Date.now(); blockTimers(false); save(); updateWake(); toast("Vorkochen fertig – super!"); window.scrollTo(0, 0); rerenderSoft(); break; }

@@ -2,6 +2,16 @@
  "info": "Was ist neu im Kochbuddy. Die App zeigt den neuesten Eintrag einmal als kurze Tour (mit „Zeigen“ springt sie an die Stelle). Bei jeder Änderung an der App einen Eintrag ergänzen, neueste zuerst. {kind} = Name des Kindes auf dem Gerät. ziel = Ansicht (#/…, @rezept = Hauptgericht von heute), zeige = Stelle in der Ansicht. Keine Namen der Familie.",
  "items": [
   {
+   "id": "2026-11-26",
+   "datum": "26.11.2026",
+   "titel": "Neu im Kochbuddy",
+   "schritte": [
+    { "ico": "pot", "t": "Die OG-Rezepte aus dem Kochbuch-Ordner", "x": "Die handgeschriebenen Rezepte aus dem Ordner stehen jetzt im Rezepte-Tab – mit eigenem Tag ganz vorne. Die Nummer steht wie im Ordner auf dem Textmarker-Strich in der Farbe des Bereichs.", "ziel": "#/rezepte", "zeige": ".seg button.og-tag" },
+    { "ico": "cal", "t": "Nach Bereichen und mit Thermomix", "x": "Im Tag lässt sich nach den Farben im Ordner filtern: Vegetarisch, Fleisch & Fisch, Dips & Soßen, Kuchen und Plätzchen. Der Schalter zeigt nur Rezepte mit Thermomix – den Filter Thermomix gibt es jetzt auch für alle anderen Rezepte.", "ziel": "#/rezepte", "zeige": "[data-tag=\"Thermomix\"]" },
+    { "ico": "plate", "t": "Das Original ist immer dabei", "x": "Im Rezept zeigt „Originalseite ansehen“ das Foto der handgeschriebenen Seite. Was beim Abschreiben unsicher war, steht orange markiert – kurz im Original nachsehen und bei Bedarf eine Notiz schreiben." }
+   ]
+  },
+  {
    "id": "2026-11-24",
    "datum": "24.11.2026",
    "titel": "Neu im Kochbuddy",
