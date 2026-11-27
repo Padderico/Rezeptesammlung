@@ -938,6 +938,33 @@ a.agp-go:active { transform: scale(.98); }
 .ek-ico { flex: none; width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
 .ek-ico .ico { width: 30px; height: 30px; }
 .ek-scan .act-btns { margin-top: 12px; }
+/* Zuletzt gescannt: was der Scanner geschickt hat und was daraus wurde */
+.ek-last { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); }
+.ek-last > i { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--line-2); }
+.ek-last > span { flex: 1; min-width: 0; }
+.ek-last b { display: block; font: 700 1.08rem/1.2 var(--font-display); font-stretch: 92%; }
+.ek-last small { display: block; color: var(--muted); font-size: .84rem; margin-top: 3px; overflow-wrap: anywhere; }
+.ek-last.idle span { color: var(--muted); font-weight: 700; font-size: .92rem; }
+.ek-last.off > i, .ek-last.katalog > i { background: var(--accent); }
+.ek-last.unbekannt > i, .ek-last.offline > i { background: var(--pumpkin); }
+.ek-last.unbekannt, .ek-last.offline { background: var(--pumpkin-soft); border-color: color-mix(in srgb, var(--pumpkin) 45%, transparent); }
+.ek-last.bad > i { background: var(--meat); }
+.ek-last.bad { background: var(--meat-soft); border-color: color-mix(in srgb, var(--meat) 40%, transparent); }
+.ek-last.busy > i { background: var(--pumpkin); animation: ekpulse 1s ease-in-out infinite; }
+.ek-last.test { border-style: dashed; border-color: var(--line-2); }
+@keyframes ekpulse { 50% { opacity: .3; } }
+.ek-times { flex: none; display: grid; justify-items: center; font: 800 1.9rem/1 var(--font-display); font-stretch: 78%; font-style: normal; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ek-times small { font: 700 .68rem/1.2 var(--font-body); color: var(--muted); margin-top: 3px; }
+.ek-testsw { margin-top: 8px; }
+.ek-tests { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.ek-tests li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px dashed var(--line-2); border-radius: 14px; }
+.ek-tests li span { flex: 1; min-width: 0; }
+.ek-tests li b { display: block; font-weight: 700; }
+.ek-tests li small { display: block; color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
+.ek-tests li em { flex: none; font: 800 1.3rem/1 var(--font-display); font-style: normal; color: var(--accent); font-variant-numeric: tabular-nums; }
+.ek-tests li.empty { color: var(--muted); font-size: .9rem; justify-content: center; }
+#ek-test-box > .btn { margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) { .ek-last.busy > i { animation: none; } }
 .ek-add { display: flex; gap: 8px; margin: 14px 0 4px; }
 .ek-add .search { padding-left: 16px; min-width: 0; }
 .ek-add input::-webkit-calendar-picker-indicator, .sheet input[list]::-webkit-calendar-picker-indicator { display: none !important; }

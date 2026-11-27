@@ -2599,27 +2599,81 @@
     return { p: p || null, net: first !== undefined || rest.some((x) => x !== undefined) };
   }
 
+  /* „Zuletzt gescannt“ oben im Reiter Einkauf: was der Scanner geschickt hat, was Open Food Facts dazu sagt
+     und wie oft es jetzt auf der Liste steht. Probescan: nur nachschlagen und anzeigen, nichts auf die Liste –
+     gleiche Codes werden auch hier zusammengezählt. */
+  let lastScan = null;
+  const ekTest = { on: false, items: {} };
+  const SRC_TXT = { off: "aus Open Food Facts", katalog: "schon bekannt", unbekannt: "nicht in Open Food Facts", offline: "ohne Netz nicht nachschlagbar" };
+  function ekProduct(x) {
+    const i = x.info, off = i ? [i.brand, i.name, i.qty].filter(Boolean).join(" · ") : "";
+    return off || x.d || x.n || "";
+  }
+  function ekLastHtml() {
+    const x = lastScan, st = scanStat && Date.now() - scanStat.at < 120000 ? scanStat : null;
+    const how = st && x && x.how === "scanner" ? ` · ${st.n} Ziffern, ${st.ms} ms je Ziffer, Ende: ${st.end === "Pause" ? "ohne Enter" : st.end}` : "";
+    if (!x) return `<div class="ek-last idle"><i></i><span>Bereit – einfach scannen.${ekTest.on ? " Probescan ist an: nichts kommt auf die Liste." : ""}</span></div>`;
+    if (x.bad) return `<div class="ek-last bad"><i></i><span><b>Kein gültiger Strichcode</b><small>Empfangen: ${esc(x.code || "–")}${esc(how)}</small></span></div>`;
+    if (x.busy) return `<div class="ek-last busy"><i></i><span><b>Suche in Open Food Facts …</b><small><span class="ek-code">${esc(x.code)}</span>${esc(how)}</small></span></div>`;
+    const it = x.test ? ekTest.items[x.code] : ekView().items[x.id], c = it ? it.c : 0, prod = ekProduct(x);
+    return `<div class="ek-last ${x.src}${x.test ? " test" : ""}"><i></i><span><b>${esc(x.n || prod || "Unbekannter Artikel")}</b>
+      <small>${prod && prod !== x.n ? `${esc(prod)} · ` : ""}${esc(SRC_TXT[x.src] || "")}</small>
+      <small><span class="ek-code">${esc(x.code)}</span>${esc(how)}</small></span>
+      <em class="ek-times">${c ? `${c}×` : ""}<small>${x.test ? "Probe" : "auf der Liste"}</small></em></div>`;
+  }
+  function ekTestHtml() {
+    if (!ekTest.on) return "";
+    const list = Object.entries(ekTest.items).sort((a, b) => b[1].at - a[1].at);
+    return `<ul class="ek-tests">${list.map(([code, t]) => `<li><span><b>${esc(t.n || ekProduct(t) || "Unbekannt")}</b><small>${esc(ekProduct(t) !== t.n ? ekProduct(t) : "")}${ekProduct(t) && ekProduct(t) !== t.n ? " · " : ""}${esc(SRC_TXT[t.src] || "")} · <span class="ek-code">${esc(code)}</span></small></span><em>${t.c}×</em></li>`).join("") || `<li class="empty">Noch keine Probescans.</li>`}</ul>
+      ${list.length ? `<button class="btn small ghost" data-act="ek-test-clear">Probescans leeren</button>` : ""}`;
+  }
+  function ekLastDraw() {
+    const box = $("#ek-last-box"); if (box) box.innerHTML = ekLastHtml();
+    const tl = $("#ek-test-box"); if (tl) tl.innerHTML = ekTestHtml();
+  }
+  async function testScan(code, how) {
+    const prev = ekTest.items[code];
+    if (prev) { prev.c++; prev.at = Date.now(); lastScan = { ...prev.last, at: Date.now(), how }; buzz(15); ekLastDraw(); return; }
+    lastScan = { code, how, at: Date.now(), busy: true, test: true }; ekLastDraw();
+    const k = ekView().kat[code];
+    let x;
+    if (k && k.n) x = { code, src: "katalog", n: k.n, d: k.d || "" };
+    else {
+      const { p, net } = await offLookup(code), sug = p ? await suggestFor(p) : null;
+      x = { code, src: p ? "off" : net ? "unbekannt" : "offline", info: p ? offInfo(p) : null, n: sug ? sug.n : "", d: sug ? sug.d : "" };
+    }
+    x.test = true;
+    ekTest.items[code] = { ...x, c: (ekTest.items[code] || { c: 0 }).c + 1, at: Date.now(), last: x };
+    lastScan = { ...x, how, at: Date.now() };
+    buzz(x.src === "off" || x.src === "katalog" ? 15 : [20, 50, 20]);
+    ekLastDraw();
+  }
+
   /* Ein Scan: bekannter Code → sofort +1; neuer Code → nachschlagen, gleich auf die Liste, einmal bestätigen */
   let scanQ = Promise.resolve();
   function onScan(raw, how) { scanQ = scanQ.then(() => handleScan(raw, how)).catch((e) => logError("Scan", e.message, e.stack)); }
   const ekCanAsk = () => !inCooking && $("#alarm").hidden && ($("#sheet").hidden || ["cam", "neu", "code"].includes($("#sheet").dataset.ek));
   async function handleScan(raw, how) {
     const code = normCode(raw);
-    if (!code) { toast("Code nicht erkannt – bitte nochmal scannen"); buzz([30, 60, 30]); return; }
+    if (!code) { lastScan = { code: String(raw || "").replace(/\D/g, ""), how, at: Date.now(), bad: true }; ekLastDraw(); toast("Code nicht erkannt – bitte nochmal scannen"); buzz([30, 60, 30]); return; }
+    if (ekTest.on) { await testScan(code, how); return; }
     if ($("#sheet").dataset.ek === "neu") await ekConfirm();
     if ($("#sheet").dataset.ek === "code") closeSheet();
     const id = "e:" + code, k = ekView().kat[code];
     if (k && k.n) {
       ekOp({ op: "inc", id, by: 1, it: { n: k.n, key: k.key || k.n, d: k.d || "", ean: code } });
       const c = (ekView().items[id] || {}).c || 1;
+      lastScan = { code, how, at: Date.now(), id, src: "katalog", n: k.n, d: k.d || "" };
       buzz(15); toast(`${k.n} auf der Liste${c > 1 ? ` (jetzt ${c}×)` : ""}`); ekRefresh(true);
       return;
     }
+    lastScan = { code, how, at: Date.now(), id, busy: true }; ekLastDraw();
     toast("Neuer Artikel – suche den Namen …");
     const { p, net } = await offLookup(code);
     const sug = p ? await suggestFor(p) : null;
     ekOp({ op: "inc", id, by: 1, it: sug ? { n: sug.n, key: sug.key, d: sug.d, ean: code } : { n: "", key: "", d: "", ean: code } });
     if (sug) ekOp({ op: "kat", ean: code, k: { key: sug.key, n: sug.n, d: sug.d, ok: false } });
+    lastScan = { code, how, at: Date.now(), id, src: p ? "off" : net ? "unbekannt" : "offline", info: p ? offInfo(p) : null, n: sug ? sug.n : "", d: sug ? sug.d : "" };
     buzz(sug ? 15 : [20, 50, 20]);
     ekRefresh(true);
     if (ekCanAsk()) await ekNewSheet(code, p ? offInfo(p) : null, sug, net);
@@ -2725,26 +2779,43 @@
     loop();
   }
 
-  /* Der Scanner tippt sehr schnell (wenige Millisekunden je Ziffer) und schließt mit Enter oder Tab ab.
-     So unterscheidet die App ihn von einer echten Tastatur – egal, welcher Reiter offen ist. */
-  let scanBuf = "", scanT0 = 0, scanLast = 0;
+  /* Handscanner (z. B. Tera HW0009 im Bluetooth-HID-Modus) „tippen“ den Strichcode wie eine Tastatur – egal, welcher Reiter
+     offen ist. Erkannt werden sie an der Geschwindigkeit: Ziffern schneller, als ein Mensch tippt, auch bei der langsamsten
+     Übertragungsstufe („Bluetooth Transfer Rate: Slow“). Abschluss mit Enter oder Tab; schickt der Scanner nichts hinterher,
+     zählt eine kurze Pause nach einem gültigen Strichcode als Ende. Ein zweites Enter direkt danach (Suffix CR+LF) wird
+     verschluckt, damit es keinen Knopf auslöst. */
+  const SCAN_GAP = 250, SCAN_PER = 120, SCAN_FAST = 60, SCAN_IDLE = 300;
+  let scanBuf = "", scanT0 = 0, scanLast = 0, scanIdleT = null, scanSwallow = 0, scanStat = null;
+  const isEditable = (t) => !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+  function scanFinish(buf, end, target, t0, t1) {
+    if (isEditable(target) && typeof target.value === "string" && target.value.endsWith(buf)) { target.value = target.value.slice(0, -buf.length); target.dispatchEvent(new Event("input", { bubbles: true })); }
+    scanStat = { at: Date.now(), n: buf.length, ms: Math.round((t1 - t0) / Math.max(1, buf.length - 1)), end };
+    scanSwallow = performance.now() + 150;
+    onScan(buf, "scanner");
+  }
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey || embedded) return;
     const now = performance.now();
-    if (now - scanLast > 150) scanBuf = "";
-    scanLast = now;
+    if ((e.key === "Enter" || e.key === "Tab") && now < scanSwallow && !scanBuf) { e.preventDefault(); e.stopPropagation(); return; }
+    if (now - scanLast > SCAN_GAP) scanBuf = "";
+    const prev = scanLast;
+    scanLast = now; clearTimeout(scanIdleT);
     if (e.key === "Enter" || e.key === "Tab") {
       const buf = scanBuf; scanBuf = "";
-      if (/^\d{8,14}$/.test(buf) && now - scanT0 < buf.length * 55 + 80) {
-        e.preventDefault(); e.stopPropagation();
-        const t = e.target;
-        if (t && /INPUT|TEXTAREA/.test(t.tagName) && typeof t.value === "string" && t.value.endsWith(buf)) { t.value = t.value.slice(0, -buf.length); t.dispatchEvent(new Event("input", { bubbles: true })); }
-        onScan(buf, "scanner");
-      }
+      if (/^\d{8,14}$/.test(buf) && now - scanT0 <= buf.length * SCAN_PER + 150) { e.preventDefault(); e.stopPropagation(); scanFinish(buf, e.key, e.target, scanT0, prev); }
       return;
     }
-    if (/^\d$/.test(e.key)) { if (!scanBuf) scanT0 = now; scanBuf += e.key; }
-    else if (e.key.length === 1) scanBuf = "";
+    // Ziffern auch vom Ziffernblock und bei abweichendem Tastaturlayout des Scanners (Taste statt Zeichen)
+    const m = /^(?:Digit|Numpad)(\d)$/.exec(e.code || ""), dig = /^\d$/.test(e.key) ? e.key : m && !e.shiftKey ? m[1] : null;
+    if (dig) {
+      if (!scanBuf) scanT0 = now;
+      scanBuf += dig;
+      const buf = scanBuf, target = e.target, t0 = scanT0;
+      // Ohne Enter: nach kurzer Pause, wenn es ein gültiger Strichcode war und sehr schnell kam (nie in Eingabefeldern)
+      if (!isEditable(target) && [8, 12, 13].includes(buf.length) && normCode(buf) && (now - t0) / Math.max(1, buf.length - 1) <= SCAN_FAST) {
+        scanIdleT = setTimeout(() => { if (scanBuf === buf) { scanBuf = ""; scanFinish(buf, "Pause", target, t0, now); } }, SCAN_IDLE);
+      }
+    } else if (e.key.length === 1) scanBuf = "";
   }, true);
 
   /* Bring: versteckte Importseite anlegen, warten bis sie online ist, dann per Deeplink öffnen */
@@ -2858,6 +2929,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     if (ul) ul.innerHTML = list.map(([id, it]) => ekRow(id, it, ekFresh && id === top)).join("") || `<li class="empty">Noch leer. Leere Packung scannen oder oben etwas dazuschreiben.</li>`;
     const b = $("#ek-bring", view); if (b) b.innerHTML = ekBringHtml(V);
     ekFresh = null;
+    ekLastDraw();
   }
   function ekRefresh(fresh) { if (location.hash.startsWith("#/einkauf")) { ekFresh = !!fresh; drawEk($("#view")); } }
   async function renderEinkauf(view) {
@@ -2866,13 +2938,19 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
       ${syncBanner()}
       <section class="card ek-scan" id="ek-scan"><div class="ek-scan-h"><span class="ek-ico">${BARCODE}</span><div><b>Einfach scannen</b>
         <div class="small muted">Scanner an und den Strichcode der leeren Packung scannen – egal, welcher Reiter offen ist. Nochmal scannen zählt hoch.</div></div></div>
+        <div id="ek-last-box" aria-live="polite">${ekLastHtml()}</div>
+        <button type="button" class="og-tm ek-testsw" data-act="ek-test" aria-pressed="${ekTest.on}"><span class="sw" aria-hidden="true"></span>Probescan – nur nachschauen, nichts auf die Liste</button>
+        <div id="ek-test-box">${ekTestHtml()}</div>
         <div class="act-btns"><button class="btn" data-act="ek-cam">${CAMERA} Mit Kamera</button><button class="btn ghost" data-act="ek-code">Code eintippen</button></div></section>
       <form class="ek-add" data-ekform autocomplete="off"><input class="search" type="text" list="ek-names" enterkeyhint="done" aria-label="Artikel dazuschreiben" placeholder="Dazuschreiben, z. B. 2 Milch" data-ekadd><button class="btn primary" aria-label="Auf die Liste">+</button></form>
       ${names}
       <ul class="ek-list" id="ek-list"></ul>
       <div id="ek-bring" class="ek-bring"></div>
       <details class="ek-help"><summary>Scanner einrichten und Tipps</summary><ul class="small">
-        <li>Den Bluetooth-Scanner im <b>HID- bzw. Tastaturmodus</b> mit dem Tablet koppeln – wie das geht, steht in seiner Anleitung (meist einen Code aus dem Heft scannen). Am Ende jedes Scans sendet er Enter, das ist Standard.</li>
+        <li><b>Tera HW0009 koppeln:</b> aus der Anleitung erst „Bluetooth HID“, dann „Pairing“ scannen – das Display blinkt schnell. Am Tablet unter Bluetooth „Bar-Code Scanner HID“ antippen. Danach verbindet er sich von selbst wieder mit diesem Gerät.</li>
+        <li>Am Scanner den <b>Echtzeit-Modus</b> lassen („Real Time Mode“, Standard). Im Speichermodus schickt „Upload All“ alles auf einmal – auch das zählt die App richtig zusammen.</li>
+        <li>Fehlen Ziffern oder kommt „Kein gültiger Strichcode“: am Scanner die Übertragung („Bluetooth Transfer Rate“) auf „Slow“ stellen. Ob er Enter mitschickt, ist egal – die App erkennt das Ende auch so.</li>
+        <li>„Probescan“ oben schlägt nur nach und zeigt, was erkannt wurde – praktisch zum Ausprobieren. Gleiche Codes werden zusammengezählt.</li>
         <li>Neue Produkte erkennt die App über offene Produktdatenbanken und schlägt die passende Bring-Kachel vor. Einmal bestätigt, kennt sie den Code auf allen Geräten.</li>
         <li>Solange der Scanner verbunden ist, blendet Android oft die Bildschirmtastatur aus. Dann in den Android-Einstellungen bei der physischen Tastatur „Bildschirmtastatur anzeigen“ einschalten.</li>
         <li>Theke, Waage und loses Obst haben keinen festen Code – einfach oben dazuschreiben.</li>
@@ -3548,6 +3626,8 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
       case "bringshare": { const u = curBring(); if (u && navigator.share) navigator.share({ title: u.subject, text: u.text }).catch(() => {}); break; }
       case "bringcopy": { const u = curBring(); if (u) { try { await navigator.clipboard.writeText(u.link); toast("Link kopiert"); } catch (er) { toast("Kopieren ging nicht – bitte „Mail-App öffnen“ nutzen"); } } break; }
       case "ek-cam": ekCamSheet(); break;
+      case "ek-test": ekTest.on = !ekTest.on; if (!ekTest.on) ekTest.items = {}; lastScan = null; el.setAttribute("aria-pressed", ekTest.on); ekLastDraw(); toast(ekTest.on ? "Probescan an – Scans landen nicht auf der Liste" : "Probescan aus – Scans kommen wieder auf die Liste"); break;
+      case "ek-test-clear": ekTest.items = {}; lastScan = null; ekLastDraw(); break;
       case "vr-undo": vrUndo(); break;
       case "prn-connect": try { if (!canBT()) break; await printerConnect(true); toast(`Drucker verbunden${prnName ? ": " + prnName : ""}`); } catch (er) { toast(printErrText(er)); } break;
       case "prn-date": {

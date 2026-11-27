@@ -6,6 +6,7 @@
    "datum": "27.11.2026",
    "titel": "Neu im Kochbuddy",
    "schritte": [
+    { "ico": "cart", "t": "Der Handscanner ist eingebunden", "x": "Im Reiter Einkauf steht jetzt nach jedem Scan, was erkannt wurde – mit Marke und Größe aus Open Food Facts – und wie oft es auf der Liste steht. Gleiche Codes zählen zusammen. Mit „Probescan“ kannst du erst ausprobieren, ohne dass etwas auf die Liste kommt.", "ziel": "#/einkauf", "zeige": "#ek-scan" },
     { "ico": "cart", "t": "Den Tab „Angebote“ gibt es nicht mehr", "x": "Die Angebote kamen dort nicht zuverlässig an, darum ist der Tab weg. Die Einkaufs-Tipps, die Metzger-Angebote und die Schnäppchen der Woche stehen weiter in der Donnerstags-Mail vom Buddy und im Wochen-PDF.", "ziel": "#/", "zeige": "#nav" }
    ]
   },
