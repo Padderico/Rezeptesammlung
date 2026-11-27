@@ -964,6 +964,28 @@ a.agp-go:active { transform: scale(.98); }
 .ek-tests li em { flex: none; font: 800 1.3rem/1 var(--font-display); font-style: normal; color: var(--accent); font-variant-numeric: tabular-nums; }
 .ek-tests li.empty { color: var(--muted); font-size: .9rem; justify-content: center; }
 #ek-test-box > .btn { margin-top: 8px; }
+/* Vorratskammer: Inventur */
+.ek-switch { margin-bottom: 4px; }
+.km-inv .km-how { margin-top: 12px; }
+.km-inv .km-how ol { padding-left: 1.2em; margin: 8px 0 0; }
+.km-inv .km-how li + li { margin-top: 6px; }
+.km-inv.live { border: 2px solid var(--accent); }
+.km-live-h { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.km-live-h .kick { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; color: var(--accent); }
+.km-live-h .kick i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); animation: ekpulse 1.2s ease-in-out infinite; }
+.km-nums { display: flex; gap: 20px; }
+.km-nums div { display: grid; justify-items: end; }
+.km-nums b { font: 800 2.4rem/1 var(--font-display); font-stretch: 76%; font-variant-numeric: tabular-nums; color: var(--ink); }
+.km-nums span { font-size: .78rem; font-weight: 700; color: var(--muted); }
+.km-nums .bad b { color: var(--meat); }
+.km-tip { margin: 8px 0 4px; color: var(--muted); }
+.km-tests { max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; }
+.km-tests li { border-style: solid; border-color: var(--line); }
+.km-cart { flex: none; width: 42px; height: 42px; border-radius: 13px; border: 1px solid var(--line-2); background: var(--surface); color: var(--accent); display: grid; place-items: center; cursor: pointer; }
+.km-cart .ico { width: 20px; height: 20px; }
+.km-cart:active { transform: scale(.92); }
+.km-hint { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--pumpkin-soft); color: var(--pumpkin-ink); }
+@media (prefers-reduced-motion: reduce) { .km-live-h .kick i { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .ek-last.busy > i { animation: none; } }
 .ek-add { display: flex; gap: 8px; margin: 14px 0 4px; }
 .ek-add .search { padding-left: 16px; min-width: 0; }

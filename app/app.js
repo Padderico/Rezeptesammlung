@@ -437,8 +437,8 @@
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
       navTo(parts[2] === "iphone" ? "#/iphone" : "#/", "replace"); return;
     }
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "einkauf", "entdecken", "rezepte", "vorrat", "iphone"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = parts[0] === "r" && /^(og|a):/.test(parts[1] || "") ? "rezepte" : { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "einkauf", "kammer", "entdecken", "rezepte", "vorrat", "iphone"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = parts[0] === "r" && /^(og|a):/.test(parts[1] || "") ? "rezepte" : { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", einkauf: "einkauf", kammer: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -450,6 +450,7 @@
       else if (parts[0] === "vorkochen") await renderPrep(view);
       else if (parts[0] === "checkliste") await renderChecklist(view);
       else if (parts[0] === "einkauf") await renderEinkauf(view);
+      else if (parts[0] === "kammer") await renderKammer(view);
       else if (parts[0] === "rezepte") await renderAll(view);
       else if (parts[0] === "vorrat") await renderVorrat(view);
       else if (parts[0] === "entdecken") await renderDiscover(view);
@@ -469,7 +470,7 @@
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
      Tabs stapeln sich nicht: Woche -> Checkliste -> Vorkochen, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/einkauf", "#/entdecken", "#/rezepte", "#/vorrat"];
+  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/einkauf", "#/kammer", "#/entdecken", "#/rezepte", "#/vorrat"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -2654,7 +2655,11 @@
   function onScan(raw, how) { scanQ = scanQ.then(() => handleScan(raw, how)).catch((e) => logError("Scan", e.message, e.stack)); }
   async function handleScan(raw, how) {
     const code = normCode(raw);
-    if (!code) { lastScan = { code: String(raw || "").replace(/\D/g, ""), how, at: Date.now(), bad: true }; ekLastDraw(); toast("Code nicht erkannt – bitte nochmal scannen"); buzz([30, 60, 30]); return; }
+    if (!code) {
+      if (kmInv()) { kmInv().bad = (kmInv().bad || 0) + 1; save(); kmInvDraw(); buzz([30, 60, 30]); return; }
+      lastScan = { code: String(raw || "").replace(/\D/g, ""), how, at: Date.now(), bad: true }; ekLastDraw(); toast("Code nicht erkannt – bitte nochmal scannen"); buzz([30, 60, 30]); return;
+    }
+    if (kmInv()) { kmInvScan(code, how); return; }
     if (ekTest.on) { await testScan(code, how); return; }
     if ($("#sheet").dataset.ek === "code") closeSheet();
     const id = "e:" + code, k = ekView().kat[code];
@@ -2764,11 +2769,22 @@
   const SCAN_GAP = 250, SCAN_PER = 120, SCAN_FAST = 60, SCAN_IDLE = 300;
   let scanBuf = "", scanT0 = 0, scanLast = 0, scanIdleT = null, scanSwallow = 0, scanStat = null;
   const isEditable = (t) => !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+  // Schickt der Scanner beim Hochladen aus dem Speichermodus mehrere Codes ohne Trenner, werden sie an der Prüfziffer getrennt
+  function splitCodes(buf) {
+    const out = [];
+    for (let i = 0; i < buf.length;) {
+      const hit = [13, 8, 12].map((L) => buf.slice(i, i + L)).find((c) => c.length >= 8 && [13, 8, 12].includes(c.length) && normCode(c));
+      if (!hit) return null;
+      out.push(hit); i += hit.length;
+    }
+    return out;
+  }
   function scanFinish(buf, end, target, t0, t1) {
     if (isEditable(target) && typeof target.value === "string" && target.value.endsWith(buf)) { target.value = target.value.slice(0, -buf.length); target.dispatchEvent(new Event("input", { bubbles: true })); }
-    scanStat = { at: Date.now(), n: buf.length, ms: Math.round((t1 - t0) / Math.max(1, buf.length - 1)), end };
+    const codes = buf.length > 14 ? splitCodes(buf) || [buf] : [buf];
+    scanStat = { at: Date.now(), n: codes[codes.length - 1].length, ms: Math.round((t1 - t0) / Math.max(1, buf.length - 1)), end };
     scanSwallow = performance.now() + 150;
-    onScan(buf, "scanner");
+    codes.forEach((c) => onScan(c, "scanner"));
   }
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey || e.altKey || e.metaKey || embedded) return;
@@ -2779,7 +2795,7 @@
     scanLast = now; clearTimeout(scanIdleT);
     if (e.key === "Enter" || e.key === "Tab") {
       const buf = scanBuf; scanBuf = "";
-      if (/^\d{8,14}$/.test(buf) && now - scanT0 <= buf.length * SCAN_PER + 150) { e.preventDefault(); e.stopPropagation(); scanFinish(buf, e.key, e.target, scanT0, prev); }
+      if ((/^\d{8,14}$/.test(buf) || (buf.length > 14 && splitCodes(buf))) && now - scanT0 <= buf.length * SCAN_PER + 150) { e.preventDefault(); e.stopPropagation(); scanFinish(buf, e.key, e.target, scanT0, prev); }
       return;
     }
     // Ziffern auch vom Ziffernblock und bei abweichendem Tastaturlayout des Scanners (Taste statt Zeichen)
@@ -2789,8 +2805,8 @@
       scanBuf += dig;
       const buf = scanBuf, target = e.target, t0 = scanT0;
       // Ohne Enter: nach kurzer Pause, wenn es ein gültiger Strichcode war und sehr schnell kam (nie in Eingabefeldern)
-      if (!isEditable(target) && [8, 12, 13].includes(buf.length) && normCode(buf) && (now - t0) / Math.max(1, buf.length - 1) <= SCAN_FAST) {
-        scanIdleT = setTimeout(() => { if (scanBuf === buf) { scanBuf = ""; scanFinish(buf, "Pause", target, t0, now); } }, SCAN_IDLE);
+      if (!isEditable(target) && (([8, 12, 13].includes(buf.length) && normCode(buf)) || buf.length > 14) && (now - t0) / Math.max(1, buf.length - 1) <= SCAN_FAST) {
+        scanIdleT = setTimeout(() => { if (scanBuf === buf && (buf.length <= 14 || splitCodes(buf))) { scanBuf = ""; scanFinish(buf, "Pause", target, t0, now); } }, SCAN_IDLE);
       }
     } else if (e.key.length === 1) scanBuf = "";
   }, true);
@@ -2912,7 +2928,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
   async function renderEinkauf(view) {
     const names = await ekNames();
     view.innerHTML = `<header class="top"><div><div class="eyebrow" id="ek-count"></div><h1>Einkaufsliste</h1></div></header>
-      ${syncBanner()}
+      ${ekSwitch("einkauf")}${syncBanner()}
       <section class="card ek-scan" id="ek-scan"><div class="ek-scan-h"><span class="ek-ico">${BARCODE}</span><div><b>Einfach scannen</b>
         <div class="small muted">Scanner an und den Strichcode der leeren Packung scannen – egal, welcher Reiter offen ist. Nochmal scannen zählt hoch.</div></div></div>
         <div id="ek-last-box" aria-live="polite">${ekLastHtml()}</div>
@@ -2940,6 +2956,189 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
     if (f.matches("[data-ekform]")) { e.preventDefault(); const i = $("[data-ekadd]", f), v = i.value; i.value = ""; ekAddText(v); }
     else if (f.matches("[data-ekcode]")) { e.preventDefault(); const v = ($("[data-ekcodein]", f) || {}).value || ""; if (!normCode(v)) { toast("Die Ziffern passen nicht zu einem Strichcode – bitte prüfen"); return; } closeSheet(); onScan(v, "hand"); }
   });
+
+  /* ---------- Vorratskammer mit Inventur ----------
+     Zweite Seite im Reiter Einkauf. „Inventur starten“: alles, was jetzt gescannt wird, landet nicht auf der Einkaufsliste,
+     sondern wird gesammelt und zusammengezählt – direkt gescannt oder auf einen Schlag aus dem Speichermodus des Scanners
+     („Upload All“). Danach als neuen Bestand übernehmen oder zum Bestand dazuzählen. Namen wie bei der Einkaufsliste
+     (gemeinsamer Strichcode-Katalog, Open Food Facts). Gespeichert nur im privaten Repo: vorrat/kammer.json. */
+  const KM_PATH = "/contents/vorrat/kammer.json";
+  const KM_INFO = "Vorratskammer aus dem Kochbuddy (Inventur mit dem Handscanner). items: id → {n: Bring-Kachel, key: Bring-Name, d: Details wie Marke und Größe, c: Anzahl, ean: Strichcode, at}. Schreibt die App – nicht von Hand ändern. Gilt nicht für die Wocheneinkaufsliste (dort steht weiterhin alles drauf).";
+  const km = () => { const K = (S.kammer = S.kammer || {}); K.items = K.items || {}; K.ops = K.ops || []; return K; };
+  const kmInv = () => (S.kammer && S.kammer.inv) || null;
+  function kmApplyOps(items, ops) {
+    let I = {};
+    for (const [k, v] of Object.entries(items || {})) I[k] = { ...v };
+    for (const o of ops) {
+      const cur = I[o.id];
+      if (o.op === "inv") {
+        if (o.mode === "replace") I = {};
+        for (const [id, it] of Object.entries(o.items || {})) { const c0 = o.mode === "add" && I[id] ? I[id].c || 0 : 0; I[id] = { ...(I[id] || {}), ...it, c: c0 + it.c, at: o.at }; if (I[id].c <= 0) delete I[id]; }
+      } else if (o.op === "inc") { const it = cur || { ...(o.it || {}), c: 0 }; it.c = (it.c || 0) + o.by; it.at = o.at; if (it.c > 0) I[o.id] = it; else delete I[o.id]; }
+      else if (o.op === "set" && cur) Object.assign(cur, o.it);
+      else if (o.op === "del") delete I[o.id];
+    }
+    return I;
+  }
+  const kmView = () => { const K = km(); return kmApplyOps(K.items, K.ops); };
+  let kmTimer = null, kmSyncing = null;
+  function kmOp(o) { o.at = o.at || new Date().toISOString(); km().ops.push(o); save(); if (!embedded) { clearTimeout(kmTimer); kmTimer = setTimeout(() => syncKammer(true).then((ch) => { if (ch) kmRefresh(); }), 3000); } }
+  function syncKammer(quiet) {
+    if (embedded) return Promise.resolve(false);
+    if (kmSyncing) return kmSyncing;
+    kmSyncing = (async () => {
+      const K = km();
+      if (!ablage.privat || !dataReady() || !ghToken()) return false; // nur privat, nie ins öffentliche Repo
+      try {
+        for (let n = 0; n < 3; n++) {
+          const r = await gh("GET", KM_PATH, null, DATA_REPO);
+          const data = r ? JSON.parse(b64d(r.content)) : {};
+          const ops = K.ops.slice();
+          if (!ops.length) { const before = JSON.stringify(K.items); K.items = data.items || {}; save(); return before !== JSON.stringify(K.items); }
+          const items = kmApplyOps(data.items, ops), inv = ops.find((o) => o.op === "inv");
+          const out = { info: KM_INFO, items, updated: new Date().toISOString() };
+          try {
+            await gh("PUT", KM_PATH, { message: inv ? `Koch-App: Inventur Vorratskammer (${Object.keys(inv.items || {}).length} Artikel)` : "Koch-App: Vorratskammer", content: b64e(JSON.stringify(out, null, 1) + "\n"), ...(r ? { sha: r.sha } : {}) });
+            K.ops = K.ops.slice(ops.length); K.items = items; save(); syncMark(true);
+            return true;
+          } catch (e) { if (e.code === 409 || e.code === 422) continue; throw e; }
+        }
+      } catch (e) { syncMark(false, e); if (!quiet && e.code === "auth") toast(`Vorratskammer nicht gespeichert: ${e.message}`); }
+      return false;
+    })().finally(() => { kmSyncing = null; });
+    return kmSyncing;
+  }
+  const ekSwitch = (on) => {
+    const n = Object.keys(kmView()).length;
+    return `<div class="seg rec-switch ek-switch" role="tablist"><a href="#/einkauf" role="tab" aria-selected="${on === "einkauf"}" class="${on === "einkauf" ? "on" : ""}">Einkaufsliste</a><a href="#/kammer" role="tab" aria-selected="${on === "kammer"}" class="${on === "kammer" ? "on" : ""}">Vorratskammer${n ? ` <b>${n}</b>` : ""}</a></div>`;
+  };
+  function kmRefresh() { if (location.hash.startsWith("#/kammer")) drawKammer($("#view")); }
+
+  /* Inventur: Scans sammeln (sofort gezählt), Namen im Hintergrund nachschlagen (je 3 gleichzeitig) */
+  function kmInvStart() {
+    km().inv = { at: Date.now(), n: 0, bad: 0, items: {} }; save();
+    lastScan = null; kmRefresh(); buzz(15);
+    toast("Inventur läuft – jetzt scannen oder am Scanner „Upload All“");
+  }
+  function kmInvCancel() { delete km().inv; save(); kmRefresh(); toast("Inventur abgebrochen – nichts geändert"); }
+  function kmInvScan(code) {
+    const inv = kmInv(), it = inv.items[code] || (inv.items[code] = { c: 0 });
+    it.c++; inv.n++; it.at = Date.now(); save();
+    buzz(10);
+    if (it.c === 1) kmLookup(code);
+    if (location.hash.startsWith("#/kammer")) kmInvDraw();
+    else toast(`Inventur: ${it.n || code} (${it.c}×)`);
+  }
+  const kmQ = [];
+  let kmBusy = 0;
+  function kmLookup(code) { if (!kmQ.includes(code)) kmQ.push(code); kmPump(); }
+  function kmPump() {
+    while (kmBusy < 3 && kmQ.length) {
+      const code = kmQ.shift(); kmBusy++;
+      (async () => {
+        const k = ekView().kat[code];
+        let x;
+        if (k && k.n) x = { n: k.n, key: k.key || k.n, d: k.d || "", src: "katalog" };
+        else {
+          const { p, net } = await offLookup(code), sug = p ? await suggestFor(p) : null;
+          x = sug ? { n: sug.n, key: sug.key, d: sug.d, src: "off" } : { n: "", key: "", d: "", src: net ? "unbekannt" : "offline" };
+          if (sug) ekOp({ op: "kat", ean: code, k: { key: sug.key, n: sug.n, d: sug.d, ok: false } });
+        }
+        const inv = kmInv();
+        if (inv && inv.items[code]) { Object.assign(inv.items[code], x); save(); kmInvDraw(); }
+        else if (x.n) { const id = "e:" + code, cur = kmView()[id]; if (cur && !cur.n) { kmOp({ op: "set", id, it: { n: x.n, key: x.key, d: x.d } }); kmRefresh(); } }
+      })().catch((e) => logError("Inventur", e.message, e.stack)).finally(() => { kmBusy--; kmPump(); });
+    }
+  }
+  function kmInvHtml() {
+    const inv = kmInv();
+    if (!inv) {
+      return `<section class="card km-inv" id="km-inv"><div class="ek-scan-h"><span class="ek-ico">${BARCODE}</span><div><b>Inventur</b>
+        <div class="small muted">Einmal alles im Vorratsschrank scannen – die App zählt gleiche Codes zusammen. Bis du auf „Übernehmen“ tippst, ändert sich nichts.</div></div></div>
+        <button class="btn primary big" data-act="km-start" style="margin-top:14px">Inventur starten</button>
+        <details class="ek-help km-how"><summary>So geht's mit dem Lagermodus des Scanners</summary><ol class="small">
+          <li>Am Scanner den Lagermodus einschalten („Storage Mode“) und im Vorratsschrank alles scannen – das Tablet muss dabei nicht in der Nähe sein.</li>
+          <li>Zurück am Tablet hier „Inventur starten“ tippen.</li>
+          <li>Am Scanner „Upload All“ wählen. Alle Codes kommen auf einmal rein und werden zusammengezählt. Zum Vergleich zeigt der Scanner, wie viele er gespeichert hat.</li>
+          <li>„Übernehmen“ tippen: als neuen Bestand oder zum Bestand dazu.</li>
+          <li>Danach am Scanner die gespeicherten Codes löschen („Clear Stored Codes Records“) und wieder auf Echtzeit („Real Time Mode“) stellen – sonst kommen sie beim nächsten Hochladen doppelt.</li>
+          <li>Ohne Lagermodus geht es auch: Inventur starten und direkt scannen.</li></ol></details></section>`;
+    }
+    const list = Object.entries(inv.items).sort((a, b) => b[1].at - a[1].at), kinds = list.length, pending = list.filter(([, x]) => !x.src).length;
+    return `<section class="card km-inv live" id="km-inv"><div class="km-live-h"><span class="kick"><i></i>Inventur läuft</span>
+      <div class="km-nums"><div><b>${inv.n}</b><span>${inv.n === 1 ? "Scan" : "Scans"}</span></div><div><b>${kinds}</b><span>${kinds === 1 ? "Artikel" : "Artikel"}</span></div>${inv.bad ? `<div class="bad"><b>${inv.bad}</b><span>nicht lesbar</span></div>` : ""}</div></div>
+      <p class="small km-tip">Jetzt scannen – oder am Scanner im Lagermodus „Upload All“ wählen.${pending ? ` Namen werden nachgeschlagen (${pending} offen) …` : ""}</p>
+      <ul class="ek-tests km-tests">${list.map(([code, x]) => `<li><span><b>${esc(x.n || (x.src ? "Name fehlt" : "wird nachgeschlagen …"))}</b><small>${x.d ? `${esc(x.d)} · ` : ""}<span class="ek-code">${esc(code)}</span></small></span><em>${x.c}×</em></li>`).join("") || `<li class="empty">Noch nichts gescannt.</li>`}</ul>
+      <div class="act-btns"><button class="btn primary" data-act="km-apply" ${inv.n ? "" : "disabled"}>Übernehmen …</button><button class="btn ghost" data-act="km-cancel">Abbrechen</button></div></section>`;
+  }
+  function kmInvDraw() { const box = $("#km-inv"); if (box) box.outerHTML = kmInvHtml(); }
+  function kmApplySheet() {
+    const inv = kmInv(); if (!inv) return;
+    const kinds = Object.keys(inv.items).length, have = Object.keys(kmView()).length;
+    openSheet(`<h2>Inventur übernehmen</h2><p class="small muted" style="margin:4px 0 14px">${inv.n} Scans, ${kinds} verschiedene Artikel.${inv.bad ? ` ${inv.bad} Codes waren nicht lesbar.` : ""}</p>
+      <button class="btn primary big" data-act="km-replace">Als neuen Bestand übernehmen</button>
+      <p class="small muted" style="margin:6px 0 14px">Für die ganze Vorratskammer: Was nicht gescannt wurde, ist weg${have ? ` (bisher ${have} Artikel)` : ""}.</p>
+      <button class="btn big" data-act="km-add">Zum Bestand dazuzählen</button>
+      <p class="small muted" style="margin:6px 0 14px">Für einzelne Fächer oder nach dem Einkauf: Die Mengen kommen zum Bestand dazu.</p>
+      <button class="btn ghost" data-act="sheet-close">Weiter scannen</button>`, { ek: "km" });
+  }
+  function kmApply(mode) {
+    const inv = kmInv(); if (!inv) return;
+    const items = {};
+    for (const [code, x] of Object.entries(inv.items)) items["e:" + code] = { n: x.n || "", key: x.key || x.n || "", d: x.d || "", ean: code, c: x.c };
+    kmOp({ op: "inv", mode, items });
+    const K = km(); delete K.inv; K.hint = { at: Date.now(), n: inv.n }; save();
+    closeSheet(); kmRefresh();
+    toast(mode === "replace" ? `Neuer Bestand: ${Object.keys(items).length} Artikel` : `${inv.n} Stück zum Bestand dazugezählt`);
+  }
+  function kmRow(id, it) {
+    return `<li class="ek-row km-row${it.n ? "" : " miss"}">
+      <button type="button" class="ek-main" data-kmedit="${esc(id)}"><b>${esc(it.n || "Name fehlt")}</b>${it.d ? `<small>${esc(it.d)}</small>` : it.n ? "" : `<small>Strichcode ${esc(it.ean || "")} – antippen und benennen</small>`}</button>
+      <button type="button" class="km-cart" data-kmcart="${esc(id)}" aria-label="${esc(it.n || "Artikel")} auf die Einkaufsliste" title="Auf die Einkaufsliste">${ICON_CART_SM}</button>
+      <div class="ek-cnt"><button type="button" data-kminc="${esc(id)}|-1" aria-label="Eins weniger">−</button><b aria-label="Anzahl">${it.c}</b><button type="button" data-kminc="${esc(id)}|1" aria-label="Eins mehr">+</button></div></li>`;
+  }
+  const ICON_CART_SM = '<svg class="ico" viewBox="0 0 24 24"><path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>';
+  function drawKammer(view) {
+    if (!view) return;
+    const V = kmView(), list = Object.entries(V).sort((a, b) => (!a[1].n - !b[1].n) || (a[1].n || "").localeCompare(b[1].n || "", "de") || (a[1].d || "").localeCompare(b[1].d || "", "de")); // ohne Namen ans Ende
+    const n = list.reduce((s, [, it]) => s + it.c, 0);
+    const cnt = $("#km-count", view); if (cnt) cnt.textContent = list.length ? `${list.length} Artikel · ${n} Stück` : "Leer";
+    const inv = $("#km-inv", view); if (inv) inv.outerHTML = kmInvHtml();
+    const K = km(), hint = $("#km-hint", view);
+    if (hint) hint.innerHTML = K.hint && Date.now() - K.hint.at < 3 * 86400000 ? `<div class="tip km-hint"><p style="margin:0"><b>Inventur übernommen.</b> Jetzt am Scanner die gespeicherten Codes löschen („Clear Stored Codes Records“) und wieder „Real Time Mode“ einstellen – sonst kommen sie beim nächsten Hochladen doppelt.</p><button class="btn small" data-act="km-hint-ok">Erledigt</button></div>` : "";
+    const ul = $("#km-list", view);
+    if (ul) ul.innerHTML = list.map(([id, it]) => kmRow(id, it)).join("") || `<li class="empty">Noch leer. Mit „Inventur starten“ alles im Vorratsschrank scannen.</li>`;
+  }
+  async function renderKammer(view) {
+    view.innerHTML = `<header class="top"><div><div class="eyebrow" id="km-count"></div><h1>Vorratskammer</h1></div></header>
+      ${ekSwitch("kammer")}${syncBanner()}
+      <div id="km-hint"></div><section id="km-inv"></section>
+      <ul class="ek-list km-list" id="km-list"></ul>
+      <p class="small muted" style="margin:14px 2px 0">Der Einkaufswagen setzt einen Artikel auf die Einkaufsliste. Die Wocheneinkaufsliste vom Buddy bleibt davon unberührt.</p>`;
+    drawKammer(view);
+    const inv = kmInv(); if (inv) Object.entries(inv.items).forEach(([code, x]) => { if (!x.src) kmLookup(code); }); // nach Neustart weiter nachschlagen
+    syncKammer(true).then((ch) => { if (ch) kmRefresh(); });
+  }
+  async function kmEditSheet(id) {
+    const it = kmView()[id]; if (!it) return;
+    openSheet(`<h2>${esc(it.n || "Name fehlt")}</h2>
+      <p class="small muted" style="margin:4px 0 12px">${it.ean ? `Strichcode <span class="ek-code">${esc(it.ean)}</span> · ` : ""}${it.c}× in der Vorratskammer</p>
+      ${ekFields(it.n, it.d || "")}${await ekNames()}
+      <div class="act-btns"><button class="btn primary" data-act="km-save">Speichern</button><button class="btn ghost" data-act="km-del">Ganz herausnehmen</button></div>
+      ${it.ean ? `<p class="small muted" style="margin:10px 0 0">Name und Details gelten ab jetzt für diesen Strichcode – auch auf der Einkaufsliste.</p>` : ""}`, { ek: "kmedit", ekid: id });
+    if (!it.n) setTimeout(() => { const i = $("#ekn"); if (i) i.focus(); }, 250);
+  }
+  async function kmSave() {
+    const id = $("#sheet").dataset.ekid, it = kmView()[id];
+    const nm = ekClean(($("[data-ekname]") || {}).value), det = ekClean(($("[data-ekdetail]") || {}).value).slice(0, 70);
+    closeSheet();
+    if (!it) return;
+    if (!nm) { toast("Bitte einen Namen eintragen"); return; }
+    const r = await resolveName(nm);
+    kmOp({ op: "set", id, it: { n: r.n, key: r.key, d: det } });
+    if (it.ean) ekOp({ op: "kat", ean: it.ean, k: { key: r.key, n: r.n, d: det, ok: true } });
+    kmRefresh(); toast("Gespeichert");
+  }
 
   /* ---------- Vorrat: was im Gefrierschrank liegt ----------
      Schneeflocke am Rezept: Gericht kommt mit Datum in den Vorrat und ein Etikett (50 × 30 mm) wird gedruckt.
@@ -3492,7 +3691,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density],[data-ogb],[data-ogtm],[data-ogpic]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density],[data-kmedit],[data-kminc],[data-kmcart],[data-ogb],[data-ogtm],[data-ogpic]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -3573,6 +3772,9 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
     if (d.vopen) { vrSheet(d.vopen); return; }
     if (d.density) { S.settings.printDensity = +d.density; save(); vrRefresh(); toast(`Druckstärke ${d.density}`); return; }
     if (d.ekedit) { ekEditSheet(d.ekedit); return; }
+    if (d.kmedit) { kmEditSheet(d.kmedit); return; }
+    if (d.kminc) { const [id, by] = d.kminc.split("|"), it = kmView()[id]; if (it) { kmOp({ op: "inc", id, by: +by, it: { n: it.n, key: it.key, d: it.d, ean: it.ean } }); buzz(8); kmRefresh(); } return; }
+    if (d.kmcart) { const it = kmView()[d.kmcart]; if (it) { ekOp({ op: "inc", id: d.kmcart, by: 1, it: { n: it.n, key: it.key || it.n, d: it.d || "", ean: it.ean } }); buzz(15); toast(`${it.n || "Artikel"} auf der Einkaufsliste`); } return; }
     if (d.ekinc) { const [id, by] = d.ekinc.split("|"), it = ekView().items[id]; if (it) { ekOp({ op: "inc", id, by: +by, it: { n: it.n, key: it.key, d: it.d, ean: it.ean } }); buzz(8); ekRefresh(); if (+by < 0 && it.c <= 1) toast(`${it.n || "Artikel"} von der Liste genommen`); } return; }
     if (d.ekopen != null) { const B = ek().bring; if (B) { B.opened = 1; save(); setTimeout(ekRefresh, 1200); } return; }
     if (d.notesave) { saveNote(el); return; }
@@ -3621,6 +3823,14 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
       }
       case "ek-code": ekCodeSheet(); break;
       case "ek-save": ekSave(); break;
+      case "km-start": kmInvStart(); break;
+      case "km-apply": kmApplySheet(); break;
+      case "km-replace": kmApply("replace"); break;
+      case "km-add": kmApply("add"); break;
+      case "km-cancel": kmInvCancel(); break;
+      case "km-hint-ok": { const K = km(); delete K.hint; save(); kmRefresh(); break; }
+      case "km-save": kmSave(); break;
+      case "km-del": { const id = $("#sheet").dataset.ekid, it = kmView()[id]; closeSheet(); if (it) { kmOp({ op: "del", id }); kmRefresh(); toast(`${it.n || "Artikel"} aus der Vorratskammer genommen`); } break; }
       case "ek-del": { const id = $("#sheet").dataset.ekid, it = ekView().items[id]; closeSheet(); if (it) { ekOp({ op: "del", id }); ekRefresh(); toast(`${it.n || "Artikel"} von der Liste genommen`); } break; }
       case "ek-bring": ekBringStart(el); break;
       case "ek-done": ekDone(); break;
@@ -3755,6 +3965,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
       if (v) syncNotes(true);
       if (v) syncMsgs(true).then((ch) => { if (ch) softIfIdle(); });
       if (v) syncEinkauf(true).then((ch) => { if (ch) ekRefresh(); });
+      if (v) syncKammer(true).then((ch) => { if (ch) kmRefresh(); });
       if (v) syncVorrat(true).then((ch) => { if (ch) vrRefresh(); });
       if (v) syncLog();
       if (v) syncVerlauf();
@@ -3790,6 +4001,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
   setTimeout(starsFirst, 6000);
   ablageP.then(() => syncNotes(true)).then((ch) => { if (ch) softIfIdle(); });
   ablageP.then(() => syncEinkauf(true)).then((ch) => { if (ch) ekRefresh(); });
+  ablageP.then(() => syncKammer(true)).then((ch) => { if (ch) kmRefresh(); });
   ablageP.then(() => syncVorrat(true)).then((ch) => { if (ch) vrRefresh(); });
   if (S.einkauf && S.einkauf.bring && S.einkauf.bring.status === "wait") setTimeout(ekPoll, 3000);
   ablageP.then(() => setTimeout(syncLog, 5000));

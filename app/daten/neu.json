@@ -6,6 +6,7 @@
    "datum": "27.11.2026",
    "titel": "Neu im Kochbuddy",
    "schritte": [
+    { "ico": "cart", "t": "Neu: die Vorratskammer mit Inventur", "x": "Im Reiter Einkauf gibt es oben jetzt „Vorratskammer“. „Inventur starten“ tippen, dann alles im Vorratsschrank scannen – oder vorher im Lagermodus des Scanners sammeln und am Scanner „Upload All“ wählen. Gleiche Artikel werden zusammengezählt, mit „Übernehmen“ wird daraus der Bestand.", "ziel": "#/kammer", "zeige": "#km-inv" },
     { "ico": "cart", "t": "Der Handscanner ist eingebunden", "x": "Im Reiter Einkauf steht jetzt nach jedem Scan, was erkannt wurde – mit Marke und Größe aus Open Food Facts – und wie oft es auf der Liste steht. Neue Artikel kommen ohne Rückfrage gleich auf die Liste, gleiche Codes zählen zusammen. Mit „Probescan“ kannst du erst ausprobieren, ohne dass etwas auf die Liste kommt.", "ziel": "#/einkauf", "zeige": "#ek-scan" },
     { "ico": "cart", "t": "Den Tab „Angebote“ gibt es nicht mehr", "x": "Die Angebote kamen dort nicht zuverlässig an, darum ist der Tab weg. Die Einkaufs-Tipps, die Metzger-Angebote und die Schnäppchen der Woche stehen weiter in der Donnerstags-Mail vom Buddy und im Wochen-PDF.", "ziel": "#/", "zeige": "#nav" }
    ]
