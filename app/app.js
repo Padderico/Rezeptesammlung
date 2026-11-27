@@ -2617,7 +2617,7 @@
     if (x.busy) return `<div class="ek-last busy"><i></i><span><b>Suche in Open Food Facts …</b><small><span class="ek-code">${esc(x.code)}</span>${esc(how)}</small></span></div>`;
     const it = x.test ? ekTest.items[x.code] : ekView().items[x.id], c = it ? it.c : 0, prod = ekProduct(x);
     return `<div class="ek-last ${x.src}${x.test ? " test" : ""}"><i></i><span><b>${esc(x.n || prod || "Unbekannter Artikel")}</b>
-      <small>${prod && prod !== x.n ? `${esc(prod)} · ` : ""}${esc(SRC_TXT[x.src] || "")}</small>
+      <small>${prod && prod !== x.n ? `${esc(prod)} · ` : ""}${esc(SRC_TXT[x.src] || "")}${!x.n && !x.test ? " – in der Liste antippen und benennen" : ""}</small>
       <small><span class="ek-code">${esc(x.code)}</span>${esc(how)}</small></span>
       <em class="ek-times">${c ? `${c}×` : ""}<small>${x.test ? "Probe" : "auf der Liste"}</small></em></div>`;
   }
@@ -2652,12 +2652,10 @@
   /* Ein Scan: bekannter Code → sofort +1; neuer Code → nachschlagen, gleich auf die Liste, einmal bestätigen */
   let scanQ = Promise.resolve();
   function onScan(raw, how) { scanQ = scanQ.then(() => handleScan(raw, how)).catch((e) => logError("Scan", e.message, e.stack)); }
-  const ekCanAsk = () => !inCooking && $("#alarm").hidden && ($("#sheet").hidden || ["cam", "neu", "code"].includes($("#sheet").dataset.ek));
   async function handleScan(raw, how) {
     const code = normCode(raw);
     if (!code) { lastScan = { code: String(raw || "").replace(/\D/g, ""), how, at: Date.now(), bad: true }; ekLastDraw(); toast("Code nicht erkannt – bitte nochmal scannen"); buzz([30, 60, 30]); return; }
     if (ekTest.on) { await testScan(code, how); return; }
-    if ($("#sheet").dataset.ek === "neu") await ekConfirm();
     if ($("#sheet").dataset.ek === "code") closeSheet();
     const id = "e:" + code, k = ekView().kat[code];
     if (k && k.n) {
@@ -2676,8 +2674,8 @@
     lastScan = { code, how, at: Date.now(), id, src: p ? "off" : net ? "unbekannt" : "offline", info: p ? offInfo(p) : null, n: sug ? sug.n : "", d: sug ? sug.d : "" };
     buzz(sug ? 15 : [20, 50, 20]);
     ekRefresh(true);
-    if (ekCanAsk()) await ekNewSheet(code, p ? offInfo(p) : null, sug, net);
-    else toast(sug ? `${sug.n} auf der Liste` : "Unbekannter Artikel – bitte in der Einkaufsliste benennen");
+    // Keine Rückfrage mehr: was Open Food Facts kennt, steht sofort richtig auf der Liste; Unbekanntes kann man in der Liste antippen und benennen
+    toast(sug ? `${sug.n} auf der Liste` : "Unbekannter Artikel – in der Liste antippen und benennen");
   }
   async function ekNames() {
     const bn = await bringNames(), V = ekView();
@@ -2688,27 +2686,6 @@
       <input class="field" id="ekn" list="ek-names" autocomplete="off" enterkeyhint="done" value="${esc(n)}" placeholder="z. B. Dosentomaten" data-ekname>
       <label class="small" for="ekd" style="display:block;margin-top:10px"><b>Details</b> <span class="muted">(Marke, Größe – steht in Bring dabei)</span></label>
       <input class="field" id="ekd" autocomplete="off" enterkeyhint="done" value="${esc(d)}" placeholder="z. B. Mutti, 400 g" data-ekdetail>`;
-  async function ekNewSheet(code, info, sug, net) {
-    const names = await ekNames();
-    const what = info ? [info.brand, info.name, info.qty].filter(Boolean).join(" · ") : net ? "Dieser Code steht in keiner offenen Produktdatenbank – einmal benennen, dann kennt die App ihn." : "Gerade kein Netz – der Name lässt sich nicht nachschlagen. Einfach selbst eintragen.";
-    openSheet(`<h2>${sug ? "Neu gescannt" : "Was ist das?"}</h2>
-      <p class="small muted" style="margin:4px 0 12px">${esc(what)} <span class="ek-code">${esc(code)}</span></p>
-      ${ekFields(sug ? sug.n : "", sug ? sug.d : "")}${names}
-      <button class="btn primary big" style="margin-top:14px" data-act="ek-ok">${sug ? "Passt – merken" : "Speichern und merken"}</button>
-      <p class="small muted" style="margin:10px 0 0">Steht schon auf der Liste. Ab jetzt landet dieser Code direkt drauf – auf allen Geräten.</p>`, { ek: "neu", ekid: code });
-    if (!sug) setTimeout(() => { const i = $("#ekn"); if (i) i.focus(); }, 250);
-  }
-  async function ekConfirm() {
-    const s = $("#sheet"), code = s.dataset.ekid;
-    const nm = ekClean(($("[data-ekname]") || {}).value), det = ekClean(($("[data-ekdetail]") || {}).value).slice(0, 70);
-    closeSheet();
-    if (!code) return;
-    if (!nm) { toast("Ohne Namen – steht als „Name fehlt“ auf der Liste"); return; }
-    const r = await resolveName(nm);
-    ekOp({ op: "set", id: "e:" + code, it: { n: r.n, key: r.key, d: det } });
-    ekOp({ op: "kat", ean: code, k: { key: r.key, n: r.n, d: det, ok: true } });
-    ekRefresh(); toast(`Gemerkt: ${r.n}`);
-  }
   async function ekEditSheet(id) {
     const it = ekView().items[id];
     if (!it) return;
@@ -2951,7 +2928,7 @@ ${JSON.stringify(ld, null, 1).replace(/<\//g, "<\\/")}
         <li>Am Scanner den <b>Echtzeit-Modus</b> lassen („Real Time Mode“, Standard). Im Speichermodus schickt „Upload All“ alles auf einmal – auch das zählt die App richtig zusammen.</li>
         <li>Fehlen Ziffern oder kommt „Kein gültiger Strichcode“: am Scanner die Übertragung („Bluetooth Transfer Rate“) auf „Slow“ stellen. Ob er Enter mitschickt, ist egal – die App erkennt das Ende auch so.</li>
         <li>„Probescan“ oben schlägt nur nach und zeigt, was erkannt wurde – praktisch zum Ausprobieren. Gleiche Codes werden zusammengezählt.</li>
-        <li>Neue Produkte erkennt die App über offene Produktdatenbanken und schlägt die passende Bring-Kachel vor. Einmal bestätigt, kennt sie den Code auf allen Geräten.</li>
+        <li>Neue Produkte schlägt die App in Open Food Facts nach und setzt sie gleich mit der passenden Bring-Kachel auf die Liste – ohne Rückfrage. Stimmt der Name nicht oder fehlt er, den Artikel in der Liste antippen; die Korrektur gilt ab dann für diesen Code auf allen Geräten.</li>
         <li>Solange der Scanner verbunden ist, blendet Android oft die Bildschirmtastatur aus. Dann in den Android-Einstellungen bei der physischen Tastatur „Bildschirmtastatur anzeigen“ einschalten.</li>
         <li>Theke, Waage und loses Obst haben keinen festen Code – einfach oben dazuschreiben.</li>
         <li>Die Liste wird privat gespeichert und ist auf allen Geräten gleich.</li></ul></details>`;
@@ -3643,7 +3620,6 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
         break;
       }
       case "ek-code": ekCodeSheet(); break;
-      case "ek-ok": ekConfirm(); break;
       case "ek-save": ekSave(); break;
       case "ek-del": { const id = $("#sheet").dataset.ekid, it = ekView().items[id]; closeSheet(); if (it) { ekOp({ op: "del", id }); ekRefresh(); toast(`${it.n || "Artikel"} von der Liste genommen`); } break; }
       case "ek-bring": ekBringStart(el); break;
