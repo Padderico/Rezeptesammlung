@@ -91,7 +91,7 @@
   /* ---------- Zustand (nur auf diesem Gerät) ---------- */
   const LS = "kochbuddy.v1";
   const defaults = () => ({
-    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {}, dealcheck: {}, swaps: {}, bringAck: {}, bringOpened: {},
+    portions: {}, ing: {}, steps: {}, prep: {}, cook: {}, timers: [], block: {}, check: {}, rem: {}, eat: {}, swaps: {}, bringAck: {}, bringOpened: {},
     settings: { sound: true, vibrate: true, scale: 1, theme: "auto", eat: { Mittag: "12:00", Abend: "18:00" }, installHint: true },
   });
   let S = defaults();
@@ -100,6 +100,9 @@
     S = { ...defaults(), ...raw, settings: { ...defaults().settings, ...(raw.settings || {}) } };
   } catch (e) { /* frisch starten */ }
   const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { /* voll oder gesperrt */ } };
+  // Den Tab „Angebote“ gibt es seit 27.11.2026 nicht mehr: seine Daten auf dem Gerät wegräumen
+  if (S.dealcheck || S.prosCache) { delete S.dealcheck; delete S.prosCache; save(); }
+  try { localStorage.removeItem("kochbuddy.deals"); } catch (e) { /* gesperrt */ }
   const bag = (name, key) => { S[name] = S[name] || {}; return (S[name][key] = S[name][key] || {}); };
   /* ---------- Fehlerprotokoll ----------
      Fehler der App werden ohne persönliche Inhalte gesammelt (Meldung, Stelle im Code, Ansicht, App-Stand, System)
@@ -109,7 +112,7 @@
     try {
       msg = String(msg || "").replace(/github_pat_\w+|ghp_\w+/g, "[Schlüssel]").slice(0, 300);
       if (!msg || NET_ERR.test(msg)) return;
-      const where = (String(stack || "").split("\n").find((l) => /app\.js|deals\.mjs/.test(l)) || "").replace(/^\s*at\s*/, "").replace(/https?:\/\/[^/]+/, "").trim().slice(0, 160);
+      const where = (String(stack || "").split("\n").find((l) => /app\.js/.test(l)) || "").replace(/^\s*at\s*/, "").replace(/https?:\/\/[^/]+/, "").trim().slice(0, 160);
       const key = `${kind}|${msg}|${where}`.slice(0, 400);
       let ver = ""; try { ver = codeTag || ""; } catch (e) { ver = ""; }
       S.errs = S.errs || {};
@@ -434,8 +437,8 @@
       if (validToken(parts[1])) { setGhToken(parts[1]); setTimeout(() => toast("Gerät verbunden – Tauschen ist eingerichtet"), 300); syncSwaps(true).then((ch) => { if (ch && !inCooking) rerenderSoft(); }); }
       navTo(parts[2] === "iphone" ? "#/iphone" : "#/", "replace"); return;
     }
-    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "angebote", "einkauf", "entdecken", "rezepte", "vorrat", "iphone"].includes(parts[0])) { navTo("#/", "replace"); return; }
-    const nav = parts[0] === "r" && /^(og|a):/.test(parts[1] || "") ? "rezepte" : { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", angebote: "angebote", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
+    if (parts[0] && !["r", "k", "vorkochen", "checkliste", "einkauf", "entdecken", "rezepte", "vorrat", "iphone"].includes(parts[0])) { navTo("#/", "replace"); return; }
+    const nav = parts[0] === "r" && /^(og|a):/.test(parts[1] || "") ? "rezepte" : { "": "woche", r: "woche", vorkochen: "vorkochen", checkliste: "checkliste", einkauf: "einkauf", entdecken: "entdecken", rezepte: "rezepte", vorrat: "rezepte" }[parts[0] || ""] ?? "";
     $$("#nav a").forEach((a) => a.classList.toggle("on", a.dataset.nav === nav));
     try {
       if (!weeks.length) await loadIndex();
@@ -446,7 +449,6 @@
       else if (parts[0] === "k") await renderCook(view, parts[1]);
       else if (parts[0] === "vorkochen") await renderPrep(view);
       else if (parts[0] === "checkliste") await renderChecklist(view);
-      else if (parts[0] === "angebote") await renderDeals(view);
       else if (parts[0] === "einkauf") await renderEinkauf(view);
       else if (parts[0] === "rezepte") await renderAll(view);
       else if (parts[0] === "vorrat") await renderVorrat(view);
@@ -467,7 +469,7 @@
 
   /* Verlauf innerhalb der App: "Zurück" (auch die Android-Zurücktaste) landet dort, wo man herkam.
      Tabs stapeln sich nicht: Woche -> Checkliste -> Vorkochen, dann Zurück = Woche, nochmal Zurück = App zu. */
-  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/angebote", "#/einkauf", "#/entdecken", "#/rezepte", "#/vorrat"];
+  const TABS = ["#/", "#/checkliste", "#/vorkochen", "#/einkauf", "#/entdecken", "#/rezepte", "#/vorrat"];
   const curHash = () => (location.hash && location.hash !== "#" ? location.hash : "#/");
   // Jeder Verlaufseintrag merkt sich seine Position (history.state.kb) – so passt die App-Liste immer zum echten Verlauf.
   const st0 = history.state && typeof history.state.kb === "number" ? history.state.kb : 0;
@@ -1203,11 +1205,11 @@
 
   /* ---------- Einführung beim ersten Start und Hilfe ---------- */
   const TOUR = [
-    { ico: "pot", t: "Willkommen beim Kochbuddy", x: "Hier siehst du jeden Tag, was gekocht wird – mit Rezept, Kochmodus und Timern. Plan, Rezepte und Angebote aktualisieren sich von selbst." },
+    { ico: "pot", t: "Willkommen beim Kochbuddy", x: "Hier siehst du jeden Tag, was gekocht wird – mit Rezept, Kochmodus und Timern. Plan und Rezepte aktualisieren sich von selbst." },
     { ico: "cal", t: "Oben steht immer heute", x: "Die Karte „Heute“ zeigt beide Mahlzeiten mit Uhrzeit und was heute ansteht – zum Nachschauen. Abgehakt wird in der Checkliste, dem zweiten Reiter unten. Ein Tipp auf ein Gericht öffnet das Rezept." },
     { ico: "timer", t: "Kochen mit Timer", x: "„Kochen“ führt dich Schritt für Schritt durchs Rezept. Eine Zeitangabe antippen startet den Timer, der Bildschirm bleibt dabei an. Zutaten abhaken, sobald sie im Topf sind." },
     { ico: "swap", t: "Gericht tauschen", x: "Lust auf etwas anderes? Unter „Ersatzgerichte“ das Gericht am Griff (sechs Punkte) auf einen Tag ziehen oder „Tauschen“ antippen. Abends passt der Buddy Plan und Einkaufsliste an." },
-    { ico: "cart", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Unter „Angebote“ stehen die besten Angebote der Woche samt Einkaufszettel zum Abhaken." },
+    { ico: "cart", t: "Wenn etwas zu tun ist", x: "Muss etwas in die Bring-Liste, erscheint oben ein oranger Hinweis mit Knopf. Die Einkaufs-Tipps und Metzger-Angebote der Woche stehen in der Mail vom Buddy." },
     { ico: "cart", t: "Leer? Einfach scannen", x: "Unter „Einkauf“ sammelt die App, was nachgekauft werden muss – Strichcode der leeren Packung scannen (Scanner oder Kamera) oder dazuschreiben. Mit einem Tipp geht alles in Bring." },
   ];
   let tourStep = 0;
@@ -1482,143 +1484,6 @@
     document.body.classList.remove("dragging");
     ["#ghost", "#droppanel"].forEach((s) => { const el = $(s); if (el) el.remove(); });
     $$(".hot").forEach((x) => x.classList.remove("hot"));
-  }
-
-  /* ---------- Angebote: Schnäppchen-Seiten aus dem neuesten Wochen-PDF ---------- */
-  const DEALS_KEY = "kochbuddy.deals";
-  let dealFilter = "Alle";
-  const pdfUrl = (w) => new URL(`../wochenplan/Speiseplan-KW${w.kw}-${w.year}.pdf`, location.href).href;
-  const KEEP_CAPS = new Set(["EDEKA", "REWE", "ALDI", "SÜD", "dm", "E", "XXL"]);
-  const niceShop = (s) => (s || "").split(/\s+/).map((x) => (/^[A-ZÄÖÜ]{3,}$/.test(x) && !KEEP_CAPS.has(x) ? x.charAt(0) + x.slice(1).toLowerCase() : x)).join(" ");
-  const shopKey = (s) => niceShop(s).split(" ")[0];
-  /* ---------- Prospekte der Läden (oben im Tab Angebote) ----------
-     Mit Schlüssel aus dem privaten Repo: angebote/prospekte.json (Läden, Gültigkeit, Links; schreibt die Wochenaufgabe).
-     Ohne Zugriff nur die allgemeinen Prospekt-Seiten der Händler (ohne Orte – das öffentliche Repo kennt keine Orte). */
-  const PROS_PATH = "/contents/angebote/prospekte.json";
-  const PROS_FALLBACK = [
-    { shop: "Lidl", stufe: 1, title: "Aktuelle Prospekte", overview: "https://www.lidl.de/c/online-prospekte/s10005610" },
-    { shop: "Kaufland", stufe: 1, title: "Aktuelle Prospekte", overview: "https://filiale.kaufland.de/prospekte.html" },
-    { shop: "ALDI SÜD", stufe: 2, title: "Aktuelle Prospekte", overview: "https://www.aldi-sued.de/de/angebote/prospekte.html" },
-  ];
-  let prosCache = null, prosAt = 0, prosLoading = null;
-  function loadPros() {
-    if (prosLoading) return prosLoading;
-    if (!(ablage.privat && dataReady() && ghToken())) return Promise.resolve(null);
-    prosLoading = dgh("GET", PROS_PATH).then((r) => (r ? JSON.parse(b64d(r.content)) : null))
-      .then((d) => { const ch = JSON.stringify(d) !== JSON.stringify(prosCache); prosCache = d; prosAt = Date.now(); S.prosCache = d; save(); return ch; })
-      .catch(() => false).finally(() => { prosLoading = null; });
-    return prosLoading;
-  }
-  const PROS_TONE = { lidl: "#0050AA", penny: "#CD1414", kaufland: "#E10915", edeka: "#1C4C9C", aldi: "#1E5AA8", rewe: "#CC071E" };
-  const shortDate = (iso) => { const d = new Date(iso + "T12:00"); return `${DAYS[d.getDay()].slice(0, 2)} ${d.getDate()}.${d.getMonth() + 1}.`; };
-  function prospekteHtml(dealItems) {
-    if (!prosCache && S.prosCache) prosCache = S.prosCache;
-    const list = (prosCache && prosCache.items) || PROS_FALLBACK, t = today();
-    const STUFE = { 1: "Hauptladen", 2: "Zweite Wahl", 3: "Nur bei Top-Angeboten" };
-    const cards = list.map((p) => {
-      let cur = p.url ? { title: p.title, von: p.von, bis: p.bis, url: p.url } : null, nxt = p.next || null;
-      if (cur && cur.bis && cur.bis < t) { cur = nxt && (!nxt.von || nxt.von <= t) ? nxt : null; nxt = null; }
-      const href = (cur && cur.url) || p.overview || p.url;
-      const key = (p.shop || "").toLowerCase().split(/\s+/)[0];
-      const nDeals = (dealItems || []).filter((it) => shopKey(it.shop).toLowerCase() === key).length;
-      const valid = cur && cur.bis ? `gültig bis ${shortDate(cur.bis)}` : cur ? "diese Woche" : "neuer Prospekt kommt";
-      return `<div class="pro" style="--pc:${PROS_TONE[key] || "var(--accent)"}"><a class="pro-main" href="${esc(href)}" target="_blank" rel="noopener">
-        <span class="pro-shop">${esc(p.shop)}</span><span class="pro-st">${esc(STUFE[p.stufe] || "")}${p.ort ? ` · ${esc(p.ort)}` : ""}</span>
-        <b>${esc((cur && cur.title) || p.title || "Prospekt")}</b><small>${esc(valid)}</small>
-        ${nDeals ? `<span class="pro-deal">${nDeals} ${nDeals === 1 ? "Top-Angebot" : "Top-Angebote"} unten</span>` : ""}
-        <span class="pro-go">Blättern ↗</span></a>
-        ${nxt && nxt.url ? `<a class="pro-next" href="${esc(nxt.url)}" target="_blank" rel="noopener">Nächste Woche${nxt.von ? ` ab ${esc(shortDate(nxt.von))}` : ""} ↗</a>` : ""}</div>`;
-    }).join("");
-    const note = prosCache ? (prosCache.stand ? `Stand ${shortDate(prosCache.stand)}` : "") : "Mit eingerichtetem Speichern stehen hier eure Läden mit Gültigkeit.";
-    return `<section id="prospekte"><div class="section-title" style="margin-top:6px">Prospekte der Woche</div><div class="pro-row">${cards}</div>${note ? `<p class="small muted" style="margin:4px 0 0">${esc(note)} · Öffnet die Seite des Händlers.</p>` : ""}</section>`;
-  }
-  async function renderDeals(view) {
-    const w0 = weeks[0];
-    const head = (sub) => `<header class="top"><div><div class="eyebrow">${esc(sub)}</div><h1>Angebote</h1></div></header>` + prospekteHtml();
-    if (!prosCache || Date.now() - prosAt > 30 * 60000) loadPros().then((ch) => { if (ch && location.hash.startsWith("#/angebote")) softIfIdle(); });
-    if (!w0) { view.innerHTML = head("Angebote") + `<p class="empty">Noch kein Wochenplan da.</p>`; return; }
-    const url = pdfUrl(w0);
-    let cache = null;
-    try { cache = JSON.parse(localStorage.getItem(DEALS_KEY) || "null"); } catch (e) { cache = null; }
-    const fresh = cache && cache.url === url && cache.built === (w0.built || "");
-    if (fresh) await drawDeals(view, w0, cache.data, url);
-    else view.innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<div class="loading">${ART.pot}<span>Lese die Angebote aus dem Wochen-PDF …</span></div>`;
-    if (fresh && Date.now() - (cache.at || 0) < 10 * 60000) return;
-    try {
-      const mod = await import("./deals.mjs");
-      const res = await mod.loadDeals(url);
-      const data = { ...res.data, pages: res.pages };
-      try { localStorage.setItem(DEALS_KEY, JSON.stringify({ url, built: w0.built || "", at: Date.now(), data })); } catch (e) { /* voll */ }
-      if (location.hash.startsWith("#/angebote") && (!fresh || JSON.stringify(data) !== JSON.stringify(cache.data))) drawDeals($("#view"), w0, data, url);
-    } catch (e) {
-      if (!fresh && location.hash.startsWith("#/angebote")) {
-        $("#view").innerHTML = head(`KW ${w0.kw} · aus dem Wochen-PDF`) + `<div class="card"><h2>Gerade nicht lesbar</h2><p class="muted">${navigator.onLine === false ? "Ohne Netz – die Angebote waren auf diesem Gerät noch nicht gespeichert." : "Das Wochen-PDF ließ sich gerade nicht auslesen."}</p><a class="btn" href="${esc(url)}">PDF öffnen</a> <button class="btn ghost" data-act="deals-retry">Nochmal versuchen</button></div>`;
-      }
-    }
-  }
-  /* Welche Angebote passen zu den Zutaten der Planwoche? (gleiche Bring-Namen wie Einkaufsliste und Rezepte) */
-  async function dealMatcher(w0) {
-    let wk = null;
-    try { wk = await week(w0.id); } catch (e) { return () => null; }
-    const bn = await bringNames(), use = new Map();
-    for (const rid of new Set(wk.days.flatMap((d) => d.meals.map((m) => m.recipe)))) {
-      const r = wk.recipes[rid];
-      for (const i of (r && r.ingredients) || []) { if (!i.b) continue; if (!use.has(i.b)) use.set(i.b, new Set()); use.get(i.b).add(shortTitle(r.title)); }
-    }
-    return (name) => { const a = textMatch(bn, name), u = a && use.get(a.n); return u ? [...u] : null; };
-  }
-  const PLAY_FORK = '<svg class="ico" viewBox="0 0 24 24"><path d="M7 3v7a2 2 0 0 0 2 2v9M11 3v7a2 2 0 0 1-2 2M9 3v6M16.5 21V3c-2 1.5-3 4-3 7v3h3"/></svg>';
-  const isHot = (it) => it.save >= 45 || /Bestpreis|Schnäppchen|Black/i.test(it.rating || "");
-  function dealCard(it, fits) {
-    const fuer = it.fuer || (fits ? fits.slice(0, 3).join(", ") : "");
-    return `<article class="deal${isHot(it) ? " hot" : ""}${fuer ? " fits" : ""}">
-      <div class="deal-top"><div style="min-width:0"><div class="eyebrow">${it.rank ? `<span class="rank">${it.rank}</span>` : ""}${esc(niceShop(it.shop))}</div><b class="dn">${esc(it.name)}</b>${it.meta && it.meta.replace(/[·\s]|gültig/g, "") ? `<div class="small muted">${esc(it.meta.replace(/^\s*·\s*/, ""))}</div>` : ""}</div>
-      <div class="dp"><b>${esc(it.price)}</b>${it.normal ? `<small>statt ${esc(it.normal)}</small>` : it.rank ? "" : `<small>Angebotspreis</small>`}</div></div>
-      ${it.save != null ? `<div class="barrow"><span class="pct">−${it.save} %</span><span class="bar"><i style="width:${Math.max(3, Math.min(100, it.save))}%"></i></span>${it.rating ? `<span class="chip${/Bestpreis|Schnäppchen|Black/i.test(it.rating) ? " pump" : ""}">${esc(it.rating)}</span>` : ""}</div>` : ""}
-      ${fuer ? `<p class="fits-for">${PLAY_FORK}Für ${esc(fuer)}</p>` : ""}
-      ${it.maker ? `<p class="small" style="margin:4px 0"><b>Hersteller:</b> ${esc(it.maker)}</p>` : ""}${it.note ? `<p class="small muted" style="margin:4px 0 0">${esc(it.note)}</p>` : ""}</article>`;
-  }
-  async function drawDeals(view, w0, d, url) {
-    const ck = bag("dealcheck", `kw${w0.kw}-${w0.year}`);
-    const items = d.items || [], rez = d.rezept || [], all = [...items, ...rez];
-    let h = `<header class="top"><div><div class="eyebrow">KW ${w0.kw} · aus dem Wochen-PDF</div><h1>Angebote</h1></div></header>` + prospekteHtml(all);
-    if (!all.length && !d.title) {
-      h += `<div class="card"><h2>Keine Angebotsseite</h2><p class="muted">In diesem Wochen-PDF gibt es diesmal keine Seite „Schnäppchen der Woche“.</p><a class="btn" href="${esc(url)}">PDF öffnen</a></div>`;
-      if (d.pages && d.pages.length) h += `<button class="btn ghost" data-act="deals-render">Seite als Bild anzeigen</button><div id="dealpages"></div>`;
-      view.innerHTML = h; view.dataset.pdf = url; view.dataset.pages = (d.pages || []).join(","); return;
-    }
-    const match = await dealMatcher(w0);
-    if (d.subtitle) h += `<p class="muted small" style="margin:0 0 6px;font-weight:700">${esc(d.subtitle)}</p>`;
-    if (!all.length && d.intro && d.intro.length) h += `<div class="tip"><p style="margin:0">${esc(d.intro[0])}</p></div>`;
-    const shops = ["Alle", ...new Set(all.map((it) => shopKey(it.shop)))];
-    if (shops.length > 2) h += `<div class="seg" style="margin-top:12px">${shops.map((s) => `<button data-shopfilter="${esc(s)}" aria-pressed="${dealFilter === s}">${esc(s)}</button>`).join("")}</div>`;
-    const shown = (it) => dealFilter === "Alle" || shopKey(it.shop) === dealFilter;
-    // 1) Absolute Top-Angebote
-    h += `<div class="section-title deal-h" id="deals-top" style="margin-top:14px">Absolute Top-Angebote</div><p class="small muted deal-sub">Die stärksten Schnäppchen der Woche – auch für Vorrat und Alltag.</p>`;
-    const topShown = items.filter(shown);
-    h += topShown.length ? topShown.map((it) => dealCard(it, match(it.name))).join("") : `<p class="empty deal-empty">${items.length ? "Bei diesem Laden keine Top-Angebote." : "Diese Woche keine Top-Angebote."}</p>`;
-    // 2) Passend zu euren Rezepten: vom Buddy gesucht, sonst die Top-Angebote, die zu Zutaten der Woche passen
-    const derived = rez.length ? [] : items.map((it) => ({ it, fits: match(it.name) })).filter((x) => x.fits);
-    h += `<div class="section-title deal-h" id="deals-rezept">Passend zu euren Rezepten</div><p class="small muted deal-sub">${rez.length ? "Angebote für Zutaten, die ihr in dieser Planwoche braucht." : derived.length ? "Diese Top-Angebote braucht ihr auch für die Rezepte der Woche." : "Angebote für Zutaten, die ihr in dieser Planwoche braucht."}</p>`;
-    const rzShown = rez.length ? rez.filter(shown).map((it) => dealCard(it, match(it.name))) : derived.filter((x) => shown(x.it)).map((x) => dealCard(x.it, x.fits));
-    h += rzShown.length ? rzShown.join("") : `<p class="empty deal-empty">${rez.length || derived.length ? "Bei diesem Laden nichts Passendes." : "Für die Zutaten dieser Woche gibt es gerade keine passenden Angebote."}</p>`;
-    if (d.plan && d.plan.length) {
-      h += `<div class="section-title">Einkaufszettel zum Abhaken</div>` + d.plan.map((s, i) => `<section class="card"><h3>${esc(s.shop)}</h3>${s.when ? `<p class="small muted" style="margin:2px 0 4px">${esc(s.when)}</p>` : ""}<ul class="checks">${s.items.map((x, j) => checkRow(ck[`${i}:${j}`], esc(x), `data-dealcheck="${i}:${j}"`)).join("")}</ul></section>`).join("");
-    }
-    if (d.tips && d.tips.length) h += `<div class="section-title">So kaufst du am besten ein</div><div class="card tipgrid">${d.tips.map((t) => `<div><b>${esc(t.label)}</b>${esc(t.text)}</div>`).join("")}</div>`;
-    const intro = all.length ? d.intro || [] : (d.intro || []).slice(1);
-    if (intro.length) h += `<div class="section-title">Hinweise</div>` + intro.map((p, i) => (i === 0 ? `<div class="tip"><p style="margin:0">${esc(p)}</p></div>` : `<p class="small muted">${esc(p)}</p>`)).join("");
-    if (d.watch && d.watch.length) h += `<div class="section-title">Preiswecker – noch nicht kaufen</div><div class="card">${d.watch.map((x) => `<p class="small" style="margin:4px 0 8px">${x.name ? `<b>${esc(x.name)}:</b> ` : ""}${esc(x.text)}</p>`).join("")}</div>`;
-    if (d.makers && d.makers.length) h += `<details class="card"><summary><b>Wer steckt hinter der Eigenmarke?</b></summary>${d.makers.map((x) => `<p class="small" style="margin:8px 0 0">${x.name ? `<b>${esc(x.name)}:</b> ` : ""}${esc(x.text)}</p>`).join("")}</details>`;
-    h += `<p class="small muted" style="margin:18px 0 0">${esc(d.sources || "")}</p><div class="links"><a class="btn small" href="${esc(url)}">Ganzes Wochen-PDF öffnen</a></div>`;
-    view.innerHTML = h;
-  }
-  async function renderDealPages() {
-    const view = $("#view"), url = view.dataset.pdf, pages = (view.dataset.pages || "").split(",").filter(Boolean).map(Number);
-    const box = $("#dealpages"); if (!box || !pages.length) return;
-    const mod = await import("./deals.mjs");
-    box.innerHTML = "";
-    for (const n of pages) { const c = document.createElement("canvas"); c.style.cssText = "display:block;margin:12px 0;border-radius:8px;background:#fff"; box.appendChild(c); await mod.renderPage(url, n, c, Math.min(box.clientWidth || 380, 900)); }
   }
 
   /* ---------- Entdecken: Gerichte bewerten wie bei Tinder ----------
@@ -3572,7 +3437,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
     unlockAudio();
     const tab = e.target.closest("#nav a");
     if (tab) { e.preventDefault(); tabTo(tab.getAttribute("href")); return; }
-    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-dealcheck],[data-shopfilter],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density],[data-ogb],[data-ogtm],[data-ogpic]");
+    let el = e.target.closest("[data-act],[data-start],[data-timer-open],[data-ing],[data-prep],[data-rem],[data-cl],[data-clfold],[data-tl],[data-go],[data-jump],[data-expand],[data-jumpday],[data-week],[data-portion],[data-tag],[data-alarm],[data-tadd],[data-tact],[data-quick],[data-swapopen],[data-swapto],[data-unswap],[data-bringopen],[data-bringmail],[data-bringdone],[data-swipe],[data-rerate],[data-star],[data-kid],[data-starskip],[data-notesave],[data-noteedit],[data-notedel],[data-ekedit],[data-ekinc],[data-ekopen],[data-freeze],[data-vprint],[data-vtake],[data-vopen],[data-density],[data-ogb],[data-ogtm],[data-ogpic]");
     if (el && !el.closest("#view, #dock, #sheet, #alarm, #upd, #newsbar")) el = null; // nie den Seitenrahmen als Knopf werten
     if (!el) { if (e.target.id === "sheet") { if ($("#sheet").dataset.tour) endTour(); else if ($("#sheet").dataset.review) toast("Erst noch die Sterne vergeben – oder „Gab's nicht“ antippen"); else if ($("#sheet").dataset.news) newsEnd(false); else if (reviewList) drawReview(); else closeSheet(); } return; }
     const d = el.dataset, view = $("#view");
@@ -3662,8 +3527,6 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
     if (d.swapopen) { swapSheet(d.swapopen); return; }
     if (d.swapto) { const id = $("#sheet").dataset.swap; closeSheet(); const [iso, slot] = d.swapto.split("|"); performSwap(id, iso, slot); return; }
     if (d.unswap) { unswap(d.unswap); return; }
-    if (d.dealcheck) { const w0 = weeks[0]; el.classList.toggle("on", toggle("dealcheck", `kw${w0.kw}-${w0.year}`, d.dealcheck)); return; }
-    if (d.shopfilter) { dealFilter = d.shopfilter; rerenderSoft(); return; }
     if (d.tadd) { adjustTimer($("#sheet").dataset.timer, +d.tadd); return; }
     if (d.tact) { timerAct($("#sheet").dataset.timer, d.tact); closeSheet(); return; }
     if (d.quick) { askNotify(); addTimer({ min: +d.quick * 60, title: "Timer", label: `${d.quick} Min.`, sub: $("[data-qlabel]") ? $("[data-qlabel]").value : "" }); closeSheet(); toast(`Timer ${d.quick} Min. läuft`); return; }
@@ -3724,8 +3587,6 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
       case "ip-copy": copyLoader(); break;
       case "gh-remove": setGhToken(""); closeSheet(); rerenderSoft(); toast("Schlüssel entfernt – Tauschen ist hier aus"); break;
       case "sw-more": { const pool = await tastePool(); extraDeck(pool); rerenderSoft(); window.scrollTo(0, 0); break; }
-      case "deals-retry": localStorage.removeItem(DEALS_KEY); rerenderSoft(); break;
-      case "deals-render": el.disabled = true; renderDealPages().catch(() => toast("PDF-Seite ließ sich nicht anzeigen")); break;
       case "home": e.preventDefault(); navTo("#/", "jump"); break;
       case "cook-next": cookGo(1, true); break;
       case "cook-prev": cookGo(-1, false); break;
@@ -3794,7 +3655,7 @@ await new Function("return (async () => {\\n" + code + "\\n})()")();
   async function codeVersion() {
     if (embedded) return null;
     try {
-      const tags = await Promise.all(["app.js", "app.css", "index.html", "deals.mjs"].map((f) =>
+      const tags = await Promise.all(["app.js", "app.css", "index.html"].map((f) =>
         fetch(f, { method: "HEAD", cache: "no-cache" }).then((r) => (r.ok ? r.headers.get("etag") || r.headers.get("last-modified") || "" : ""))));
       return tags.join("|");
     } catch (e) { return null; }

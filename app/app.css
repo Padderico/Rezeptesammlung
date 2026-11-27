@@ -457,27 +457,6 @@ body.cooking #app { padding-bottom: calc(100px + var(--dock-h) + var(--safe-b));
 .act-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .act-btns .btn { flex: 1 1 auto; }
 
-/* ---------- Angebote ---------- */
-.deal { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 16px; margin: 10px 0; }
-.deal-top { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
-.deal .eyebrow { margin-bottom: 4px; }
-.deal .dn { display: block; font: 700 1.14rem/1.18 var(--font-display); font-stretch: 92%; margin: 2px 0 3px; }
-.rank { display: inline-grid; place-items: center; min-width: 26px; height: 26px; border-radius: 50%; background: var(--tanne); color: var(--on-tanne); font: 800 .82rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
-/* Preisschild mit Loch */
-.deal .dp { position: relative; flex: none; max-width: 44%; min-width: 92px; text-align: center; background: var(--accent); color: var(--accent-ink); border-radius: 12px 16px 16px 12px; padding: 10px 12px 9px 18px; }
-.deal .dp::before { content: ""; position: absolute; left: 6px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--surface); }
-.deal.hot .dp { background: var(--pumpkin); color: #fff; transform: rotate(-2deg); }
-.deal .dp b { display: block; font: 800 1.5rem/1 var(--font-display); font-stretch: 80%; font-variant-numeric: tabular-nums; }
-.deal .dp small { display: block; font-size: .74rem; line-height: 1.2; margin-top: 3px; opacity: .88; }
-.barrow { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; flex-wrap: wrap; }
-.barrow .pct { font: 800 1.1rem/1 var(--font-display); font-stretch: 85%; min-width: 3.2em; color: var(--accent); }
-.deal.hot .barrow .pct { color: var(--pumpkin); }
-.barrow .bar { flex: 1; min-width: 90px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
-.barrow .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
-.deal.hot .barrow .bar i { background: var(--pumpkin); }
-.tipgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
-.tipgrid b { display: block; font: 700 .86rem/1.3 var(--font-display); color: var(--accent); margin-bottom: 2px; }
-@media (max-width: 520px) { .tipgrid { grid-template-columns: 1fr; } }
 details.card summary { cursor: pointer; }
 
 /* ---------- Rezeptliste ---------- */
@@ -945,21 +924,6 @@ a.agp-go:active { transform: scale(.98); }
 .today .ag-prep .box { border-color: var(--line-2); }
 .ag-prep .fe-chip { color: var(--ink); }
 
-/* ---------- Prospekte ---------- */
-.pro-row { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 10px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
-.pro-row::-webkit-scrollbar { display: none; }
-.pro { flex: none; width: 168px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
-.pro-main { position: relative; display: flex; flex-direction: column; gap: 3px; min-height: 160px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 14px 12px; text-decoration: none; color: var(--ink); overflow: hidden; }
-.pro-main::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--pc); }
-.pro-shop { font: 800 1.25rem/1.1 var(--font-display); color: var(--pc); }
-:root[data-scheme="dark"] .pro-shop { color: var(--ink); }
-.pro-st { font-size: .72rem; font-weight: 700; color: var(--muted); }
-.pro-main b { font: 700 .95rem/1.2 var(--font-display); margin-top: 6px; }
-.pro-main small { color: var(--muted); font-weight: 700; }
-.pro-deal { align-self: flex-start; font-size: .72rem; font-weight: 800; background: var(--pumpkin-soft); color: var(--pumpkin-ink); padding: 3px 8px; border-radius: 999px; }
-.pro-go { margin-top: auto; padding-top: 8px; font-weight: 800; color: var(--accent); font-size: .88rem; }
-.pro-next { font-size: .8rem; font-weight: 700; color: var(--accent); text-decoration: none; padding: 0 6px; }
-
 /* ---------- Was ist neu? ---------- */
 .tour.news .eyebrow { display: block; margin-bottom: 4px; }
 .news-show { width: 100%; margin: 0 0 10px; background: var(--accent-soft); color: var(--accent); border-color: transparent; }
@@ -1035,15 +999,6 @@ a.agp-go:active { transform: scale(.98); }
 .label-prev img { width: 100%; max-width: 330px; aspect-ratio: 384 / 240; border-radius: 10px; box-shadow: 0 3px 14px rgba(0, 0, 0, .18); background: #fff; }
 .vr-rename { margin-top: 16px; }
 .vr-rename .ek-add .btn { font-size: 1rem; min-width: 0; padding: 0 18px; border-radius: 14px; min-height: 50px; }
-/* Angebote: zwei Bereiche */
-.deal-h { margin-bottom: 2px; }
-.deal-sub { margin: 0 0 10px; }
-.deal-empty { padding: 14px 0 6px; text-align: left; }
-.deal.fits { border-left: 5px solid #2F6FA3; }
-.fits-for { display: flex; align-items: center; gap: 6px; margin: 8px 0 2px; font-weight: 700; font-size: .9rem; color: #2F6FA3; }
-.fits-for .ico { width: 18px; height: 18px; }
-:root[data-scheme="dark"] .fits-for { color: var(--fish); }
-:root[data-scheme="dark"] .deal.fits { border-left-color: var(--fish); }
 
 /* ---------- Nachricht an den Buddy ---------- */
 .msg-list { list-style: none; margin: 8px 0 10px; padding: 0; display: grid; gap: 8px; }
